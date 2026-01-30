@@ -7,6 +7,16 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -50,6 +60,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
   const [formData, setFormData] = useState<Partial<Task>>(task);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const activeMembers = useMemo(
     () => Object.values(members).filter((m) => m.isActive),
@@ -70,10 +81,9 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   };
 
   const handleDelete = () => {
-    if (confirm("このタスクを削除しますか?")) {
-      deleteTask(task.id);
-      onClose();
-    }
+    deleteTask(task.id);
+    setShowDeleteAlert(false);
+    onClose();
   };
 
   const toggleAssignee = (memberId: string) => {
@@ -108,7 +118,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteAlert(true)}
               className="text-destructive"
             >
               <Trash2 size={20} />
@@ -277,6 +287,26 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           <Button onClick={handleSave}>保存</Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>タスクを削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              この操作は取り消せません。タスク「{task.title}」が完全に削除されます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              削除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

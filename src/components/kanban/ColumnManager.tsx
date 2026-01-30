@@ -7,6 +7,16 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +47,10 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   const deleteColumn = useBoardStore((state) => state.deleteColumn);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleAddColumn = () => {
     if (newColumnTitle.trim()) {
@@ -46,14 +60,19 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
     }
   };
 
-  const handleDeleteColumn = (columnId: string) => {
+  const handleDeleteColumn = (columnId: string, columnName: string) => {
     const column = columns[columnId];
     if (column?.isDefault) {
       alert("デフォルトの列は削除できません");
       return;
     }
-    if (confirm("この列を削除しますか? 列内のタスクも削除されます。")) {
-      deleteColumn(columnId);
+    setDeleteTarget({ id: columnId, name: columnName });
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteColumn(deleteTarget.id);
+      setDeleteTarget(null);
     }
   };
 
@@ -129,7 +148,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteColumn(column.id)}
+                        onClick={() => handleDeleteColumn(column.id, column.title)}
                         className="text-destructive"
                       >
                         <Trash2 size={16} />
@@ -146,6 +165,30 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
           <Button onClick={onClose}>閉じる</Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>列を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              この操作は取り消せません。列「{deleteTarget?.name}
+              」が完全に削除され、列内のすべてのタスクも削除されます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              削除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

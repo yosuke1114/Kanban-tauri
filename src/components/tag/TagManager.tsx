@@ -7,6 +7,16 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +46,10 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
   const deleteTag = useBoardStore((state) => state.deleteTag);
   const [newTagName, setNewTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleAddTag = () => {
     if (newTagName.trim()) {
@@ -45,9 +59,14 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
     }
   };
 
-  const handleDeleteTag = (tagId: string) => {
-    if (confirm("このタグを削除しますか?")) {
-      deleteTag(tagId);
+  const handleDeleteTag = (tagId: string, tagName: string) => {
+    setDeleteTarget({ id: tagId, name: tagName });
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteTag(deleteTarget.id);
+      setDeleteTarget(null);
     }
   };
 
@@ -117,7 +136,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
                     variant="ghost"
                     size="icon"
                     className="h-5 w-5 text-destructive"
-                    onClick={() => handleDeleteTag(tag.id)}
+                    onClick={() => handleDeleteTag(tag.id, tag.name)}
                   >
                     <Trash2 size={12} />
                   </Button>
@@ -136,6 +155,30 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
           <Button onClick={onClose}>閉じる</Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>タグを削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              この操作は取り消せません。タグ「{deleteTarget?.name}
+              」が完全に削除され、関連するタスクから削除されます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              削除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

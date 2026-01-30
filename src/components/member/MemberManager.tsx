@@ -7,6 +7,16 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +47,10 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
   const deleteMember = useBoardStore((state) => state.deleteMember);
   const [newMemberName, setNewMemberName] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleAddMember = () => {
     if (newMemberName.trim()) {
@@ -50,9 +64,14 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
     updateMember(memberId, { isActive: !isActive });
   };
 
-  const handleDeleteMember = (memberId: string) => {
-    if (confirm("このメンバーを削除しますか?")) {
-      deleteMember(memberId);
+  const handleDeleteMember = (memberId: string, memberName: string) => {
+    setDeleteTarget({ id: memberId, name: memberName });
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteMember(deleteTarget.id);
+      setDeleteTarget(null);
     }
   };
 
@@ -134,7 +153,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteMember(member.id)}
+                      onClick={() => handleDeleteMember(member.id, member.name)}
                       className="text-destructive"
                     >
                       <Trash2 size={16} />
@@ -155,6 +174,30 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
           <Button onClick={onClose}>閉じる</Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>メンバーを削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              この操作は取り消せません。メンバー「{deleteTarget?.name}
+              」が完全に削除され、関連するタスクから割り当てが解除されます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              削除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
