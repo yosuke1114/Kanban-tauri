@@ -11,7 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Calendar, User } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Circle,
+  AlertCircle,
+  AlertTriangle,
+  AlertOctagon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
@@ -21,10 +28,30 @@ interface TaskCardProps {
 }
 
 const PRIORITY_CONFIG = {
-  low: { label: "低", variant: "secondary" as const, color: "#34d399" },
-  medium: { label: "中", variant: "default" as const, color: "#fbbf24" },
-  high: { label: "高", variant: "destructive" as const, color: "#fb923c" },
-  urgent: { label: "緊急", variant: "destructive" as const, color: "#ef4444" },
+  low: {
+    label: "低",
+    variant: "secondary" as const,
+    color: "#34d399",
+    icon: Circle,
+  },
+  medium: {
+    label: "中",
+    variant: "default" as const,
+    color: "#fbbf24",
+    icon: AlertCircle,
+  },
+  high: {
+    label: "高",
+    variant: "destructive" as const,
+    color: "#fb923c",
+    icon: AlertTriangle,
+  },
+  urgent: {
+    label: "緊急",
+    variant: "destructive" as const,
+    color: "#ef4444",
+    icon: AlertOctagon,
+  },
 };
 
 const getDueDateStatus = (dueDate?: string) => {
@@ -76,7 +103,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
         )}
 
         <div className="flex flex-wrap gap-1">
-          <Badge variant={PRIORITY_CONFIG[task.priority].variant} className="text-xs">
+          <Badge
+            variant={PRIORITY_CONFIG[task.priority].variant}
+            className="text-xs flex items-center gap-1"
+          >
+            {React.createElement(PRIORITY_CONFIG[task.priority].icon, {
+              size: 12,
+            })}
             {PRIORITY_CONFIG[task.priority].label}
           </Badge>
 
