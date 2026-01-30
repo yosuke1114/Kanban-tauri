@@ -9,18 +9,21 @@ Kanban-Rust is a TODO management tool built with Tauri + React + TypeScript for 
 ## Essential Commands
 
 ### Development
+
 ```bash
 npm run tauri dev    # Start Tauri app in development mode
 npm run dev          # Start Vite dev server only (for web-only testing)
 ```
 
 ### Build
+
 ```bash
 npm run build        # Build TypeScript and frontend (tsc + vite build)
 npm run tauri build  # Build complete Tauri application
 ```
 
 ### Type Checking
+
 ```bash
 tsc --noEmit         # Type check without emitting files
 ```
@@ -54,11 +57,13 @@ All domain types are defined in `src/types/index.ts`. Key interfaces:
 The kanban board uses `@dnd-kit` with the following structure:
 
 1. **KanbanBoard** (src/components/kanban/KanbanBoard.tsx): Root DndContext
+
    - Manages `DragStartEvent` and `DragEndEvent`
    - Handles drop logic: determines target column and position
    - Uses `SortableContext` for each column
 
 2. **SortableTaskCard** (src/components/task/SortableTaskCard.tsx): Draggable wrapper
+
    - Uses `useSortable` hook
    - Wraps TaskCard with drag attributes/listeners
    - Opens EditTaskDialog on click
@@ -107,6 +112,7 @@ Colors are applied via CSS custom properties, not hardcoded.
 `@/*` maps to `./src/*` (configured in tsconfig.json and vite.config.ts).
 
 Always use `@/` imports for cleaner paths:
+
 ```typescript
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Task } from "@/types";
@@ -117,6 +123,7 @@ import { Task } from "@/types";
 ### Date Handling
 
 Use `date-fns` with Japanese locale for date formatting:
+
 ```typescript
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -155,3 +162,12 @@ These are prepared in types but not yet implemented:
 - No test suite currently exists
 - No linting configured (only TypeScript strict mode)
 - Date picker (react-day-picker) installed but not yet used in UI
+
+## TDD
+
+- t-wada style
+- as you could , e2e with playwright
+
+## Review
+
+- frontend の場合は Vercel React Best Practice スキルを使って毎回レビューすること。
