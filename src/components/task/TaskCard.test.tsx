@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
-// @ts-expect-error - screen is exported from @testing-library/react
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import TaskCard from './TaskCard';
 import { useBoardStore } from '@/stores/useBoardStore';
 import type { Task } from '@/types';

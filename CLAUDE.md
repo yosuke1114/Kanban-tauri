@@ -183,6 +183,46 @@ These are prepared in types but not yet implemented:
 - t-wada style
 - as you could , e2e with playwright
 
+## 品質確認チェックリスト
+
+### コード変更後の必須確認
+
+すべてのコード変更後に以下を**必ず実行**してください:
+
+1. **ビルド確認**: `npm run build` が成功すること
+2. **テスト確認**: `npm run test -- --run` が全パスすること (93テスト)
+3. **E2E確認**: `npm run test:e2e` がパスすること
+4. **画面表示確認**: アプリを起動して白い画面でないこと
+5. **コンソール確認**: ブラウザコンソールにエラーがないこと
+6. **機能確認**: 変更した機能が正常に動作すること
+7. **Best Practiceレビュー**: React/UI変更時は必須
+
+### 特に注意が必要な変更
+
+- **Zustandストアの変更**: セレクター内で関数呼び出しをしない（下記参照）
+- **useEffectの変更**: 無限ループの可能性を確認
+- **状態管理の変更**: 再レンダリングの影響を確認
+
+### Zustandストアのベストプラクティス
+
+**❌ 危険なパターン（無限ループの原因）:**
+
+```typescript
+// セレクター内で関数を呼び出す → 毎回新しい値 → 無限ループ
+const data = useStore((state) => state.getData());
+```
+
+**✅ 安全なパターン:**
+
+```typescript
+// 方法1: 状態を直接購読
+const tasks = useStore((state) => state.tasks);
+
+// 方法2: useMemoでメモ化
+const tasks = useStore((state) => state.tasks);
+const filteredTasks = useMemo(() => filterTasks(tasks), [tasks]);
+```
+
 ## Review
 
 - frontend の場合は Vercel React Best Practice スキルを使って毎回レビューすること。

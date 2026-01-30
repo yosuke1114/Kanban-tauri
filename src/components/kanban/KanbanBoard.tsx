@@ -36,9 +36,12 @@ const KanbanBoard: React.FC = () => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    loadFromStorage();
-    // データ読み込み後、繰り返しタスクを生成
-    generateRecurringTasks();
+    const initializeData = async () => {
+      await loadFromStorage();
+      // データ読み込み後、繰り返しタスクを生成
+      generateRecurringTasks();
+    };
+    initializeData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
