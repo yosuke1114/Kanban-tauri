@@ -126,11 +126,9 @@ Radix UIのSelect、Popover等の複雑なコンポーネントは、jsdom環境
 1. TypeScript型チェック (`tsc --noEmit`)
 2. テスト実行 (`npm test`)
 3. フロントエンドビルド (`npm run build`)
-4. カバレッジレポートのアップロード（Node.js 20.xのみ）
+4. カバレッジレポートのアップロード
 
-**テストマトリックス**:
-- Node.js 18.x
-- Node.js 20.x
+**Node.jsバージョン**: 20.x (LTS)
 
 ### ローカルでのカバレッジ確認
 
