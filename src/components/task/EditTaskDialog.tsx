@@ -43,7 +43,12 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   open,
   onClose,
 }) => {
-  const { updateTask, deleteTask, members, tags, columns, columnOrder } = useBoardStore();
+  const updateTask = useBoardStore((state) => state.updateTask);
+  const deleteTask = useBoardStore((state) => state.deleteTask);
+  const members = useBoardStore((state) => state.members);
+  const tags = useBoardStore((state) => state.tags);
+  const columns = useBoardStore((state) => state.columns);
+  const columnOrder = useBoardStore((state) => state.columnOrder);
   const [formData, setFormData] = useState<Partial<Task>>(task);
 
   useEffect(() => {

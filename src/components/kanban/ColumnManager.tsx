@@ -31,8 +31,10 @@ const colorOptions = [
 ];
 
 const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
-  const { columns, columnOrder, addColumn, deleteColumn } =
-    useBoardStore();
+  const columns = useBoardStore((state) => state.columns);
+  const columnOrder = useBoardStore((state) => state.columnOrder);
+  const addColumn = useBoardStore((state) => state.addColumn);
+  const deleteColumn = useBoardStore((state) => state.deleteColumn);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
 

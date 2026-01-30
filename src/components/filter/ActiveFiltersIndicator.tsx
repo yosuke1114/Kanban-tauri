@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Priority } from "@/types";
 
 export function ActiveFiltersIndicator() {
-  const { filters, setFilters, clearFilters, hasActiveFilters, members, tags } =
-    useBoardStore();
+  const filters = useBoardStore((state) => state.filters);
+  const setFilters = useBoardStore((state) => state.setFilters);
+  const clearFilters = useBoardStore((state) => state.clearFilters);
+  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
+  const members = useBoardStore((state) => state.members);
+  const tags = useBoardStore((state) => state.tags);
 
   if (!hasActiveFilters()) {
     return null;

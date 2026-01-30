@@ -28,7 +28,8 @@ const priorityConfig = {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
-  const { members, tags } = useBoardStore();
+  const members = useBoardStore((state) => state.members);
+  const tags = useBoardStore((state) => state.tags);
 
   const getDueDateStatus = () => {
     if (!task.dueDate) return null;

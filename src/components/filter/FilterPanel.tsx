@@ -10,8 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { Priority } from "@/types";
 
 export function FilterPanel() {
-  const { filters, setFilters, clearFilters, hasActiveFilters, members, tags } =
-    useBoardStore();
+  const filters = useBoardStore((state) => state.filters);
+  const setFilters = useBoardStore((state) => state.setFilters);
+  const clearFilters = useBoardStore((state) => state.clearFilters);
+  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
+  const members = useBoardStore((state) => state.members);
+  const tags = useBoardStore((state) => state.tags);
 
   const activeMembers = Object.values(members).filter((m) => m.isActive);
   const allTags = Object.values(tags);

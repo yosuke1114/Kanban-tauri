@@ -31,7 +31,10 @@ const colorOptions = [
 ];
 
 const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
-  const { members, addMember, updateMember, deleteMember } = useBoardStore();
+  const members = useBoardStore((state) => state.members);
+  const addMember = useBoardStore((state) => state.addMember);
+  const updateMember = useBoardStore((state) => state.updateMember);
+  const deleteMember = useBoardStore((state) => state.deleteMember);
   const [newMemberName, setNewMemberName] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
 

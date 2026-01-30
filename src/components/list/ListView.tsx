@@ -16,14 +16,12 @@ import { Button } from "@/components/ui/button";
 import EditTaskDialog from "../task/EditTaskDialog";
 
 const ListView: React.FC = () => {
-  const {
-    tasks,
-    columns,
-    members,
-    tags,
-    getFilteredTasks,
-    hasActiveFilters,
-  } = useBoardStore();
+  const tasks = useBoardStore((state) => state.tasks);
+  const columns = useBoardStore((state) => state.columns);
+  const members = useBoardStore((state) => state.members);
+  const tags = useBoardStore((state) => state.tags);
+  const getFilteredTasks = useBoardStore((state) => state.getFilteredTasks);
+  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
 
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");

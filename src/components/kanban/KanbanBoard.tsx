@@ -18,16 +18,14 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
 const KanbanBoard: React.FC = () => {
-  const {
-    tasks,
-    columns,
-    columnOrder,
-    addTask,
-    moveTask,
-    loadFromStorage,
-    getFilteredTasks,
-    hasActiveFilters,
-  } = useBoardStore();
+  const tasks = useBoardStore((state) => state.tasks);
+  const columns = useBoardStore((state) => state.columns);
+  const columnOrder = useBoardStore((state) => state.columnOrder);
+  const addTask = useBoardStore((state) => state.addTask);
+  const moveTask = useBoardStore((state) => state.moveTask);
+  const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
+  const getFilteredTasks = useBoardStore((state) => state.getFilteredTasks);
+  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
 
   const [newTaskTitle, setNewTaskTitle] = React.useState("");
   const [activeTask, setActiveTask] = React.useState<Task | null>(null);

@@ -31,7 +31,9 @@ const colorOptions = [
 ];
 
 const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
-  const { tags, addTag, deleteTag } = useBoardStore();
+  const tags = useBoardStore((state) => state.tags);
+  const addTag = useBoardStore((state) => state.addTag);
+  const deleteTag = useBoardStore((state) => state.deleteTag);
   const [newTagName, setNewTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
 
