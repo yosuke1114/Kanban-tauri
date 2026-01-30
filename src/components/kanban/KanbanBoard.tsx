@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useBoardStore } from "@/stores/useBoardStore";
+import { useFilteredTasks } from "@/hooks/useFilteredTasks";
 import { Task } from "@/types";
 import KanbanColumn from "./KanbanColumn";
 import TaskCard from "../task/TaskCard";
@@ -21,17 +22,19 @@ const KanbanBoard: React.FC = () => {
   const tasks = useBoardStore((state) => state.tasks);
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
-  const filters = useBoardStore((state) => state.filters);
   const addTask = useBoardStore((state) => state.addTask);
   const moveTask = useBoardStore((state) => state.moveTask);
   const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
 
-  const [newTaskTitle, setNewTaskTitle] = React.useState("");
-  const [activeTask, setActiveTask] = React.useState<Task | null>(null);
+  const filteredTasks = useFilteredTasks();
+
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   useEffect(() => {
     loadFromStorage();
-  }, [loadFromStorage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,7 +64,7 @@ const KanbanBoard: React.FC = () => {
     // 列の上にドロップした場合
     if (columns[overId]) {
       const targetColumnId = overId;
-      const tasksInColumn = Object.values(tasks).filter(
+      const tasksInColumn = filteredTasks.filter(
         (t) => t.columnId === targetColumnId
       );
       moveTask(activeId, targetColumnId, tasksInColumn.length);
@@ -110,33 +113,6 @@ const KanbanBoard: React.FC = () => {
           {columnOrder.map((columnId) => {
             const column = columns[columnId];
             if (!column) return null;
-
-            // フィルター適用
-            const allTasks = Object.values(tasks);
-            const filteredTasks = allTasks.filter((task) => {
-              // タグフィルター
-              if (filters.tagIds.length > 0) {
-                const hasMatchingTag = task.tagIds.some((tagId) =>
-                  filters.tagIds.includes(tagId)
-                );
-                if (!hasMatchingTag) return false;
-              }
-
-              // 担当者フィルター
-              if (filters.assigneeIds.length > 0) {
-                const hasMatchingAssignee = task.assigneeIds.some((assigneeId) =>
-                  filters.assigneeIds.includes(assigneeId)
-                );
-                if (!hasMatchingAssignee) return false;
-              }
-
-              // 優先度フィルター
-              if (filters.priorities.length > 0) {
-                if (!filters.priorities.includes(task.priority)) return false;
-              }
-
-              return true;
-            });
 
             const columnTasks = filteredTasks
               .filter((task) => task.columnId === columnId)

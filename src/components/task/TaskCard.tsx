@@ -20,40 +20,40 @@ interface TaskCardProps {
   onClick?: () => void;
 }
 
-const priorityConfig = {
+const PRIORITY_CONFIG = {
   low: { label: "低", variant: "secondary" as const, color: "#34d399" },
   medium: { label: "中", variant: "default" as const, color: "#fbbf24" },
   high: { label: "高", variant: "destructive" as const, color: "#fb923c" },
   urgent: { label: "緊急", variant: "destructive" as const, color: "#ef4444" },
 };
 
+const getDueDateStatus = (dueDate?: string) => {
+  if (!dueDate) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDateObj = new Date(dueDate);
+  dueDateObj.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (dueDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) {
+    return { status: "overdue", label: "期限切れ", color: "#ef4444" };
+  } else if (diffDays === 0) {
+    return { status: "today", label: "今日", color: "#fb923c" };
+  } else if (diffDays <= 3) {
+    return { status: "soon", label: "期限間近", color: "#fbbf24" };
+  }
+  return null;
+};
+
 const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
 
-  const getDueDateStatus = () => {
-    if (!task.dueDate) return null;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(task.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-
-    const diffDays = Math.floor(
-      (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffDays < 0) {
-      return { status: "overdue", label: "期限切れ", color: "#ef4444" };
-    } else if (diffDays === 0) {
-      return { status: "today", label: "今日", color: "#fb923c" };
-    } else if (diffDays <= 3) {
-      return { status: "soon", label: "期限間近", color: "#fbbf24" };
-    }
-    return null;
-  };
-
-  const dueDateStatus = getDueDateStatus();
+  const dueDateStatus = getDueDateStatus(task.dueDate);
 
   return (
     <Card
@@ -76,8 +76,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
         )}
 
         <div className="flex flex-wrap gap-1">
-          <Badge variant={priorityConfig[task.priority].variant} className="text-xs">
-            {priorityConfig[task.priority].label}
+          <Badge variant={PRIORITY_CONFIG[task.priority].variant} className="text-xs">
+            {PRIORITY_CONFIG[task.priority].label}
           </Badge>
 
           {task.tagIds.map((tagId) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ interface EditTaskDialogProps {
   onClose: () => void;
 }
 
-const priorityOptions: { value: Priority; label: string }[] = [
+const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "low", label: "低" },
   { value: "medium", label: "中" },
   { value: "high", label: "高" },
@@ -50,6 +50,13 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
   const [formData, setFormData] = useState<Partial<Task>>(task);
+
+  const activeMembers = useMemo(
+    () => Object.values(members).filter((m) => m.isActive),
+    [members]
+  );
+
+  const allTags = useMemo(() => Object.values(tags), [tags]);
 
   useEffect(() => {
     if (open) {
@@ -146,7 +153,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                   <SelectValue placeholder="優先度を選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  {priorityOptions.map((option) => (
+                  {PRIORITY_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -196,29 +203,27 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           <div>
             <Label>担当者</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {Object.values(members)
-                .filter((m) => m.isActive)
-                .map((member) => {
-                  const isSelected = (formData.assigneeIds || []).includes(
-                    member.id
-                  );
-                  return (
-                    <Badge
-                      key={member.id}
-                      variant={isSelected ? "default" : "outline"}
-                      className="cursor-pointer"
-                      style={
-                        isSelected
-                          ? { backgroundColor: member.color }
-                          : { borderColor: member.color, color: member.color }
-                      }
-                      onClick={() => toggleAssignee(member.id)}
-                    >
-                      {member.name}
-                    </Badge>
-                  );
-                })}
-              {Object.keys(members).length === 0 && (
+              {activeMembers.map((member) => {
+                const isSelected = (formData.assigneeIds || []).includes(
+                  member.id
+                );
+                return (
+                  <Badge
+                    key={member.id}
+                    variant={isSelected ? "default" : "outline"}
+                    className="cursor-pointer"
+                    style={
+                      isSelected
+                        ? { backgroundColor: member.color }
+                        : { borderColor: member.color, color: member.color }
+                    }
+                    onClick={() => toggleAssignee(member.id)}
+                  >
+                    {member.name}
+                  </Badge>
+                );
+              })}
+              {activeMembers.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   メンバーが登録されていません
                 </p>
@@ -229,7 +234,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           <div>
             <Label>タグ</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {Object.values(tags).map((tag) => {
+              {allTags.map((tag) => {
                 const isSelected = (formData.tagIds || []).includes(tag.id);
                 return (
                   <Badge
@@ -247,7 +252,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                   </Badge>
                 );
               })}
-              {Object.keys(tags).length === 0 && (
+              {allTags.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   タグが登録されていません
                 </p>

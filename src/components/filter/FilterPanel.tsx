@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,13 @@ import { Filter, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Priority } from "@/types";
 
+const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
+  { value: "low", label: "低" },
+  { value: "medium", label: "中" },
+  { value: "high", label: "高" },
+  { value: "urgent", label: "緊急" },
+];
+
 export function FilterPanel() {
   const filters = useBoardStore((state) => state.filters);
   const setFilters = useBoardStore((state) => state.setFilters);
@@ -16,21 +24,18 @@ export function FilterPanel() {
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
 
-  const activeMembers = Object.values(members).filter((m) => m.isActive);
-  const allTags = Object.values(tags);
+  const activeMembers = useMemo(
+    () => Object.values(members).filter((m) => m.isActive),
+    [members]
+  );
+
+  const allTags = useMemo(() => Object.values(tags), [tags]);
 
   // フィルターがアクティブかどうかを直接計算
   const hasActiveFilters =
     filters.tagIds.length > 0 ||
     filters.assigneeIds.length > 0 ||
     filters.priorities.length > 0;
-
-  const priorities: { value: Priority; label: string }[] = [
-    { value: "low", label: "低" },
-    { value: "medium", label: "中" },
-    { value: "high", label: "高" },
-    { value: "urgent", label: "緊急" },
-  ];
 
   const toggleTag = (tagId: string) => {
     const newTagIds = filters.tagIds.includes(tagId)
@@ -159,7 +164,7 @@ export function FilterPanel() {
           <div>
             <label className="text-sm font-medium mb-2 block">優先度</label>
             <div className="flex flex-wrap gap-2">
-              {priorities.map(({ value, label }) => (
+              {PRIORITY_OPTIONS.map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => togglePriority(value)}

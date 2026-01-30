@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useBoardStore } from "@/stores/useBoardStore";
+import { useFilteredTasks } from "@/hooks/useFilteredTasks";
 import { Task, SortField, SortDirection, Priority } from "@/types";
 import {
   Table,
@@ -15,43 +16,51 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EditTaskDialog from "../task/EditTaskDialog";
 
+const PRIORITY_ORDER: Record<Priority, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+  urgent: 4,
+};
+
+const PRIORITY_LABELS: Record<Priority, string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+  urgent: "緊急",
+};
+
+const PRIORITY_COLORS: Record<Priority, string> = {
+  low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+};
+
+const getDueDateColor = (dueDate?: string): string => {
+  if (!dueDate) return "";
+  const today = new Date();
+  const due = new Date(dueDate);
+  const diffDays = Math.ceil(
+    (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) return "text-red-600 font-semibold";
+  if (diffDays === 0) return "text-orange-600 font-semibold";
+  if (diffDays <= 3) return "text-yellow-600";
+  return "";
+};
+
 const ListView: React.FC = () => {
-  const tasks = useBoardStore((state) => state.tasks);
   const columns = useBoardStore((state) => state.columns);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
-  const filters = useBoardStore((state) => state.filters);
+
+  const filteredTasks = useFilteredTasks();
 
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // フィルター適用
-  const allTasks = Object.values(tasks);
-  const filteredTasks = allTasks.filter((task) => {
-    // タグフィルター
-    if (filters.tagIds.length > 0) {
-      const hasMatchingTag = task.tagIds.some((tagId) =>
-        filters.tagIds.includes(tagId)
-      );
-      if (!hasMatchingTag) return false;
-    }
-
-    // 担当者フィルター
-    if (filters.assigneeIds.length > 0) {
-      const hasMatchingAssignee = task.assigneeIds.some((assigneeId) =>
-        filters.assigneeIds.includes(assigneeId)
-      );
-      if (!hasMatchingAssignee) return false;
-    }
-
-    // 優先度フィルター
-    if (filters.priorities.length > 0) {
-      if (!filters.priorities.includes(task.priority)) return false;
-    }
-
-    return true;
-  });
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -62,38 +71,33 @@ const ListView: React.FC = () => {
     }
   };
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const direction = sortDirection === "asc" ? 1 : -1;
+  const sortedTasks = useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
+      const direction = sortDirection === "asc" ? 1 : -1;
 
-    switch (sortField) {
-      case "title":
-        return direction * a.title.localeCompare(b.title, "ja");
-      case "priority": {
-        const priorityOrder: Record<Priority, number> = {
-          low: 1,
-          medium: 2,
-          high: 3,
-          urgent: 4,
-        };
-        return direction * (priorityOrder[a.priority] - priorityOrder[b.priority]);
+      switch (sortField) {
+        case "title":
+          return direction * a.title.localeCompare(b.title, "ja");
+        case "priority":
+          return direction * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+        case "dueDate":
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return direction;
+          if (!b.dueDate) return -direction;
+          return (
+            direction *
+            (new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+          );
+        case "createdAt":
+          return (
+            direction *
+            (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          );
+        default:
+          return 0;
       }
-      case "dueDate":
-        if (!a.dueDate && !b.dueDate) return 0;
-        if (!a.dueDate) return direction;
-        if (!b.dueDate) return -direction;
-        return (
-          direction *
-          (new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-        );
-      case "createdAt":
-        return (
-          direction *
-          (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-        );
-      default:
-        return 0;
-    }
-  });
+    });
+  }, [filteredTasks, sortField, sortDirection]);
 
   const SortIcon: React.FC<{ field: SortField }> = ({ field }) => {
     if (sortField !== field) {
@@ -104,34 +108,6 @@ const ListView: React.FC = () => {
     ) : (
       <ArrowDown size={14} className="ml-1" />
     );
-  };
-
-  const priorityLabels: Record<Priority, string> = {
-    low: "低",
-    medium: "中",
-    high: "高",
-    urgent: "緊急",
-  };
-
-  const priorityColors: Record<Priority, string> = {
-    low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-    urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  };
-
-  const getDueDateColor = (dueDate?: string): string => {
-    if (!dueDate) return "";
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffDays = Math.ceil(
-      (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffDays < 0) return "text-red-600 font-semibold";
-    if (diffDays === 0) return "text-orange-600 font-semibold";
-    if (diffDays <= 3) return "text-yellow-600";
-    return "";
   };
 
   return (
@@ -221,10 +197,10 @@ const ListView: React.FC = () => {
                     <TableCell>
                       <span
                         className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          priorityColors[task.priority]
+                          PRIORITY_COLORS[task.priority]
                         }`}
                       >
-                        {priorityLabels[task.priority]}
+                        {PRIORITY_LABELS[task.priority]}
                       </span>
                     </TableCell>
                     <TableCell>
