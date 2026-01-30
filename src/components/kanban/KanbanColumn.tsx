@@ -16,7 +16,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, tasks }) => {
   return (
     <div
       ref={setNodeRef}
-      className="flex-shrink-0 w-80 bg-secondary/50 rounded-lg p-4"
+      className="flex-shrink-0 w-full sm:w-80 md:w-96 bg-secondary/50 rounded-lg p-4 snap-start"
       style={{
         borderTop: `3px solid ${column.color}`,
       }}
