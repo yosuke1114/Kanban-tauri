@@ -3,27 +3,31 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "@radix-ui/react-dialog";
-import { Label } from "@radix-ui/react-label";
+  DialogHeader,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@radix-ui/react-select";
-import { Button } from "./components/ui/button";
-import { DialogHeader, DialogFooter } from "./components/ui/dialog";
-import { Input } from "./components/ui/input";
-import { Textarea } from "./components/ui/textarea";
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
 import { Priority, Task } from "./Kanban";
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const EditTaskDialog: React.FC<{
   editingTask: Task | null;
   closeEditModal: () => void;
   saveEditedTask: (task: Task) => void;
-}> = ({ editingTask, closeEditModal, saveEditedTask }) => {
+  deleteTask: (taskId: string) => void;
+}> = ({ editingTask, closeEditModal, saveEditedTask, deleteTask }) => {
   const [task, setTask] = useState(editingTask);
 
   React.useEffect(() => {
@@ -31,6 +35,12 @@ const EditTaskDialog: React.FC<{
   }, [editingTask]);
 
   if (!task) return null;
+  const onDeleteClicked = () => {
+    if (task) {
+      closeEditModal();
+      deleteTask(task.id);
+    }
+  };
 
   return (
     <Dialog
@@ -39,10 +49,13 @@ const EditTaskDialog: React.FC<{
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
-          <DialogDescription>
-            Make changes to your task here. Click save when you're done.
-          </DialogDescription>
+          <div className={cn("flex justify-end ")}>
+            <DialogTitle>
+              Edit Task
+              <Trash2 onClick={onDeleteClicked} size={20} className="m-3" />
+            </DialogTitle>
+          </div>
+          <DialogDescription>Change or Check</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(e) => {
