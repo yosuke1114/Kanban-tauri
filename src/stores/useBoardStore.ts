@@ -5,6 +5,7 @@ import {
   calculateNextDueDate,
   isRecurrenceEnded,
 } from "@/services/recurrence/recurrenceService";
+import { storage } from "@/services/storage/tauriStorage";
 
 const createDefaultColumns = (): { [key: string]: Column } => ({
   todo: {
@@ -447,8 +448,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   // データ読み込み・保存
   loadFromStorage: async () => {
     try {
-      // まずlocalStorageから読み込み（互換性のため）
-      const savedState = localStorage.getItem("kanbanBoardState");
+      const savedState = await storage.load();
       if (savedState) {
         const parsed = JSON.parse(savedState);
         set({
@@ -465,18 +465,17 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   saveToStorage: () => {
-    try {
-      const state = get();
-      const dataToSave = {
-        tasks: state.tasks,
-        columns: state.columns,
-        columnOrder: state.columnOrder,
-        members: state.members,
-        tags: state.tags,
-      };
-      localStorage.setItem("kanbanBoardState", JSON.stringify(dataToSave));
-    } catch (error) {
+    const state = get();
+    const dataToSave = {
+      tasks: state.tasks,
+      columns: state.columns,
+      columnOrder: state.columnOrder,
+      members: state.members,
+      tags: state.tags,
+    };
+    // 非同期保存（fire-and-forget）
+    storage.save(JSON.stringify(dataToSave)).catch((error) => {
       console.error("データの保存に失敗しました:", error);
-    }
+    });
   },
 }));

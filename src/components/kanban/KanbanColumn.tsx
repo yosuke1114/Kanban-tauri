@@ -43,4 +43,4 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, tasks }) => {
   );
 };
 
-export default KanbanColumn;
+export default React.memo(KanbanColumn);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -25,6 +25,9 @@ const KanbanBoard: React.FC = () => {
   const addTask = useBoardStore((state) => state.addTask);
   const moveTask = useBoardStore((state) => state.moveTask);
   const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
+  const generateRecurringTasks = useBoardStore(
+    (state) => state.generateRecurringTasks
+  );
 
   const filteredTasks = useFilteredTasks();
 
@@ -33,6 +36,8 @@ const KanbanBoard: React.FC = () => {
 
   useEffect(() => {
     loadFromStorage();
+    // データ読み込み後、繰り返しタスクを生成
+    generateRecurringTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -44,47 +49,56 @@ const KanbanBoard: React.FC = () => {
     })
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveTask(tasks[active.id as string] || null);
-  };
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const { active } = event;
+      setActiveTask(tasks[active.id as string] || null);
+    },
+    [tasks]
+  );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveTask(null);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveTask(null);
 
-    if (!over) return;
+      if (!over) return;
 
-    const activeId = active.id as string;
-    const overId = over.id as string;
+      const activeId = active.id as string;
+      const overId = over.id as string;
 
-    const activeTask = tasks[activeId];
-    if (!activeTask) return;
+      const activeTask = tasks[activeId];
+      if (!activeTask) return;
 
-    // 列の上にドロップした場合
-    if (columns[overId]) {
-      const targetColumnId = overId;
-      const tasksInColumn = filteredTasks.filter(
-        (t) => t.columnId === targetColumnId
-      );
-      moveTask(activeId, targetColumnId, tasksInColumn.length);
-      return;
-    }
+      // 列の上にドロップした場合
+      if (columns[overId]) {
+        const targetColumnId = overId;
+        const tasksInColumn = filteredTasks.filter(
+          (t) => t.columnId === targetColumnId
+        );
+        moveTask(activeId, targetColumnId, tasksInColumn.length);
+        return;
+      }
 
-    // タスクの上にドロップした場合
-    const overTask = tasks[overId];
-    if (overTask) {
-      moveTask(activeId, overTask.columnId, overTask.position);
-    }
-  };
+      // タスクの上にドロップした場合
+      const overTask = tasks[overId];
+      if (overTask) {
+        moveTask(activeId, overTask.columnId, overTask.position);
+      }
+    },
+    [tasks, columns, filteredTasks, moveTask]
+  );
 
-  const handleAddTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTaskTitle.trim()) {
-      addTask("todo", newTaskTitle);
-      setNewTaskTitle("");
-    }
-  };
+  const handleAddTask = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (newTaskTitle.trim()) {
+        addTask("todo", newTaskTitle);
+        setNewTaskTitle("");
+      }
+    },
+    [newTaskTitle, addTask]
+  );
 
   return (
     <div className="container mx-auto p-4">

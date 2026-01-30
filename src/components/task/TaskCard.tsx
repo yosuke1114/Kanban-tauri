@@ -143,4 +143,4 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
   );
 };
 
-export default TaskCard;
+export default React.memo(TaskCard);

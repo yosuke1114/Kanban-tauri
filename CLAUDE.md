@@ -145,16 +145,31 @@ When moving tasks, the `moveTask` action recalculates positions for all tasks in
 - **Tags**: Hard deletion removes tag from all tasks automatically
 - When deleting, the store actions clean up task references
 
+## Implemented Features
+
+These features are now fully implemented:
+
+1. **Filters**: FilterState type and logic are implemented in `useBoardStore.getFilteredTasks()`
+   - Tag filtering
+   - Assignee filtering
+   - Priority filtering
+   - Due date range filtering (prepared in types)
+2. **Recurrence**: RecurrenceRule for repeating tasks is implemented
+   - Automatic generation on app startup via `generateRecurringTasks()`
+   - Completed recurring tasks generate new instances in "未着手" column
+3. **Tauri File Storage**: Integrated via `src/services/storage/tauriStorage.ts`
+   - Automatic fallback to localStorage in web mode
+   - Seamless storage abstraction
+
 ## Pending/Future Features
 
 These are prepared in types but not yet implemented:
 
-1. **Filters**: FilterState type exists, but UI and logic are not implemented
-2. **Recurrence**: RecurrenceRule type exists for repeating tasks (not implemented)
-3. **Tauri File Storage**: Commands exist, but frontend still uses localStorage
-4. **SharePoint Sync**: SyncMetadata prepared for future integration
-5. **Desktop Notifications**: Planned for overdue tasks (Tauri notification API)
-6. **List View**: Alternative table-based view (not implemented)
+1. **SharePoint Sync**: SyncMetadata prepared for future integration
+2. **Desktop Notifications**: Planned for overdue tasks (Tauri notification API)
+3. **List View**: Alternative table-based view (not implemented)
+4. **Filter UI**: Backend logic exists, but UI controls (FilterPanel) not yet implemented
+5. **Date Picker Integration**: react-day-picker installed but not yet used in UI for due date range filtering
 
 ## Known Constraints
 
