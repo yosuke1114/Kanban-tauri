@@ -20,15 +20,38 @@ const ListView: React.FC = () => {
   const columns = useBoardStore((state) => state.columns);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
-  const getFilteredTasks = useBoardStore((state) => state.getFilteredTasks);
-  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
+  const filters = useBoardStore((state) => state.filters);
 
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // フィルター適用
   const allTasks = Object.values(tasks);
-  const filteredTasks = hasActiveFilters() ? getFilteredTasks() : allTasks;
+  const filteredTasks = allTasks.filter((task) => {
+    // タグフィルター
+    if (filters.tagIds.length > 0) {
+      const hasMatchingTag = task.tagIds.some((tagId) =>
+        filters.tagIds.includes(tagId)
+      );
+      if (!hasMatchingTag) return false;
+    }
+
+    // 担当者フィルター
+    if (filters.assigneeIds.length > 0) {
+      const hasMatchingAssignee = task.assigneeIds.some((assigneeId) =>
+        filters.assigneeIds.includes(assigneeId)
+      );
+      if (!hasMatchingAssignee) return false;
+    }
+
+    // 優先度フィルター
+    if (filters.priorities.length > 0) {
+      if (!filters.priorities.includes(task.priority)) return false;
+    }
+
+    return true;
+  });
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

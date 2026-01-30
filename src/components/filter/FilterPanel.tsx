@@ -13,12 +13,17 @@ export function FilterPanel() {
   const filters = useBoardStore((state) => state.filters);
   const setFilters = useBoardStore((state) => state.setFilters);
   const clearFilters = useBoardStore((state) => state.clearFilters);
-  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
 
   const activeMembers = Object.values(members).filter((m) => m.isActive);
   const allTags = Object.values(tags);
+
+  // フィルターがアクティブかどうかを直接計算
+  const hasActiveFilters =
+    filters.tagIds.length > 0 ||
+    filters.assigneeIds.length > 0 ||
+    filters.priorities.length > 0;
 
   const priorities: { value: Priority; label: string }[] = [
     { value: "low", label: "低" },
@@ -52,13 +57,13 @@ export function FilterPanel() {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          variant={hasActiveFilters() ? "default" : "outline"}
+          variant={hasActiveFilters ? "default" : "outline"}
           size="sm"
           className="relative"
         >
           <Filter size={16} className="mr-2" />
           フィルター
-          {hasActiveFilters() && (
+          {hasActiveFilters && (
             <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs text-primary">
               {filters.tagIds.length +
                 filters.assigneeIds.length +
@@ -71,7 +76,7 @@ export function FilterPanel() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">フィルター</h4>
-            {hasActiveFilters() && (
+            {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"

@@ -21,11 +21,10 @@ const KanbanBoard: React.FC = () => {
   const tasks = useBoardStore((state) => state.tasks);
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
+  const filters = useBoardStore((state) => state.filters);
   const addTask = useBoardStore((state) => state.addTask);
   const moveTask = useBoardStore((state) => state.moveTask);
   const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
-  const getFilteredTasks = useBoardStore((state) => state.getFilteredTasks);
-  const hasActiveFilters = useBoardStore((state) => state.hasActiveFilters);
 
   const [newTaskTitle, setNewTaskTitle] = React.useState("");
   const [activeTask, setActiveTask] = React.useState<Task | null>(null);
@@ -114,7 +113,30 @@ const KanbanBoard: React.FC = () => {
 
             // フィルター適用
             const allTasks = Object.values(tasks);
-            const filteredTasks = hasActiveFilters() ? getFilteredTasks() : allTasks;
+            const filteredTasks = allTasks.filter((task) => {
+              // タグフィルター
+              if (filters.tagIds.length > 0) {
+                const hasMatchingTag = task.tagIds.some((tagId) =>
+                  filters.tagIds.includes(tagId)
+                );
+                if (!hasMatchingTag) return false;
+              }
+
+              // 担当者フィルター
+              if (filters.assigneeIds.length > 0) {
+                const hasMatchingAssignee = task.assigneeIds.some((assigneeId) =>
+                  filters.assigneeIds.includes(assigneeId)
+                );
+                if (!hasMatchingAssignee) return false;
+              }
+
+              // 優先度フィルター
+              if (filters.priorities.length > 0) {
+                if (!filters.priorities.includes(task.priority)) return false;
+              }
+
+              return true;
+            });
 
             const columnTasks = filteredTasks
               .filter((task) => task.columnId === columnId)
