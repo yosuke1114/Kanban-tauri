@@ -6,6 +6,7 @@ import {
   isRecurrenceEnded,
 } from "@/services/recurrence/recurrenceService";
 import { storage } from "@/services/storage/tauriStorage";
+import { toast } from "@/hooks/use-toast";
 
 const createDefaultColumns = (): { [key: string]: Column } => ({
   todo: {
@@ -44,7 +45,11 @@ const initialState: BoardState = {
   },
 };
 
-interface BoardStore extends BoardState {
+interface BoardStoreState extends BoardState {
+  searchQuery: string;
+}
+
+interface BoardStore extends BoardStoreState {
   // タスク操作
   addTask: (columnId: string, title: string) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
@@ -73,6 +78,9 @@ interface BoardStore extends BoardState {
   getFilteredTasks: () => Task[];
   hasActiveFilters: () => boolean;
 
+  // 検索操作
+  setSearchQuery: (query: string) => void;
+
   // 繰り返しタスク
   generateRecurringTasks: () => void;
 
@@ -83,6 +91,7 @@ interface BoardStore extends BoardState {
 
 export const useBoardStore = create<BoardStore>((set, get) => ({
   ...initialState,
+  searchQuery: "",
 
   // タスク操作
   addTask: (columnId: string, title: string) => {
@@ -110,6 +119,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       tasks: { ...state.tasks, [newTask.id]: newTask },
     }));
     get().saveToStorage();
+    toast({
+      title: "タスクを作成しました",
+      description: title,
+    });
   },
 
   updateTask: (taskId: string, updates: Partial<Task>) => {
@@ -138,11 +151,18 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   deleteTask: (taskId: string) => {
+    const task = get().tasks[taskId];
     set((state) => {
       const { [taskId]: _, ...remainingTasks } = state.tasks;
       return { tasks: remainingTasks };
     });
     get().saveToStorage();
+    if (task) {
+      toast({
+        title: "タスクを削除しました",
+        description: task.title,
+      });
+    }
   },
 
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => {
@@ -349,9 +369,19 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   getFilteredTasks: () => {
     const state = get();
-    const { tasks, filters } = state;
+    const { tasks, filters, searchQuery } = state;
 
     return Object.values(tasks).filter((task) => {
+      // 検索クエリフィルター
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = task.title.toLowerCase().includes(query);
+        const matchesDescription = task.description
+          .toLowerCase()
+          .includes(query);
+        if (!matchesTitle && !matchesDescription) return false;
+      }
+
       // タグフィルター
       if (filters.tagIds.length > 0) {
         const hasMatchingTag = task.tagIds.some((tagId) =>
@@ -386,13 +416,18 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   hasActiveFilters: () => {
-    const { filters } = get();
+    const { filters, searchQuery } = get();
     return (
       filters.tagIds.length > 0 ||
       filters.assigneeIds.length > 0 ||
       filters.priorities.length > 0 ||
-      !!filters.dueDateRange
+      !!filters.dueDateRange ||
+      searchQuery.trim().length > 0
     );
+  },
+
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
   },
 
   generateRecurringTasks: () => {
@@ -442,6 +477,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         return { tasks: newTasks };
       });
       get().saveToStorage();
+      toast({
+        title: "繰り返しタスクを生成しました",
+        description: `${tasksToAdd.length}件のタスクを追加しました`,
+      });
     }
   },
 

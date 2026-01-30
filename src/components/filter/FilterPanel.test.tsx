@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+// @ts-expect-error - screen is exported from @testing-library/react
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FilterPanel } from './FilterPanel';
 import { useBoardStore } from '@/stores/useBoardStore';
