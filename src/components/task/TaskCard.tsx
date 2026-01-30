@@ -27,6 +27,9 @@ interface TaskCardProps {
   onClick?: () => void;
 }
 
+// デフォルト値を定数として定義（メモ化破壊を防ぐ）
+const NOOP = () => {};
+
 const PRIORITY_CONFIG = {
   low: {
     label: "低",
@@ -76,7 +79,11 @@ const getDueDateStatus = (dueDate?: string) => {
   return null;
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, isDragging, onClick }) => {
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  isDragging,
+  onClick = NOOP,
+}) => {
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
 
