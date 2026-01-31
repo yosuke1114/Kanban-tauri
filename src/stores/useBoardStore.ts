@@ -43,6 +43,7 @@ const initialState: BoardState = {
     assigneeIds: [],
     priorities: [],
   },
+  currentUserId: undefined,
 };
 
 interface BoardStoreState extends BoardState {
@@ -80,6 +81,10 @@ interface BoardStore extends BoardStoreState {
 
   // 検索操作
   setSearchQuery: (query: string) => void;
+
+  // 現在のユーザー設定
+  setCurrentUserId: (userId: string | undefined) => void;
+  toggleMyTasks: () => void;
 
   // 繰り返しタスク
   generateRecurringTasks: () => void;
@@ -424,6 +429,36 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     set({ searchQuery: query });
   },
 
+  setCurrentUserId: (userId: string | undefined) => {
+    set({ currentUserId: userId });
+  },
+
+  toggleMyTasks: () => {
+    const { currentUserId, filters } = get();
+    if (!currentUserId) {
+      // 現在のユーザーが設定されていない場合は何もしない
+      return;
+    }
+
+    // 既に自分のタスクフィルターが適用されている場合は解除
+    if (filters.assigneeIds.includes(currentUserId)) {
+      set((state) => ({
+        filters: {
+          ...state.filters,
+          assigneeIds: state.filters.assigneeIds.filter((id) => id !== currentUserId),
+        },
+      }));
+    } else {
+      // 自分のタスクフィルターを適用
+      set((state) => ({
+        filters: {
+          ...state.filters,
+          assigneeIds: [...state.filters.assigneeIds, currentUserId],
+        },
+      }));
+    }
+  },
+
   generateRecurringTasks: () => {
     const state = get();
     const now = new Date();
@@ -490,6 +525,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
           columnOrder: parsed.columnOrder || ["todo", "inProgress", "done"],
           members: parsed.members || {},
           tags: parsed.tags || {},
+          currentUserId: parsed.currentUserId,
         });
       }
     } catch (error) {
@@ -505,6 +541,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       columnOrder: state.columnOrder,
       members: state.members,
       tags: state.tags,
+      currentUserId: state.currentUserId,
     };
     // 非同期保存（fire-and-forget）
     storage.save(JSON.stringify(dataToSave)).catch((error) => {

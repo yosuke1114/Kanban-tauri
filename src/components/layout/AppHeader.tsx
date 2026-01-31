@@ -3,8 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
-import { Users, Tag, Columns, PlusCircle } from "lucide-react";
+import { Users, Tag, Columns, PlusCircle, User } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AppHeaderProps {
   onOpenMemberManager: () => void;
@@ -25,6 +32,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const searchQuery = useBoardStore((state) => state.searchQuery);
   const setSearchQuery = useBoardStore((state) => state.setSearchQuery);
   const addTask = useBoardStore((state) => state.addTask);
+  const members = useBoardStore((state) => state.members);
+  const currentUserId = useBoardStore((state) => state.currentUserId);
+  const setCurrentUserId = useBoardStore((state) => state.setCurrentUserId);
+  const toggleMyTasks = useBoardStore((state) => state.toggleMyTasks);
+  const filters = useBoardStore((state) => state.filters);
+
+  // 「自分のタスク」フィルターが有効かチェック
+  const isMyTasksActive = currentUserId && filters.assigneeIds.includes(currentUserId);
 
   const handleAddTask = useCallback(
     (e: React.FormEvent) => {
@@ -45,6 +60,38 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             Kanban Board
           </h1>
           <div className="flex gap-2 shrink-0">
+            {/* 現在のユーザー選択 */}
+            <Select
+              value={currentUserId || "none"}
+              onValueChange={(value) => setCurrentUserId(value === "none" ? undefined : value)}
+            >
+              <SelectTrigger className="w-[180px] rounded-lg">
+                <SelectValue placeholder="ユーザーを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">未選択</SelectItem>
+                {Object.values(members)
+                  .filter((m) => m.isActive)
+                  .map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            {/* 自分のタスクトグル */}
+            <Button
+              variant={isMyTasksActive ? "default" : "outline"}
+              size="sm"
+              onClick={toggleMyTasks}
+              disabled={!currentUserId}
+              className="rounded-lg hover:bg-muted transition-apple"
+            >
+              <User size={16} className="mr-2" />
+              自分のタスク
+            </Button>
+
             <FilterPanel />
             <Button
               variant="outline"

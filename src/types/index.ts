@@ -76,4 +76,5 @@ export interface BoardState {
   members: { [key: string]: Member };
   tags: { [key: string]: Tag };
   filters: FilterState;
+  currentUserId?: string; // 現在のユーザーID（「自分のタスク」フィルター用）
 }
