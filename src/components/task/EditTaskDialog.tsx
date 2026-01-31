@@ -124,8 +124,9 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               size="icon"
               onClick={() => setShowDeleteAlert(true)}
               className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
+              aria-label="タスクを削除"
             >
-              <Trash2 size={20} />
+              <Trash2 size={20} aria-hidden="true" />
             </Button>
           </div>
         </DialogHeader>
@@ -215,8 +216,12 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           </div>
 
           <div>
-            <Label>担当者</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <Label id="assignee-label">担当者</Label>
+            <div
+              className="flex flex-wrap gap-2 mt-2"
+              role="group"
+              aria-labelledby="assignee-label"
+            >
               {activeMembers.map((member) => {
                 const isSelected = (formData.assigneeIds || []).includes(
                   member.id
@@ -225,13 +230,22 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                   <Badge
                     key={member.id}
                     variant={isSelected ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     style={
                       isSelected
                         ? { backgroundColor: member.color }
                         : { borderColor: member.color, color: member.color }
                     }
                     onClick={() => toggleAssignee(member.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleAssignee(member.id);
+                      }
+                    }}
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    tabIndex={0}
                   >
                     {member.name}
                   </Badge>
@@ -246,21 +260,34 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           </div>
 
           <div>
-            <Label>タグ</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <Label id="tag-label">タグ</Label>
+            <div
+              className="flex flex-wrap gap-2 mt-2"
+              role="group"
+              aria-labelledby="tag-label"
+            >
               {allTags.map((tag) => {
                 const isSelected = (formData.tagIds || []).includes(tag.id);
                 return (
                   <Badge
                     key={tag.id}
                     variant={isSelected ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     style={
                       isSelected
                         ? { backgroundColor: tag.color }
                         : { borderColor: tag.color, color: tag.color }
                     }
                     onClick={() => toggleTag(tag.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleTag(tag.id);
+                      }
+                    }}
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    tabIndex={0}
                   >
                     {tag.name}
                   </Badge>

@@ -32,20 +32,31 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
 
+  const columnHeadingId = `column-heading-${column.id}`;
+
   return (
     <div
       ref={setNodeRef}
       className={`flex-shrink-0 flex flex-col h-full bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/50 shadow-apple p-6 transition-all duration-200 hover:shadow-apple-md ${getColumnWidthClass()}`}
+      role="region"
+      aria-labelledby={columnHeadingId}
     >
       <div className="mb-5 flex items-center gap-3 flex-shrink-0">
         <div
           className="w-1 h-6 rounded-full"
           style={{ backgroundColor: column.color }}
+          aria-hidden="true"
         />
-        <h3 className="font-semibold text-lg tracking-tight text-foreground">
+        <h3
+          id={columnHeadingId}
+          className="font-semibold text-lg tracking-tight text-foreground"
+        >
           {column.title}
         </h3>
-        <span className="ml-auto text-sm font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+        <span
+          className="ml-auto text-sm font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full"
+          aria-label={`${tasks.length}件のタスク`}
+        >
           {tasks.length}
         </span>
       </div>

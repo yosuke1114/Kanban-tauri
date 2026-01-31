@@ -89,6 +89,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const dueDateStatus = getDueDateStatus(task.dueDate);
 
+  // スクリーンリーダー向けのタスク概要を生成
+  const getTaskSummary = () => {
+    const parts = [task.title];
+    parts.push(`優先度: ${PRIORITY_CONFIG[task.priority].label}`);
+    if (dueDateStatus) {
+      parts.push(dueDateStatus.label);
+    }
+    if (task.assigneeIds.length > 0) {
+      const assigneeNames = task.assigneeIds
+        .map((id) => members[id]?.name)
+        .filter(Boolean)
+        .join("、");
+      if (assigneeNames) {
+        parts.push(`担当: ${assigneeNames}`);
+      }
+    }
+    return parts.join("、");
+  };
+
   return (
     <Card
       className={cn(
@@ -99,6 +118,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
         isDragging && "opacity-50 rotate-2 shadow-apple-xl ring-2 ring-primary/30"
       )}
       onClick={onClick}
+      role="article"
+      aria-label={getTaskSummary()}
     >
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold leading-tight tracking-tight group-hover:text-primary transition-colors">
