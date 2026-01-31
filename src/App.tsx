@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./App.css";
 import KanbanBoard from "./components/kanban/KanbanBoard";
 import ListView from "./components/list/ListView";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { LayoutGrid, List } from "lucide-react";
 import { ViewMode } from "./types";
 import { useDueDateNotifications } from "./hooks/useDueDateNotifications";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
@@ -19,8 +20,21 @@ function App() {
   const [showColumnManager, setShowColumnManager] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const taskInputRef = useRef<HTMLInputElement>(null);
+
   // 期限通知フック
   useDueDateNotifications();
+
+  // キーボードショートカット
+  useKeyboardShortcuts({
+    onSearch: () => {
+      searchInputRef.current?.focus();
+    },
+    onNewTask: () => {
+      taskInputRef.current?.focus();
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,6 +42,8 @@ function App() {
         onOpenMemberManager={() => setShowMemberManager(true)}
         onOpenTagManager={() => setShowTagManager(true)}
         onOpenColumnManager={() => setShowColumnManager(true)}
+        searchInputRef={searchInputRef}
+        taskInputRef={taskInputRef}
       />
 
       <ActiveFiltersIndicator />

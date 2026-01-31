@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, forwardRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,12 +10,12 @@ interface SearchBarProps {
   className?: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
+const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(({
   value,
   onChange,
   placeholder = "タスクを検索...",
   className,
-}) => {
+}, ref) => {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange(e.target.value);
@@ -35,6 +35,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         aria-hidden="true"
       />
       <Input
+        ref={ref}
         type="text"
         value={value}
         onChange={handleChange}
@@ -54,6 +55,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       )}
     </div>
   );
-};
+});
+
+SearchBar.displayName = "SearchBar";
 
 export default React.memo(SearchBar);

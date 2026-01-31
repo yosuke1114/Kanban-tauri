@@ -10,12 +10,16 @@ interface AppHeaderProps {
   onOpenMemberManager: () => void;
   onOpenTagManager: () => void;
   onOpenColumnManager: () => void;
+  searchInputRef?: React.RefObject<HTMLInputElement>;
+  taskInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenMemberManager,
   onOpenTagManager,
   onOpenColumnManager,
+  searchInputRef,
+  taskInputRef,
 }) => {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const searchQuery = useBoardStore((state) => state.searchQuery);
@@ -74,6 +78,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         <form onSubmit={handleAddTask} className="flex gap-2 mt-4">
           <Input
+            ref={taskInputRef}
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -90,6 +95,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </form>
 
         <SearchBar
+          ref={searchInputRef}
           value={searchQuery}
           onChange={setSearchQuery}
           className="mt-3"
