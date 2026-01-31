@@ -163,13 +163,15 @@ describe('useBoardStore', () => {
   });
 
   describe('deleteColumn', () => {
-    it('デフォルト列は削除できない', () => {
-      const { deleteColumn, columns } = useBoardStore.getState();
-      const originalColumns = { ...columns };
+    it('デフォルト列も削除できる', () => {
+      const { deleteColumn } = useBoardStore.getState();
 
       deleteColumn('todo');
 
-      expect(useBoardStore.getState().columns).toEqual(originalColumns);
+      const columns = useBoardStore.getState().columns;
+      expect(columns['todo']).toBeUndefined();
+      expect(columns['inProgress']).toBeDefined();
+      expect(columns['done']).toBeDefined();
     });
 
     it('カスタム列を削除する', () => {

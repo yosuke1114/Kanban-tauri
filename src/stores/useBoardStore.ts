@@ -231,12 +231,6 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   deleteColumn: (columnId: string) => {
-    const column = get().columns[columnId];
-    if (column?.isDefault) {
-      console.warn("デフォルト列は削除できません");
-      return;
-    }
-
     set((state) => {
       const { [columnId]: _, ...remainingColumns } = state.columns;
       const newColumnOrder = state.columnOrder.filter((id) => id !== columnId);

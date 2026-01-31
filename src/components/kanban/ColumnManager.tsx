@@ -20,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Trash2, Plus, GripVertical } from "lucide-react";
 import {
@@ -98,21 +97,14 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
         style={{ backgroundColor: column.color }}
       />
       <span className="flex-1">{column.title}</span>
-      {column.isDefault && (
-        <Badge variant="secondary" className="text-xs">
-          デフォルト
-        </Badge>
-      )}
-      {!column.isDefault && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(column.id, column.title)}
-          className="text-destructive"
-        >
-          <Trash2 size={16} />
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onDelete(column.id, column.title)}
+        className="text-destructive hover:bg-destructive/10 transition-apple rounded-lg"
+      >
+        <Trash2 size={16} />
+      </Button>
     </div>
   );
 };
@@ -120,6 +112,7 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
 const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
+  const tasks = useBoardStore((state) => state.tasks);
   const addColumn = useBoardStore((state) => state.addColumn);
   const deleteColumn = useBoardStore((state) => state.deleteColumn);
   const reorderColumns = useBoardStore((state) => state.reorderColumns);
@@ -129,6 +122,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
     id: string;
     name: string;
   } | null>(null);
+  const [deleteError, setDeleteError] = useState<string>("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -147,11 +141,24 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   };
 
   const handleDeleteColumn = (columnId: string, columnName: string) => {
-    const column = columns[columnId];
-    if (column?.isDefault) {
-      alert("デフォルトの列は削除できません");
+    // 列が1つしかない場合は削除不可
+    if (columnOrder.length <= 1) {
+      setDeleteError("最後の列は削除できません。少なくとも1つの列が必要です。");
       return;
     }
+
+    // 列にタスクが存在する場合は削除不可
+    const tasksInColumn = Object.values(tasks).filter(
+      (task) => task.columnId === columnId
+    );
+    if (tasksInColumn.length > 0) {
+      setDeleteError(
+        `この列には${tasksInColumn.length}個のタスクがあります。タスクを移動または削除してから、列を削除してください。`
+      );
+      return;
+    }
+
+    setDeleteError("");
     setDeleteTarget({ id: columnId, name: columnName });
   };
 
@@ -275,6 +282,32 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
         </DialogFooter>
       </DialogContent>
 
+      {/* 削除エラーダイアログ */}
+      <AlertDialog
+        open={deleteError !== ""}
+        onOpenChange={(open) => !open && setDeleteError("")}
+      >
+        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold tracking-tight">
+              列を削除できません
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              {deleteError}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => setDeleteError("")}
+              className="rounded-xl transition-apple"
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 削除確認ダイアログ */}
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
@@ -285,8 +318,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
               列を削除しますか？
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
-              この操作は取り消せません。列「{deleteTarget?.name}
-              」が完全に削除され、列内のすべてのタスクも削除されます。
+              この操作は取り消せません。列「{deleteTarget?.name}」が完全に削除されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
