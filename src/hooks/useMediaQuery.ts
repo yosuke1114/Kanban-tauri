@@ -56,3 +56,18 @@ export const useIsTablet = (): boolean => {
 export const useIsDesktop = (): boolean => {
   return useMediaQuery("(min-width: 1280px)");
 };
+
+export type ViewportSize = "mobile" | "tablet" | "desktop";
+
+/**
+ * ビューポートサイズを判定するフック
+ * @returns 現在のビューポートサイズ ('mobile' | 'tablet' | 'desktop')
+ */
+export const useViewportSize = (): ViewportSize => {
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
+  const isTablet = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) return "desktop";
+  if (isTablet) return "tablet";
+  return "mobile";
+};

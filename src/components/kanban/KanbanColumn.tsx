@@ -1,22 +1,41 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Column, Task } from "@/types";
+import { ViewportSize } from "@/hooks/useMediaQuery";
 import SortableTaskCard from "../task/SortableTaskCard";
 
 interface KanbanColumnProps {
   column: Column;
   tasks: Task[];
+  viewportSize?: ViewportSize;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, tasks }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({
+  column,
+  tasks,
+  viewportSize = "desktop",
+}) => {
   const { setNodeRef } = useDroppable({
     id: column.id,
   });
 
+  // ビューポートサイズに応じたスタイルクラス
+  const getColumnWidthClass = () => {
+    switch (viewportSize) {
+      case "mobile":
+        return "w-full";
+      case "tablet":
+        return "w-[calc(50%-0.5rem)] min-w-[320px] snap-start";
+      case "desktop":
+      default:
+        return "w-96 min-w-[320px] xl:flex-1 xl:max-w-md";
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
-      className="flex-shrink-0 flex flex-col w-full min-w-[280px] md:w-[calc(50%-0.5rem)] md:min-w-[320px] md:snap-start lg:w-96 lg:snap-none xl:flex-1 xl:max-w-md h-full bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/50 shadow-apple p-6 transition-all duration-200 hover:shadow-apple-md"
+      className={`flex-shrink-0 flex flex-col h-full bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/50 shadow-apple p-6 transition-all duration-200 hover:shadow-apple-md ${getColumnWidthClass()}`}
     >
       <div className="mb-5 flex items-center gap-3 flex-shrink-0">
         <div

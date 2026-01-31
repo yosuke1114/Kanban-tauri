@@ -12,10 +12,12 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
-import { useIsMobile } from "@/hooks/useMediaQuery";
+import { useViewportSize } from "@/hooks/useMediaQuery";
+import { useSwipe } from "@/hooks/useSwipe";
 import { Task } from "@/types";
 import KanbanColumn from "./KanbanColumn";
 import TaskCard from "../task/TaskCard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,8 +43,37 @@ const KanbanBoard: React.FC = () => {
     columnOrder[0] || ""
   );
 
-  // レスポンシブ対応: モバイル判定
-  const isMobile = useIsMobile();
+  // レスポンシブ対応: ビューポートサイズ判定
+  const viewportSize = useViewportSize();
+  const isMobile = viewportSize === "mobile";
+
+  // スワイプでカラム切り替え（モバイルのみ）
+  const handleSwipeLeft = useCallback(() => {
+    if (!isMobile) return;
+    const currentIndex = columnOrder.indexOf(activeColumnId);
+    if (currentIndex < columnOrder.length - 1) {
+      setActiveColumnId(columnOrder[currentIndex + 1]);
+    }
+  }, [columnOrder, activeColumnId, isMobile]);
+
+  const handleSwipeRight = useCallback(() => {
+    if (!isMobile) return;
+    const currentIndex = columnOrder.indexOf(activeColumnId);
+    if (currentIndex > 0) {
+      setActiveColumnId(columnOrder[currentIndex - 1]);
+    }
+  }, [columnOrder, activeColumnId, isMobile]);
+
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    threshold: 50,
+  });
+
+  // 現在のカラムインデックス（モバイル表示用）
+  const currentColumnIndex = columnOrder.indexOf(activeColumnId);
+  const canGoLeft = currentColumnIndex > 0;
+  const canGoRight = currentColumnIndex < columnOrder.length - 1;
 
   // カラムごとのタスク数を計算
   const columnTaskCounts = useMemo(() => {
@@ -121,38 +152,84 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="w-full h-full p-4 overflow-hidden flex flex-col">
-      {/* モバイル: カラムセレクター */}
-      <div className="md:hidden mb-4">
-        <Select value={activeColumnId} onValueChange={setActiveColumnId}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {columnOrder.map((columnId) => {
-              const column = columns[columnId];
-              if (!column) return null;
-              return (
-                <SelectItem key={columnId} value={columnId}>
-                  {column.title} ({columnTaskCounts[columnId] || 0})
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* モバイル: カラムセレクター + ナビゲーション */}
+      {isMobile && (
+        <div className="mb-4 space-y-2">
+          <Select value={activeColumnId} onValueChange={setActiveColumnId}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {columnOrder.map((columnId) => {
+                const column = columns[columnId];
+                if (!column) return null;
+                return (
+                  <SelectItem key={columnId} value={columnId}>
+                    {column.title} ({columnTaskCounts[columnId] || 0})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          {/* スワイプインジケーター */}
+          <div className="flex items-center justify-between px-2">
+            <button
+              onClick={handleSwipeRight}
+              disabled={!canGoLeft}
+              className="p-2 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="前のカラム"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="flex gap-1.5">
+              {columnOrder.map((columnId, index) => (
+                <button
+                  key={columnId}
+                  onClick={() => setActiveColumnId(columnId)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentColumnIndex
+                      ? "bg-primary w-4"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  }`}
+                  aria-label={`カラム ${index + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={handleSwipeLeft}
+              disabled={!canGoRight}
+              className="p-2 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="次のカラム"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            左右にスワイプしてカラムを切り替え
+          </p>
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto overflow-y-hidden pb-4 flex-1 min-h-0 md:snap-x md:snap-mandatory lg:snap-none scroll-smooth">
+        <div
+          className={`
+            gap-4 overflow-y-hidden pb-4 flex-1 min-h-0 scroll-smooth
+            ${viewportSize === "mobile" ? "flex flex-col" : ""}
+            ${viewportSize === "tablet" ? "flex flex-row overflow-x-auto snap-x snap-mandatory" : ""}
+            ${viewportSize === "desktop" ? "flex flex-row overflow-x-auto" : ""}
+          `}
+          {...(isMobile ? swipeHandlers : {})}
+        >
           {columnOrder.map((columnId) => {
             const column = columns[columnId];
             if (!column) return null;
 
             // モバイル: アクティブカラムのみ表示
-            // デスクトップ: すべて表示（横スクロール可能）
+            // タブレット/デスクトップ: すべて表示（横スクロール可能）
             const isVisible = !isMobile || columnId === activeColumnId;
 
             if (!isVisible) return null;
@@ -167,7 +244,11 @@ const KanbanBoard: React.FC = () => {
                 items={columnTasks.map((t) => t.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <KanbanColumn column={column} tasks={columnTasks} />
+                <KanbanColumn
+                  column={column}
+                  tasks={columnTasks}
+                  viewportSize={viewportSize}
+                />
               </SortableContext>
             );
           })}
