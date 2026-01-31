@@ -146,7 +146,7 @@ const KanbanBoard: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto overflow-y-hidden pb-4 flex-1 min-h-0">
+        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto overflow-y-hidden pb-4 flex-1 min-h-0 md:snap-x md:snap-mandatory lg:snap-none scroll-smooth">
           {columnOrder.map((columnId) => {
             const column = columns[columnId];
             if (!column) return null;
