@@ -57,6 +57,15 @@ interface BoardStore extends BoardStoreState {
   deleteTask: (taskId: string) => void;
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => void;
 
+  // 論理削除操作
+  archiveTask: (taskId: string) => void;
+  softDeleteTask: (taskId: string) => void;
+  restoreTask: (taskId: string) => void;
+  permanentDeleteTask: (taskId: string) => void;
+  getArchivedTasks: () => Task[];
+  getDeletedTasks: () => Task[];
+  emptyTrash: () => void;
+
   // 列操作
   addColumn: (title: string, color: string) => void;
   updateColumn: (columnId: string, updates: Partial<Column>) => void;
@@ -206,6 +215,120 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       return { tasks: updatedTasks };
     });
     get().saveToStorage();
+  },
+
+  // 論理削除操作
+  archiveTask: (taskId: string) => {
+    const task = get().tasks[taskId];
+    if (!task) return;
+
+    const now = new Date().toISOString();
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          status: "archived",
+          archivedAt: now,
+          updatedAt: now,
+        },
+      },
+    }));
+    get().saveToStorage();
+    toast({
+      title: "タスクをアーカイブしました",
+      description: task.title,
+    });
+  },
+
+  softDeleteTask: (taskId: string) => {
+    const task = get().tasks[taskId];
+    if (!task) return;
+
+    const now = new Date().toISOString();
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          status: "deleted",
+          deletedAt: now,
+          updatedAt: now,
+        },
+      },
+    }));
+    get().saveToStorage();
+    toast({
+      title: "タスクをゴミ箱に移動しました",
+      description: `${task.title}（30日後に自動削除されます）`,
+    });
+  },
+
+  restoreTask: (taskId: string) => {
+    const task = get().tasks[taskId];
+    if (!task) return;
+
+    const now = new Date().toISOString();
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          status: "active",
+          deletedAt: undefined,
+          archivedAt: undefined,
+          updatedAt: now,
+        },
+      },
+    }));
+    get().saveToStorage();
+    toast({
+      title: "タスクを復元しました",
+      description: task.title,
+    });
+  },
+
+  permanentDeleteTask: (taskId: string) => {
+    const task = get().tasks[taskId];
+    set((state) => {
+      const { [taskId]: _, ...remainingTasks } = state.tasks;
+      return { tasks: remainingTasks };
+    });
+    get().saveToStorage();
+    if (task) {
+      toast({
+        title: "タスクを完全に削除しました",
+        description: task.title,
+      });
+    }
+  },
+
+  getArchivedTasks: () => {
+    const { tasks } = get();
+    return Object.values(tasks).filter((task) => task.status === "archived");
+  },
+
+  getDeletedTasks: () => {
+    const { tasks } = get();
+    return Object.values(tasks).filter((task) => task.status === "deleted");
+  },
+
+  emptyTrash: () => {
+    const deletedTasks = get().getDeletedTasks();
+    if (deletedTasks.length === 0) return;
+
+    set((state) => {
+      const remainingTasks = { ...state.tasks };
+      deletedTasks.forEach((task) => {
+        delete remainingTasks[task.id];
+      });
+      return { tasks: remainingTasks };
+    });
+    get().saveToStorage();
+    toast({
+      title: "ゴミ箱を空にしました",
+      description: `${deletedTasks.length}件のタスクを完全に削除しました`,
+    });
   },
 
   // 列操作
@@ -371,6 +494,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     const { tasks, filters, searchQuery } = state;
 
     return Object.values(tasks).filter((task) => {
+      // アクティブなタスクのみを対象（statusがundefinedまたは'active'）
+      const taskStatus = task.status || "active";
+      if (taskStatus !== "active") return false;
+
       // 検索クエリフィルター
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();

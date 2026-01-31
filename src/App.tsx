@@ -5,6 +5,7 @@ import ListView from "./components/list/ListView";
 import MemberManager from "./components/member/MemberManager";
 import TagManager from "./components/tag/TagManager";
 import ColumnManager from "./components/kanban/ColumnManager";
+import TrashManager from "./components/task/TrashManager";
 import { AppHeader } from "./components/layout/AppHeader";
 import { ActiveFiltersIndicator } from "./components/filter/ActiveFiltersIndicator";
 import { ShortcutsDialog } from "./components/shortcuts/ShortcutsDialog";
@@ -20,6 +21,7 @@ function App() {
   const [showMemberManager, setShowMemberManager] = useState(false);
   const [showTagManager, setShowTagManager] = useState(false);
   const [showColumnManager, setShowColumnManager] = useState(false);
+  const [showTrashManager, setShowTrashManager] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 
@@ -68,6 +70,7 @@ function App() {
         onOpenMemberManager={() => setShowMemberManager(true)}
         onOpenTagManager={() => setShowTagManager(true)}
         onOpenColumnManager={() => setShowColumnManager(true)}
+        onOpenTrashManager={() => setShowTrashManager(true)}
         searchInputRef={searchInputRef}
         taskInputRef={taskInputRef}
       />
@@ -112,6 +115,10 @@ function App() {
       <ShortcutsDialog
         open={showShortcuts}
         onClose={() => setShowShortcuts(false)}
+      />
+      <TrashManager
+        open={showTrashManager}
+        onClose={() => setShowTrashManager(false)}
       />
       <Toaster />
     </div>

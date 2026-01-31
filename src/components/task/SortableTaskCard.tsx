@@ -25,7 +25,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
-  const deleteTask = useBoardStore((state) => state.deleteTask);
+  const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
   const addTask = useBoardStore((state) => state.addTask);
 
   const {
@@ -50,9 +50,9 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   }, [task, addTask]);
 
   const handleDelete = useCallback(() => {
-    deleteTask(task.id);
+    softDeleteTask(task.id);
     setIsDeleteOpen(false);
-  }, [task.id, deleteTask]);
+  }, [task.id, softDeleteTask]);
 
   return (
     <>
@@ -82,10 +82,10 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
         <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
-              タスクを削除しますか？
+              タスクをゴミ箱に移動しますか？
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
-              この操作は取り消せません。タスク「{task.title}」が完全に削除されます。
+              タスク「{task.title}」はゴミ箱に移動されます。ゴミ箱から復元することができます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -96,7 +96,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
               onClick={handleDelete}
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
-              削除
+              ゴミ箱に移動
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

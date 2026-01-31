@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
-import { Users, Tag, Columns, PlusCircle, User } from "lucide-react";
+import { Users, Tag, Columns, PlusCircle, User, Trash2 } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ interface AppHeaderProps {
   onOpenMemberManager: () => void;
   onOpenTagManager: () => void;
   onOpenColumnManager: () => void;
+  onOpenTrashManager: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement>;
   taskInputRef?: React.RefObject<HTMLInputElement>;
 }
@@ -25,6 +27,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenMemberManager,
   onOpenTagManager,
   onOpenColumnManager,
+  onOpenTrashManager,
   searchInputRef,
   taskInputRef,
 }) => {
@@ -37,9 +40,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const setCurrentUserId = useBoardStore((state) => state.setCurrentUserId);
   const toggleMyTasks = useBoardStore((state) => state.toggleMyTasks);
   const filters = useBoardStore((state) => state.filters);
+  const deletedTasks = useBoardStore((state) => state.getDeletedTasks());
+  const archivedTasks = useBoardStore((state) => state.getArchivedTasks());
 
   // 「自分のタスク」フィルターが有効かチェック
   const isMyTasksActive = currentUserId && filters.assigneeIds.includes(currentUserId);
+
+  // ゴミ箱/アーカイブ内のタスク数
+  const trashCount = deletedTasks.length + archivedTasks.length;
 
   const handleAddTask = useCallback(
     (e: React.FormEvent) => {
@@ -119,6 +127,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             >
               <Tag size={16} className="mr-2" />
               タグ管理
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenTrashManager}
+              className="rounded-lg hover:bg-muted transition-apple relative"
+            >
+              <Trash2 size={16} className="mr-2" />
+              ゴミ箱
+              {trashCount > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="absolute -top-2 -right-2 h-5 min-w-5 px-1.5 text-xs"
+                >
+                  {trashCount}
+                </Badge>
+              )}
             </Button>
           </div>
         </div>

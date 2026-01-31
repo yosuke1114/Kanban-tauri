@@ -6,6 +6,9 @@ export type SyncStatus = "local" | "synced" | "conflict";
 
 export type ViewMode = "kanban" | "list";
 
+// タスクのライフサイクル状態
+export type TaskStatus = "active" | "archived" | "deleted";
+
 export type SortField = "title" | "priority" | "dueDate" | "createdAt";
 
 export type SortDirection = "asc" | "desc";
@@ -36,6 +39,10 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   sync: SyncMetadata;
+  // 論理削除対応（後方互換性のためオプショナル、undefinedは'active'として扱う）
+  status?: TaskStatus;
+  deletedAt?: string;  // 削除日時（自動削除用）
+  archivedAt?: string; // アーカイブ日時
 }
 
 export interface Column {

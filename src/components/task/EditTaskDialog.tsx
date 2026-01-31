@@ -54,7 +54,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   onClose,
 }) => {
   const updateTask = useBoardStore((state) => state.updateTask);
-  const deleteTask = useBoardStore((state) => state.deleteTask);
+  const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
   const columns = useBoardStore((state) => state.columns);
@@ -81,7 +81,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   };
 
   const handleDelete = () => {
-    deleteTask(task.id);
+    softDeleteTask(task.id);
     setShowDeleteAlert(false);
     onClose();
   };
@@ -305,10 +305,10 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
-              タスクを削除しますか？
+              タスクをゴミ箱に移動しますか？
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
-              この操作は取り消せません。タスク「{task.title}」が完全に削除されます。
+              タスク「{task.title}」はゴミ箱に移動されます。ゴミ箱から復元することができます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -319,7 +319,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               onClick={handleDelete}
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
-              削除
+              ゴミ箱に移動
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
