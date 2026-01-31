@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Task, Priority } from "@/types";
 import { Trash2, Archive } from "lucide-react";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags, selectColumns, selectColumnOrder } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
 import { Separator } from "@/components/ui/separator";
@@ -57,9 +57,9 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
   const archiveTask = useBoardStore((state) => state.archiveTask);
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
-  const columns = useBoardStore((state) => state.columns);
-  const columnOrder = useBoardStore((state) => state.columnOrder);
+  const tags = useBoardStore(selectTags);
+  const columns = useBoardStore(selectColumns);
+  const columnOrder = useBoardStore(selectColumnOrder);
   const [formData, setFormData] = useState<Partial<Task>>(task);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 

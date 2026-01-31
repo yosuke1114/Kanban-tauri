@@ -1,41 +1,60 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useBoardStore } from './useBoardStore';
 
-// ストアのリセット用ヘルパー
+const DEFAULT_BOARD_ID = 'default';
+
+const createDefaultColumns = () => ({
+  todo: {
+    id: 'todo',
+    title: '未着手',
+    color: '#94a3b8',
+    position: 0,
+    isDefault: true,
+  },
+  inProgress: {
+    id: 'inProgress',
+    title: '進行中',
+    color: '#60a5fa',
+    position: 1,
+    isDefault: true,
+  },
+  done: {
+    id: 'done',
+    title: '完了',
+    color: '#34d399',
+    position: 2,
+    isDefault: true,
+  },
+});
+
+// ストアのリセット用ヘルパー（マルチボード対応）
 const resetStore = () => {
-  const store = useBoardStore.getState();
-  store.tasks = {};
-  store.columns = {
-    todo: {
-      id: 'todo',
-      title: '未着手',
-      color: '#94a3b8',
-      position: 0,
-      isDefault: true,
+  const now = new Date().toISOString();
+  useBoardStore.setState({
+    boards: {
+      [DEFAULT_BOARD_ID]: {
+        id: DEFAULT_BOARD_ID,
+        name: 'メインボード',
+        description: '',
+        tasks: {},
+        columns: createDefaultColumns(),
+        columnOrder: ['todo', 'inProgress', 'done'],
+        tags: {},
+        createdAt: now,
+        updatedAt: now,
+      },
     },
-    inProgress: {
-      id: 'inProgress',
-      title: '進行中',
-      color: '#60a5fa',
-      position: 1,
-      isDefault: true,
+    boardOrder: [DEFAULT_BOARD_ID],
+    currentBoardId: DEFAULT_BOARD_ID,
+    members: {},
+    currentUserId: undefined,
+    filters: {
+      tagIds: [],
+      assigneeIds: [],
+      priorities: [],
     },
-    done: {
-      id: 'done',
-      title: '完了',
-      color: '#34d399',
-      position: 2,
-      isDefault: true,
-    },
-  };
-  store.columnOrder = ['todo', 'inProgress', 'done'];
-  store.members = {};
-  store.tags = {};
-  store.filters = {
-    tagIds: [],
-    assigneeIds: [],
-    priorities: [],
-  };
+    searchQuery: '',
+  });
 };
 
 describe('useBoardStore', () => {
@@ -44,13 +63,31 @@ describe('useBoardStore', () => {
     vi.clearAllMocks();
   });
 
+  // ヘルパー: 現在のボードのタスクを取得
+  const getTasks = () => {
+    const state = useBoardStore.getState();
+    return state.boards[state.currentBoardId]?.tasks || {};
+  };
+
+  // ヘルパー: 現在のボードの列を取得
+  const getColumns = () => {
+    const state = useBoardStore.getState();
+    return state.boards[state.currentBoardId]?.columns || {};
+  };
+
+  // ヘルパー: 現在のボードのタグを取得
+  const getTags = () => {
+    const state = useBoardStore.getState();
+    return state.boards[state.currentBoardId]?.tags || {};
+  };
+
   describe('addTask', () => {
     it('タスクを追加する', () => {
       const { addTask } = useBoardStore.getState();
 
       addTask('todo', 'テストタスク');
 
-      const tasks = Object.values(useBoardStore.getState().tasks);
+      const tasks = Object.values(getTasks());
       expect(tasks).toHaveLength(1);
       expect(tasks[0].title).toBe('テストタスク');
       expect(tasks[0].columnId).toBe('todo');
@@ -64,7 +101,7 @@ describe('useBoardStore', () => {
       addTask('todo', 'タスク2');
       addTask('todo', 'タスク3');
 
-      const tasks = Object.values(useBoardStore.getState().tasks);
+      const tasks = Object.values(getTasks());
       expect(tasks).toHaveLength(3);
       expect(tasks[0].position).toBe(0);
       expect(tasks[1].position).toBe(1);
@@ -89,12 +126,12 @@ describe('useBoardStore', () => {
       const { addTask, updateTask } = useBoardStore.getState();
 
       addTask('todo', 'テストタスク');
-      const taskId = Object.keys(useBoardStore.getState().tasks)[0];
-      const originalVersion = useBoardStore.getState().tasks[taskId].sync.version;
+      const taskId = Object.keys(getTasks())[0];
+      const originalVersion = getTasks()[taskId].sync.version;
 
       updateTask(taskId, { title: '更新されたタスク', priority: 'high' });
 
-      const updatedTask = useBoardStore.getState().tasks[taskId];
+      const updatedTask = getTasks()[taskId];
       expect(updatedTask.title).toBe('更新されたタスク');
       expect(updatedTask.priority).toBe('high');
       expect(updatedTask.sync.version).toBe(originalVersion + 1);
@@ -102,11 +139,11 @@ describe('useBoardStore', () => {
 
     it('存在しないタスクの更新は無視される', () => {
       const { updateTask } = useBoardStore.getState();
-      const initialTasks = useBoardStore.getState().tasks;
+      const initialTasks = getTasks();
 
       updateTask('non-existent-id', { title: '存在しない' });
 
-      expect(useBoardStore.getState().tasks).toEqual(initialTasks);
+      expect(getTasks()).toEqual(initialTasks);
     });
   });
 
@@ -115,11 +152,11 @@ describe('useBoardStore', () => {
       const { addTask, deleteTask } = useBoardStore.getState();
 
       addTask('todo', 'テストタスク');
-      const taskId = Object.keys(useBoardStore.getState().tasks)[0];
+      const taskId = Object.keys(getTasks())[0];
 
       deleteTask(taskId);
 
-      expect(Object.keys(useBoardStore.getState().tasks)).toHaveLength(0);
+      expect(Object.keys(getTasks())).toHaveLength(0);
     });
   });
 
@@ -131,13 +168,13 @@ describe('useBoardStore', () => {
       addTask('todo', 'タスク2');
       addTask('todo', 'タスク3');
 
-      const taskIds = Object.keys(useBoardStore.getState().tasks);
+      const taskIds = Object.keys(getTasks());
       const task1Id = taskIds[0];
 
       // タスク1を位置2に移動
       moveTask(task1Id, 'todo', 2);
 
-      const tasks = Object.values(useBoardStore.getState().tasks)
+      const tasks = Object.values(getTasks())
         .filter((t) => t.columnId === 'todo')
         .sort((a, b) => a.position - b.position);
 
@@ -150,12 +187,12 @@ describe('useBoardStore', () => {
       const { addTask, moveTask } = useBoardStore.getState();
 
       addTask('todo', 'テストタスク');
-      const taskId = Object.keys(useBoardStore.getState().tasks)[0];
-      const originalVersion = useBoardStore.getState().tasks[taskId].sync.version;
+      const taskId = Object.keys(getTasks())[0];
+      const originalVersion = getTasks()[taskId].sync.version;
 
       moveTask(taskId, 'inProgress', 0);
 
-      const movedTask = useBoardStore.getState().tasks[taskId];
+      const movedTask = getTasks()[taskId];
       expect(movedTask.columnId).toBe('inProgress');
       expect(movedTask.position).toBe(0);
       expect(movedTask.sync.version).toBe(originalVersion + 1);
@@ -168,7 +205,7 @@ describe('useBoardStore', () => {
 
       deleteColumn('todo');
 
-      const columns = useBoardStore.getState().columns;
+      const columns = getColumns();
       expect(columns['todo']).toBeUndefined();
       expect(columns['inProgress']).toBeDefined();
       expect(columns['done']).toBeDefined();
@@ -178,20 +215,20 @@ describe('useBoardStore', () => {
       const { addColumn, deleteColumn } = useBoardStore.getState();
 
       addColumn('カスタム列', '#ff0000');
-      const columnId = Object.keys(useBoardStore.getState().columns).find(
+      const columnId = Object.keys(getColumns()).find(
         (id) => !['todo', 'inProgress', 'done'].includes(id)
       )!;
 
       deleteColumn(columnId);
 
-      expect(useBoardStore.getState().columns[columnId]).toBeUndefined();
+      expect(getColumns()[columnId]).toBeUndefined();
     });
 
     it('列を削除すると、その列のタスクも削除される', () => {
       const { addColumn, addTask, deleteColumn } = useBoardStore.getState();
 
       addColumn('カスタム列', '#ff0000');
-      const columnId = Object.keys(useBoardStore.getState().columns).find(
+      const columnId = Object.keys(getColumns()).find(
         (id) => !['todo', 'inProgress', 'done'].includes(id)
       )!;
 
@@ -200,7 +237,7 @@ describe('useBoardStore', () => {
 
       deleteColumn(columnId);
 
-      const tasks = Object.values(useBoardStore.getState().tasks);
+      const tasks = Object.values(getTasks());
       expect(tasks).toHaveLength(1);
       expect(tasks[0].columnId).toBe('todo');
     });
@@ -215,12 +252,12 @@ describe('useBoardStore', () => {
       const memberId = Object.keys(useBoardStore.getState().members)[0];
 
       addTask('todo', 'テストタスク');
-      const taskId = Object.keys(useBoardStore.getState().tasks)[0];
+      const taskId = Object.keys(getTasks())[0];
       updateTask(taskId, { assigneeIds: [memberId] });
 
       deleteMember(memberId);
 
-      const task = useBoardStore.getState().tasks[taskId];
+      const task = getTasks()[taskId];
       expect(task.assigneeIds).toEqual([]);
       expect(useBoardStore.getState().members[memberId]).toBeUndefined();
     });
@@ -232,17 +269,17 @@ describe('useBoardStore', () => {
         useBoardStore.getState();
 
       addTag('テストタグ', '#ff0000');
-      const tagId = Object.keys(useBoardStore.getState().tags)[0];
+      const tagId = Object.keys(getTags())[0];
 
       addTask('todo', 'テストタスク');
-      const taskId = Object.keys(useBoardStore.getState().tasks)[0];
+      const taskId = Object.keys(getTasks())[0];
       updateTask(taskId, { tagIds: [tagId] });
 
       deleteTag(tagId);
 
-      const task = useBoardStore.getState().tasks[taskId];
+      const task = getTasks()[taskId];
       expect(task.tagIds).toEqual([]);
-      expect(useBoardStore.getState().tags[tagId]).toBeUndefined();
+      expect(getTags()[tagId]).toBeUndefined();
     });
   });
 
@@ -257,7 +294,7 @@ describe('useBoardStore', () => {
       addMember('ユーザーA', '#0000ff');
       addMember('ユーザーB', '#ffff00');
 
-      const tagIds = Object.keys(useBoardStore.getState().tags);
+      const tagIds = Object.keys(getTags());
       const memberIds = Object.keys(useBoardStore.getState().members);
 
       // テストタスクを作成
@@ -265,7 +302,7 @@ describe('useBoardStore', () => {
       addTask('todo', 'タスク2');
       addTask('todo', 'タスク3');
 
-      const taskIds = Object.keys(useBoardStore.getState().tasks);
+      const taskIds = Object.keys(getTasks());
       updateTask(taskIds[0], {
         tagIds: [tagIds[0]],
         assigneeIds: [memberIds[0]],
@@ -293,7 +330,7 @@ describe('useBoardStore', () => {
 
     it('タグフィルターで絞り込む', () => {
       const { setFilters, getFilteredTasks } = useBoardStore.getState();
-      const tagIds = Object.keys(useBoardStore.getState().tags);
+      const tagIds = Object.keys(getTags());
 
       setFilters({ tagIds: [tagIds[0]] });
       const filtered = getFilteredTasks();
@@ -331,7 +368,7 @@ describe('useBoardStore', () => {
 
     it('複合フィルターで絞り込む', () => {
       const { setFilters, getFilteredTasks } = useBoardStore.getState();
-      const tagIds = Object.keys(useBoardStore.getState().tags);
+      const tagIds = Object.keys(getTags());
       const memberIds = Object.keys(useBoardStore.getState().members);
 
       setFilters({

@@ -10,7 +10,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTasks, selectColumns, selectColumnOrder } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
 import { useViewportSize } from "@/hooks/useMediaQuery";
 import { useSwipe } from "@/hooks/useSwipe";
@@ -27,9 +27,9 @@ import {
 } from "@/components/ui/select";
 
 const KanbanBoard: React.FC = () => {
-  const tasks = useBoardStore((state) => state.tasks);
-  const columns = useBoardStore((state) => state.columns);
-  const columnOrder = useBoardStore((state) => state.columnOrder);
+  const tasks = useBoardStore(selectTasks);
+  const columns = useBoardStore(selectColumns);
+  const columnOrder = useBoardStore(selectColumnOrder);
   const moveTask = useBoardStore((state) => state.moveTask);
   const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
   const generateRecurringTasks = useBoardStore(

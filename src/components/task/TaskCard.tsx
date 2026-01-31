@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
@@ -85,7 +85,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onClick = NOOP,
 }) => {
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
 
   const dueDateStatus = getDueDateStatus(task.dueDate);
 

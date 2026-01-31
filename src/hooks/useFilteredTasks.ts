@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTasks } from "@/stores/useBoardStore";
 
 export function useFilteredTasks() {
-  const tasks = useBoardStore((state) => state.tasks);
+  const tasks = useBoardStore(selectTasks);
   const filters = useBoardStore((state) => state.filters);
   const searchQuery = useBoardStore((state) => state.searchQuery);
 

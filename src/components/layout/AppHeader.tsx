@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
+import { BoardSelector } from "@/components/board/BoardSelector";
 import { Users, Tag, Columns, PlusCircle, User, Trash2 } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ interface AppHeaderProps {
   onOpenTagManager: () => void;
   onOpenColumnManager: () => void;
   onOpenTrashManager: () => void;
+  onOpenBoardManager: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement>;
   taskInputRef?: React.RefObject<HTMLInputElement>;
 }
@@ -28,6 +30,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenTagManager,
   onOpenColumnManager,
   onOpenTrashManager,
+  onOpenBoardManager,
   searchInputRef,
   taskInputRef,
 }) => {
@@ -64,9 +67,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <header className="sticky top-0 z-50 glass border-b border-border/40 shadow-apple">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight shrink-0">
-            Kanban Board
-          </h1>
+          <div className="flex items-center gap-4 shrink-0">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Kanban Board
+            </h1>
+            <BoardSelector onOpenBoardManager={onOpenBoardManager} />
+          </div>
           <div className="flex gap-2 shrink-0">
             {/* 現在のユーザー選択 */}
             <Select

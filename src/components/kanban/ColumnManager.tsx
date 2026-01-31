@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectColumns, selectColumnOrder, selectTasks } from "@/stores/useBoardStore";
 import { Trash2, Plus, GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -110,9 +110,9 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
 };
 
 const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
-  const columns = useBoardStore((state) => state.columns);
-  const columnOrder = useBoardStore((state) => state.columnOrder);
-  const tasks = useBoardStore((state) => state.tasks);
+  const columns = useBoardStore(selectColumns);
+  const columnOrder = useBoardStore(selectColumnOrder);
+  const tasks = useBoardStore(selectTasks);
   const addColumn = useBoardStore((state) => state.addColumn);
   const deleteColumn = useBoardStore((state) => state.deleteColumn);
   const reorderColumns = useBoardStore((state) => state.reorderColumns);

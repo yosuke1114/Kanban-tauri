@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Trash2, Tag as TagIcon } from "lucide-react";
 
 interface TagManagerProps {
@@ -41,7 +41,7 @@ const colorOptions = [
 ];
 
 const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
   const addTag = useBoardStore((state) => state.addTag);
   const deleteTag = useBoardStore((state) => state.deleteTag);
   const [newTagName, setNewTagName] = useState("");

@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectColumns } from "@/stores/useBoardStore";
 import { Task } from "@/types";
 import { Archive, Trash2, RotateCcw, Trash, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -43,7 +43,7 @@ const TaskItem: React.FC<{
   onDelete: () => void;
   showDeletedAt?: boolean;
 }> = ({ task, onRestore, onDelete, showDeletedAt }) => {
-  const columns = useBoardStore((state) => state.columns);
+  const columns = useBoardStore(selectColumns);
   const column = columns[task.columnId];
 
   const timeAgo = useMemo(() => {

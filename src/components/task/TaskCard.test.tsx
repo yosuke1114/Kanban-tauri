@@ -4,12 +4,42 @@ import TaskCard from './TaskCard';
 import { useBoardStore } from '@/stores/useBoardStore';
 import type { Task } from '@/types';
 
-// ストアのリセット用ヘルパー
+const DEFAULT_BOARD_ID = 'default';
+
+const createDefaultColumns = () => ({
+  todo: { id: 'todo', title: '未着手', color: '#94a3b8', position: 0, isDefault: true },
+  inProgress: { id: 'inProgress', title: '進行中', color: '#60a5fa', position: 1, isDefault: true },
+  done: { id: 'done', title: '完了', color: '#34d399', position: 2, isDefault: true },
+});
+
+// ストアのリセット用ヘルパー（マルチボード対応）
 const resetStore = () => {
-  const store = useBoardStore.getState();
-  store.tasks = {};
-  store.members = {};
-  store.tags = {};
+  const now = new Date().toISOString();
+  useBoardStore.setState({
+    boards: {
+      [DEFAULT_BOARD_ID]: {
+        id: DEFAULT_BOARD_ID,
+        name: 'メインボード',
+        description: '',
+        tasks: {},
+        columns: createDefaultColumns(),
+        columnOrder: ['todo', 'inProgress', 'done'],
+        tags: {},
+        createdAt: now,
+        updatedAt: now,
+      },
+    },
+    boardOrder: [DEFAULT_BOARD_ID],
+    currentBoardId: DEFAULT_BOARD_ID,
+    members: {},
+    currentUserId: undefined,
+    filters: {
+      tagIds: [],
+      assigneeIds: [],
+      priorities: [],
+    },
+    searchQuery: '',
+  });
 };
 
 const createMockTask = (overrides?: Partial<Task>): Task => ({
@@ -149,13 +179,19 @@ describe('TaskCard', () => {
     });
   });
 
+  // ヘルパー: 現在のボードのタグを取得
+  const getTags = () => {
+    const state = useBoardStore.getState();
+    return state.boards[state.currentBoardId]?.tags || {};
+  };
+
   describe('タグ表示', () => {
     it('タグを表示する', () => {
       const { addTag } = useBoardStore.getState();
       addTag('バグ', '#ff0000');
       addTag('機能', '#00ff00');
 
-      const tagIds = Object.keys(useBoardStore.getState().tags);
+      const tagIds = Object.keys(getTags());
       const task = createMockTask({ tagIds });
 
       render(<TaskCard task={task} />);

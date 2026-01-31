@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { BoardState, Task, Column, Member, Tag } from "@/types";
+import { Board, Task, Column, Member, Tag, FilterState } from "@/types";
 import {
   calculateNextDueDate,
   isRecurrenceEnded,
 } from "@/services/recurrence/recurrenceService";
 import { storage } from "@/services/storage/tauriStorage";
 import { toast } from "@/hooks/use-toast";
+
+const DEFAULT_BOARD_ID = "default";
 
 const createDefaultColumns = (): { [key: string]: Column } => ({
   todo: {
@@ -32,26 +34,61 @@ const createDefaultColumns = (): { [key: string]: Column } => ({
   },
 });
 
-const initialState: BoardState = {
-  tasks: {},
-  columns: createDefaultColumns(),
-  columnOrder: ["todo", "inProgress", "done"],
+const createDefaultBoard = (): Board => {
+  const now = new Date().toISOString();
+  return {
+    id: DEFAULT_BOARD_ID,
+    name: "メインボード",
+    description: "",
+    tasks: {},
+    columns: createDefaultColumns(),
+    columnOrder: ["todo", "inProgress", "done"],
+    tags: {},
+    createdAt: now,
+    updatedAt: now,
+  };
+};
+
+interface BoardStoreState {
+  // マルチボード対応
+  boards: { [key: string]: Board };
+  boardOrder: string[];
+  currentBoardId: string;
+
+  // グローバル設定（全ボード共通）
+  members: { [key: string]: Member };
+  currentUserId?: string;
+
+  // UIステート
+  filters: FilterState;
+  searchQuery: string;
+}
+
+const initialState: BoardStoreState = {
+  boards: { [DEFAULT_BOARD_ID]: createDefaultBoard() },
+  boardOrder: [DEFAULT_BOARD_ID],
+  currentBoardId: DEFAULT_BOARD_ID,
   members: {},
-  tags: {},
+  currentUserId: undefined,
   filters: {
     tagIds: [],
     assigneeIds: [],
     priorities: [],
   },
-  currentUserId: undefined,
+  searchQuery: "",
 };
 
-interface BoardStoreState extends BoardState {
-  searchQuery: string;
-}
-
 interface BoardStore extends BoardStoreState {
-  // タスク操作
+  // ボード操作
+  addBoard: (name: string, description?: string) => string;
+  updateBoard: (boardId: string, updates: Partial<Pick<Board, "name" | "description">>) => void;
+  deleteBoard: (boardId: string) => void;
+  duplicateBoard: (boardId: string) => string;
+  switchBoard: (boardId: string) => void;
+  reorderBoards: (newOrder: string[]) => void;
+  getCurrentBoard: () => Board;
+
+  // 現在のボードに対するタスク操作
   addTask: (columnId: string, title: string) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
@@ -73,18 +110,18 @@ interface BoardStore extends BoardStoreState {
   deleteColumn: (columnId: string) => void;
   reorderColumns: (newOrder: string[]) => void;
 
-  // メンバー操作
+  // メンバー操作（グローバル）
   addMember: (name: string, color: string) => void;
   updateMember: (memberId: string, updates: Partial<Member>) => void;
   deleteMember: (memberId: string) => void;
 
-  // タグ操作
+  // タグ操作（ボードごと）
   addTag: (name: string, color: string) => void;
   updateTag: (tagId: string, updates: Partial<Tag>) => void;
   deleteTag: (tagId: string) => void;
 
   // フィルター操作
-  setFilters: (filters: Partial<BoardState["filters"]>) => void;
+  setFilters: (filters: Partial<FilterState>) => void;
   clearFilters: () => void;
   getFilteredTasks: () => Task[];
   hasActiveFilters: () => boolean;
@@ -102,22 +139,185 @@ interface BoardStore extends BoardStoreState {
   // データ読み込み・保存
   loadFromStorage: () => void;
   saveToStorage: () => void;
+
+  // 後方互換性のためのゲッター
+  tasks: { [key: string]: Task };
+  columns: { [key: string]: Column };
+  columnOrder: string[];
+  tags: { [key: string]: Tag };
 }
 
 export const useBoardStore = create<BoardStore>((set, get) => ({
   ...initialState,
-  searchQuery: "",
 
-  // タスク操作
+  // 後方互換性のための計算プロパティ（初期値、実際の値はセレクターで取得）
+  tasks: {},
+  columns: {},
+  columnOrder: [],
+  tags: {},
+
+  // ボード操作
+  addBoard: (name: string, description?: string) => {
+    const now = new Date().toISOString();
+    const newBoard: Board = {
+      id: uuidv4(),
+      name,
+      description: description || "",
+      tasks: {},
+      columns: createDefaultColumns(),
+      columnOrder: ["todo", "inProgress", "done"],
+      tags: {},
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    set((state) => ({
+      boards: { ...state.boards, [newBoard.id]: newBoard },
+      boardOrder: [...state.boardOrder, newBoard.id],
+      currentBoardId: newBoard.id,
+    }));
+    get().saveToStorage();
+    toast({
+      title: "ボードを作成しました",
+      description: name,
+    });
+    return newBoard.id;
+  },
+
+  updateBoard: (boardId: string, updates: Partial<Pick<Board, "name" | "description">>) => {
+    set((state) => {
+      const board = state.boards[boardId];
+      if (!board) return state;
+
+      return {
+        boards: {
+          ...state.boards,
+          [boardId]: {
+            ...board,
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      };
+    });
+    get().saveToStorage();
+  },
+
+  deleteBoard: (boardId: string) => {
+    const state = get();
+    // デフォルトボードは削除不可
+    if (boardId === DEFAULT_BOARD_ID) {
+      toast({
+        title: "削除できません",
+        description: "デフォルトボードは削除できません",
+        variant: "destructive",
+      });
+      return;
+    }
+    // 最後の1つは削除不可
+    if (state.boardOrder.length <= 1) {
+      toast({
+        title: "削除できません",
+        description: "最低1つのボードが必要です",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const boardName = state.boards[boardId]?.name;
+    const newBoardOrder = state.boardOrder.filter((id) => id !== boardId);
+    const newCurrentBoardId = boardId === state.currentBoardId
+      ? newBoardOrder[0]
+      : state.currentBoardId;
+
+    set((state) => {
+      const { [boardId]: _, ...remainingBoards } = state.boards;
+      return {
+        boards: remainingBoards,
+        boardOrder: newBoardOrder,
+        currentBoardId: newCurrentBoardId,
+      };
+    });
+    get().saveToStorage();
+    toast({
+      title: "ボードを削除しました",
+      description: boardName,
+    });
+  },
+
+  duplicateBoard: (boardId: string) => {
+    const state = get();
+    const sourceBoard = state.boards[boardId];
+    if (!sourceBoard) return "";
+
+    const now = new Date().toISOString();
+    const newBoard: Board = {
+      ...sourceBoard,
+      id: uuidv4(),
+      name: `${sourceBoard.name} (コピー)`,
+      createdAt: now,
+      updatedAt: now,
+      // タスクIDも新規に振り直す
+      tasks: Object.fromEntries(
+        Object.values(sourceBoard.tasks).map((task) => {
+          const newId = uuidv4();
+          return [newId, { ...task, id: newId }];
+        })
+      ),
+    };
+
+    set((state) => ({
+      boards: { ...state.boards, [newBoard.id]: newBoard },
+      boardOrder: [...state.boardOrder, newBoard.id],
+      currentBoardId: newBoard.id,
+    }));
+    get().saveToStorage();
+    toast({
+      title: "ボードを複製しました",
+      description: newBoard.name,
+    });
+    return newBoard.id;
+  },
+
+  switchBoard: (boardId: string) => {
+    const state = get();
+    if (!state.boards[boardId]) return;
+
+    set({ currentBoardId: boardId });
+    // フィルターをリセット
+    set({
+      filters: {
+        tagIds: [],
+        assigneeIds: [],
+        priorities: [],
+      },
+      searchQuery: "",
+    });
+  },
+
+  reorderBoards: (newOrder: string[]) => {
+    set({ boardOrder: newOrder });
+    get().saveToStorage();
+  },
+
+  getCurrentBoard: () => {
+    const state = get();
+    return state.boards[state.currentBoardId] || createDefaultBoard();
+  },
+
+  // タスク操作（現在のボードに対して）
   addTask: (columnId: string, title: string) => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     const now = new Date().toISOString();
     const newTask: Task = {
       id: uuidv4(),
       title,
       description: "",
       columnId,
-      position: Object.values(get().tasks).filter((t) => t.columnId === columnId)
-        .length,
+      position: Object.values(board.tasks).filter((t) => t.columnId === columnId).length,
       priority: "medium",
       assigneeIds: [],
       tagIds: [],
@@ -131,7 +331,14 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     };
 
     set((state) => ({
-      tasks: { ...state.tasks, [newTask.id]: newTask },
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: { ...board.tasks, [newTask.id]: newTask },
+          updatedAt: now,
+        },
+      },
     }));
     get().saveToStorage();
     toast({
@@ -141,35 +348,57 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   updateTask: (taskId: string, updates: Partial<Task>) => {
-    set((state) => {
-      const task = state.tasks[taskId];
-      if (!task) return state;
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
 
-      const now = new Date().toISOString();
-      return {
-        tasks: {
-          ...state.tasks,
-          [taskId]: {
-            ...task,
-            ...updates,
-            updatedAt: now,
-            sync: {
-              ...task.sync,
-              version: task.sync.version + 1,
-              lastModifiedAt: now,
+    const task = board.tasks[taskId];
+    if (!task) return;
+
+    const now = new Date().toISOString();
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: {
+            ...board.tasks,
+            [taskId]: {
+              ...task,
+              ...updates,
+              updatedAt: now,
+              sync: {
+                ...task.sync,
+                version: task.sync.version + 1,
+                lastModifiedAt: now,
+              },
             },
           },
+          updatedAt: now,
         },
-      };
-    });
+      },
+    }));
     get().saveToStorage();
   },
 
   deleteTask: (taskId: string) => {
-    const task = get().tasks[taskId];
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const task = board.tasks[taskId];
     set((state) => {
-      const { [taskId]: _, ...remainingTasks } = state.tasks;
-      return { tasks: remainingTasks };
+      const { [taskId]: _, ...remainingTasks } = board.tasks;
+      return {
+        boards: {
+          ...state.boards,
+          [state.currentBoardId]: {
+            ...board,
+            tasks: remainingTasks,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      };
     });
     get().saveToStorage();
     if (task) {
@@ -181,56 +410,76 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => {
-    set((state) => {
-      const task = state.tasks[taskId];
-      if (!task) return state;
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
 
-      const now = new Date().toISOString();
-      const tasksInTargetColumn = Object.values(state.tasks)
-        .filter((t) => t.columnId === targetColumnId && t.id !== taskId)
-        .sort((a, b) => a.position - b.position);
+    const task = board.tasks[taskId];
+    if (!task) return;
 
-      const updatedTasks = { ...state.tasks };
+    const now = new Date().toISOString();
+    const tasksInTargetColumn = Object.values(board.tasks)
+      .filter((t) => t.columnId === targetColumnId && t.id !== taskId)
+      .sort((a, b) => a.position - b.position);
 
-      // 既存のタスクの位置を調整
-      tasksInTargetColumn.forEach((t, index) => {
-        const newPos = index >= newPosition ? index + 1 : index;
-        if (t.position !== newPos) {
-          updatedTasks[t.id] = { ...t, position: newPos, updatedAt: now };
-        }
-      });
+    const updatedTasks = { ...board.tasks };
 
-      // 移動するタスクを更新
-      updatedTasks[taskId] = {
-        ...task,
-        columnId: targetColumnId,
-        position: newPosition,
-        updatedAt: now,
-        sync: {
-          ...task.sync,
-          version: task.sync.version + 1,
-          lastModifiedAt: now,
-        },
-      };
-
-      return { tasks: updatedTasks };
+    tasksInTargetColumn.forEach((t, index) => {
+      const newPos = index >= newPosition ? index + 1 : index;
+      if (t.position !== newPos) {
+        updatedTasks[t.id] = { ...t, position: newPos, updatedAt: now };
+      }
     });
+
+    updatedTasks[taskId] = {
+      ...task,
+      columnId: targetColumnId,
+      position: newPosition,
+      updatedAt: now,
+      sync: {
+        ...task.sync,
+        version: task.sync.version + 1,
+        lastModifiedAt: now,
+      },
+    };
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: updatedTasks,
+          updatedAt: now,
+        },
+      },
+    }));
     get().saveToStorage();
   },
 
   // 論理削除操作
   archiveTask: (taskId: string) => {
-    const task = get().tasks[taskId];
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const task = board.tasks[taskId];
     if (!task) return;
 
     const now = new Date().toISOString();
     set((state) => ({
-      tasks: {
-        ...state.tasks,
-        [taskId]: {
-          ...task,
-          status: "archived",
-          archivedAt: now,
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: {
+            ...board.tasks,
+            [taskId]: {
+              ...task,
+              status: "archived",
+              archivedAt: now,
+              updatedAt: now,
+            },
+          },
           updatedAt: now,
         },
       },
@@ -243,27 +492,38 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   archiveColumnTasks: (columnId: string) => {
-    const { tasks, columns } = get();
-    const column = columns[columnId];
-    const columnTasks = Object.values(tasks).filter(
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const column = board.columns[columnId];
+    const columnTasks = Object.values(board.tasks).filter(
       (t) => t.columnId === columnId && (t.status === "active" || !t.status)
     );
 
     if (columnTasks.length === 0) return;
 
     const now = new Date().toISOString();
-    set((state) => {
-      const updatedTasks = { ...state.tasks };
-      columnTasks.forEach((task) => {
-        updatedTasks[task.id] = {
-          ...task,
-          status: "archived",
-          archivedAt: now,
-          updatedAt: now,
-        };
-      });
-      return { tasks: updatedTasks };
+    const updatedTasks = { ...board.tasks };
+    columnTasks.forEach((task) => {
+      updatedTasks[task.id] = {
+        ...task,
+        status: "archived",
+        archivedAt: now,
+        updatedAt: now,
+      };
     });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: updatedTasks,
+          updatedAt: now,
+        },
+      },
+    }));
     get().saveToStorage();
     toast({
       title: `${columnTasks.length}件のタスクをアーカイブしました`,
@@ -272,17 +532,28 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   softDeleteTask: (taskId: string) => {
-    const task = get().tasks[taskId];
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const task = board.tasks[taskId];
     if (!task) return;
 
     const now = new Date().toISOString();
     set((state) => ({
-      tasks: {
-        ...state.tasks,
-        [taskId]: {
-          ...task,
-          status: "deleted",
-          deletedAt: now,
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: {
+            ...board.tasks,
+            [taskId]: {
+              ...task,
+              status: "deleted",
+              deletedAt: now,
+              updatedAt: now,
+            },
+          },
           updatedAt: now,
         },
       },
@@ -295,18 +566,29 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   restoreTask: (taskId: string) => {
-    const task = get().tasks[taskId];
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const task = board.tasks[taskId];
     if (!task) return;
 
     const now = new Date().toISOString();
     set((state) => ({
-      tasks: {
-        ...state.tasks,
-        [taskId]: {
-          ...task,
-          status: "active",
-          deletedAt: undefined,
-          archivedAt: undefined,
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: {
+            ...board.tasks,
+            [taskId]: {
+              ...task,
+              status: "active",
+              deletedAt: undefined,
+              archivedAt: undefined,
+              updatedAt: now,
+            },
+          },
           updatedAt: now,
         },
       },
@@ -319,10 +601,23 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   permanentDeleteTask: (taskId: string) => {
-    const task = get().tasks[taskId];
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const task = board.tasks[taskId];
     set((state) => {
-      const { [taskId]: _, ...remainingTasks } = state.tasks;
-      return { tasks: remainingTasks };
+      const { [taskId]: _, ...remainingTasks } = board.tasks;
+      return {
+        boards: {
+          ...state.boards,
+          [state.currentBoardId]: {
+            ...board,
+            tasks: remainingTasks,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      };
     });
     get().saveToStorage();
     if (task) {
@@ -334,26 +629,42 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   getArchivedTasks: () => {
-    const { tasks } = get();
-    return Object.values(tasks).filter((task) => task.status === "archived");
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return [];
+    return Object.values(board.tasks).filter((task) => task.status === "archived");
   },
 
   getDeletedTasks: () => {
-    const { tasks } = get();
-    return Object.values(tasks).filter((task) => task.status === "deleted");
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return [];
+    return Object.values(board.tasks).filter((task) => task.status === "deleted");
   },
 
   emptyTrash: () => {
-    const deletedTasks = get().getDeletedTasks();
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const deletedTasks = Object.values(board.tasks).filter((task) => task.status === "deleted");
     if (deletedTasks.length === 0) return;
 
-    set((state) => {
-      const remainingTasks = { ...state.tasks };
-      deletedTasks.forEach((task) => {
-        delete remainingTasks[task.id];
-      });
-      return { tasks: remainingTasks };
+    const remainingTasks = { ...board.tasks };
+    deletedTasks.forEach((task) => {
+      delete remainingTasks[task.id];
     });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: remainingTasks,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }));
     get().saveToStorage();
     toast({
       title: "ゴミ箱を空にしました",
@@ -363,59 +674,102 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   // 列操作
   addColumn: (title: string, color: string) => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     const newColumn: Column = {
       id: uuidv4(),
       title,
       color,
-      position: get().columnOrder.length,
+      position: board.columnOrder.length,
       isDefault: false,
     };
 
     set((state) => ({
-      columns: { ...state.columns, [newColumn.id]: newColumn },
-      columnOrder: [...state.columnOrder, newColumn.id],
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          columns: { ...board.columns, [newColumn.id]: newColumn },
+          columnOrder: [...board.columnOrder, newColumn.id],
+          updatedAt: new Date().toISOString(),
+        },
+      },
     }));
     get().saveToStorage();
   },
 
   updateColumn: (columnId: string, updates: Partial<Column>) => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     set((state) => ({
-      columns: {
-        ...state.columns,
-        [columnId]: { ...state.columns[columnId], ...updates },
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          columns: {
+            ...board.columns,
+            [columnId]: { ...board.columns[columnId], ...updates },
+          },
+          updatedAt: new Date().toISOString(),
+        },
       },
     }));
     get().saveToStorage();
   },
 
   deleteColumn: (columnId: string) => {
-    set((state) => {
-      const { [columnId]: _, ...remainingColumns } = state.columns;
-      const newColumnOrder = state.columnOrder.filter((id) => id !== columnId);
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
 
-      // この列のタスクを削除
-      const updatedTasks = { ...state.tasks };
-      Object.keys(updatedTasks).forEach((taskId) => {
-        if (updatedTasks[taskId].columnId === columnId) {
-          delete updatedTasks[taskId];
-        }
-      });
+    const { [columnId]: _, ...remainingColumns } = board.columns;
+    const newColumnOrder = board.columnOrder.filter((id) => id !== columnId);
 
-      return {
-        columns: remainingColumns,
-        columnOrder: newColumnOrder,
-        tasks: updatedTasks,
-      };
+    const updatedTasks = { ...board.tasks };
+    Object.keys(updatedTasks).forEach((taskId) => {
+      if (updatedTasks[taskId].columnId === columnId) {
+        delete updatedTasks[taskId];
+      }
     });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          columns: remainingColumns,
+          columnOrder: newColumnOrder,
+          tasks: updatedTasks,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }));
     get().saveToStorage();
   },
 
   reorderColumns: (newOrder: string[]) => {
-    set({ columnOrder: newOrder });
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          columnOrder: newOrder,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }));
     get().saveToStorage();
   },
 
-  // メンバー操作
+  // メンバー操作（グローバル）
   addMember: (name: string, color: string) => {
     const newMember: Member = {
       id: uuidv4(),
@@ -444,24 +798,33 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     set((state) => {
       const { [memberId]: _, ...remainingMembers } = state.members;
 
-      // タスクから担当者を削除
-      const updatedTasks = { ...state.tasks };
-      Object.keys(updatedTasks).forEach((taskId) => {
-        updatedTasks[taskId] = {
-          ...updatedTasks[taskId],
-          assigneeIds: updatedTasks[taskId].assigneeIds.filter(
-            (id) => id !== memberId
-          ),
-        };
+      // 全ボードのタスクから担当者を削除
+      const updatedBoards = { ...state.boards };
+      Object.keys(updatedBoards).forEach((boardId) => {
+        const board = updatedBoards[boardId];
+        const updatedTasks = { ...board.tasks };
+        Object.keys(updatedTasks).forEach((taskId) => {
+          updatedTasks[taskId] = {
+            ...updatedTasks[taskId],
+            assigneeIds: updatedTasks[taskId].assigneeIds.filter(
+              (id) => id !== memberId
+            ),
+          };
+        });
+        updatedBoards[boardId] = { ...board, tasks: updatedTasks };
       });
 
-      return { members: remainingMembers, tasks: updatedTasks };
+      return { members: remainingMembers, boards: updatedBoards };
     });
     get().saveToStorage();
   },
 
-  // タグ操作
+  // タグ操作（ボードごと）
   addTag: (name: string, color: string) => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     const newTag: Tag = {
       id: uuidv4(),
       name,
@@ -469,36 +832,65 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     };
 
     set((state) => ({
-      tags: { ...state.tags, [newTag.id]: newTag },
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tags: { ...board.tags, [newTag.id]: newTag },
+          updatedAt: new Date().toISOString(),
+        },
+      },
     }));
     get().saveToStorage();
   },
 
   updateTag: (tagId: string, updates: Partial<Tag>) => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     set((state) => ({
-      tags: {
-        ...state.tags,
-        [tagId]: { ...state.tags[tagId], ...updates },
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tags: {
+            ...board.tags,
+            [tagId]: { ...board.tags[tagId], ...updates },
+          },
+          updatedAt: new Date().toISOString(),
+        },
       },
     }));
     get().saveToStorage();
   },
 
   deleteTag: (tagId: string) => {
-    set((state) => {
-      const { [tagId]: _, ...remainingTags } = state.tags;
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
 
-      // タスクからタグを削除
-      const updatedTasks = { ...state.tasks };
-      Object.keys(updatedTasks).forEach((taskId) => {
-        updatedTasks[taskId] = {
-          ...updatedTasks[taskId],
-          tagIds: updatedTasks[taskId].tagIds.filter((id) => id !== tagId),
-        };
-      });
+    const { [tagId]: _, ...remainingTags } = board.tags;
 
-      return { tags: remainingTags, tasks: updatedTasks };
+    const updatedTasks = { ...board.tasks };
+    Object.keys(updatedTasks).forEach((taskId) => {
+      updatedTasks[taskId] = {
+        ...updatedTasks[taskId],
+        tagIds: updatedTasks[taskId].tagIds.filter((id) => id !== tagId),
+      };
     });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tags: remainingTags,
+          tasks: updatedTasks,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }));
     get().saveToStorage();
   },
 
@@ -521,10 +913,13 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   getFilteredTasks: () => {
     const state = get();
-    const { tasks, filters, searchQuery } = state;
+    const board = state.boards[state.currentBoardId];
+    if (!board) return [];
 
-    return Object.values(tasks).filter((task) => {
-      // アクティブなタスクのみを対象（statusがundefinedまたは'active'）
+    const { filters, searchQuery } = state;
+
+    return Object.values(board.tasks).filter((task) => {
+      // アクティブなタスクのみを対象
       const taskStatus = task.status || "active";
       if (taskStatus !== "active") return false;
 
@@ -532,9 +927,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesTitle = task.title.toLowerCase().includes(query);
-        const matchesDescription = task.description
-          .toLowerCase()
-          .includes(query);
+        const matchesDescription = task.description.toLowerCase().includes(query);
         if (!matchesTitle && !matchesDescription) return false;
       }
 
@@ -592,12 +985,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   toggleMyTasks: () => {
     const { currentUserId, filters } = get();
-    if (!currentUserId) {
-      // 現在のユーザーが設定されていない場合は何もしない
-      return;
-    }
+    if (!currentUserId) return;
 
-    // 既に自分のタスクフィルターが適用されている場合は解除
     if (filters.assigneeIds.includes(currentUserId)) {
       set((state) => ({
         filters: {
@@ -606,7 +995,6 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         },
       }));
     } else {
-      // 自分のタスクフィルターを適用
       set((state) => ({
         filters: {
           ...state.filters,
@@ -618,18 +1006,19 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
   generateRecurringTasks: () => {
     const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
     const now = new Date();
     const tasksToAdd: Task[] = [];
 
-    Object.values(state.tasks).forEach((task) => {
+    Object.values(board.tasks).forEach((task) => {
       if (!task.recurrence || !task.dueDate) return;
 
       const dueDate = new Date(task.dueDate);
-      // 期限が過去で、かつ完了列にある場合、次の繰り返しタスクを生成
       if (dueDate < now && task.columnId === "done") {
         const nextDueDate = calculateNextDueDate(task.dueDate, task.recurrence);
 
-        // 繰り返し終了チェック
         if (isRecurrenceEnded(nextDueDate, task.recurrence)) {
           return;
         }
@@ -638,9 +1027,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
           ...task,
           id: uuidv4(),
           dueDate: nextDueDate,
-          columnId: "todo", // 未着手に戻す
-          position: Object.values(state.tasks).filter((t) => t.columnId === "todo")
-            .length,
+          columnId: "todo",
+          position: Object.values(board.tasks).filter((t) => t.columnId === "todo").length,
           createdAt: now.toISOString(),
           updatedAt: now.toISOString(),
           sync: {
@@ -655,13 +1043,21 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     });
 
     if (tasksToAdd.length > 0) {
-      set((state) => {
-        const newTasks = { ...state.tasks };
-        tasksToAdd.forEach((task) => {
-          newTasks[task.id] = task;
-        });
-        return { tasks: newTasks };
+      const newTasks = { ...board.tasks };
+      tasksToAdd.forEach((task) => {
+        newTasks[task.id] = task;
       });
+
+      set((state) => ({
+        boards: {
+          ...state.boards,
+          [state.currentBoardId]: {
+            ...board,
+            tasks: newTasks,
+            updatedAt: now.toISOString(),
+          },
+        },
+      }));
       get().saveToStorage();
       toast({
         title: "繰り返しタスクを生成しました",
@@ -676,14 +1072,43 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       const savedState = await storage.load();
       if (savedState) {
         const parsed = JSON.parse(savedState);
-        set({
-          tasks: parsed.tasks || {},
-          columns: parsed.columns || createDefaultColumns(),
-          columnOrder: parsed.columnOrder || ["todo", "inProgress", "done"],
-          members: parsed.members || {},
-          tags: parsed.tags || {},
-          currentUserId: parsed.currentUserId,
-        });
+
+        // 新形式（マルチボード対応）の場合
+        if (parsed.boards) {
+          set({
+            boards: parsed.boards,
+            boardOrder: parsed.boardOrder || Object.keys(parsed.boards),
+            currentBoardId: parsed.currentBoardId || Object.keys(parsed.boards)[0],
+            members: parsed.members || {},
+            currentUserId: parsed.currentUserId,
+          });
+        } else {
+          // 旧形式からのマイグレーション
+          const now = new Date().toISOString();
+          const migratedBoard: Board = {
+            id: DEFAULT_BOARD_ID,
+            name: "メインボード",
+            description: "",
+            tasks: parsed.tasks || {},
+            columns: parsed.columns || createDefaultColumns(),
+            columnOrder: parsed.columnOrder || ["todo", "inProgress", "done"],
+            tags: parsed.tags || {},
+            createdAt: now,
+            updatedAt: now,
+          };
+
+          set({
+            boards: { [DEFAULT_BOARD_ID]: migratedBoard },
+            boardOrder: [DEFAULT_BOARD_ID],
+            currentBoardId: DEFAULT_BOARD_ID,
+            members: parsed.members || {},
+            currentUserId: parsed.currentUserId,
+          });
+
+          // マイグレーション後に保存
+          get().saveToStorage();
+          console.log("データを新形式にマイグレーションしました");
+        }
       }
     } catch (error) {
       console.error("データの読み込みに失敗しました:", error);
@@ -693,16 +1118,39 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   saveToStorage: () => {
     const state = get();
     const dataToSave = {
-      tasks: state.tasks,
-      columns: state.columns,
-      columnOrder: state.columnOrder,
+      boards: state.boards,
+      boardOrder: state.boardOrder,
+      currentBoardId: state.currentBoardId,
       members: state.members,
-      tags: state.tags,
       currentUserId: state.currentUserId,
     };
-    // 非同期保存（fire-and-forget）
     storage.save(JSON.stringify(dataToSave)).catch((error) => {
       console.error("データの保存に失敗しました:", error);
     });
   },
 }));
+
+// セレクターヘルパー（現在のボードのデータにアクセスするため）
+export const selectCurrentBoard = (state: BoardStoreState) => {
+  return state.boards[state.currentBoardId];
+};
+
+export const selectTasks = (state: BoardStoreState) => {
+  const board = state.boards[state.currentBoardId];
+  return board?.tasks || {};
+};
+
+export const selectColumns = (state: BoardStoreState) => {
+  const board = state.boards[state.currentBoardId];
+  return board?.columns || {};
+};
+
+export const selectColumnOrder = (state: BoardStoreState) => {
+  const board = state.boards[state.currentBoardId];
+  return board?.columnOrder || [];
+};
+
+export const selectTags = (state: BoardStoreState) => {
+  const board = state.boards[state.currentBoardId];
+  return board?.tags || {};
+};

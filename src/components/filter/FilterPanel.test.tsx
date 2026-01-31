@@ -4,17 +4,48 @@ import userEvent from '@testing-library/user-event';
 import { FilterPanel } from './FilterPanel';
 import { useBoardStore } from '@/stores/useBoardStore';
 
-// ストアのリセット用ヘルパー
+const DEFAULT_BOARD_ID = 'default';
+
+const createDefaultColumns = () => ({
+  todo: { id: 'todo', title: '未着手', color: '#94a3b8', position: 0, isDefault: true },
+  inProgress: { id: 'inProgress', title: '進行中', color: '#60a5fa', position: 1, isDefault: true },
+  done: { id: 'done', title: '完了', color: '#34d399', position: 2, isDefault: true },
+});
+
+// ストアのリセット用ヘルパー（マルチボード対応）
 const resetStore = () => {
-  const store = useBoardStore.getState();
-  store.tasks = {};
-  store.members = {};
-  store.tags = {};
-  store.filters = {
-    tagIds: [],
-    assigneeIds: [],
-    priorities: [],
-  };
+  const now = new Date().toISOString();
+  useBoardStore.setState({
+    boards: {
+      [DEFAULT_BOARD_ID]: {
+        id: DEFAULT_BOARD_ID,
+        name: 'メインボード',
+        description: '',
+        tasks: {},
+        columns: createDefaultColumns(),
+        columnOrder: ['todo', 'inProgress', 'done'],
+        tags: {},
+        createdAt: now,
+        updatedAt: now,
+      },
+    },
+    boardOrder: [DEFAULT_BOARD_ID],
+    currentBoardId: DEFAULT_BOARD_ID,
+    members: {},
+    currentUserId: undefined,
+    filters: {
+      tagIds: [],
+      assigneeIds: [],
+      priorities: [],
+    },
+    searchQuery: '',
+  });
+};
+
+// ヘルパー: 現在のボードのタグを取得
+const getTags = () => {
+  const state = useBoardStore.getState();
+  return state.boards[state.currentBoardId]?.tags || {};
 };
 
 describe('FilterPanel', () => {
@@ -66,7 +97,7 @@ describe('FilterPanel', () => {
       await user.click(screen.getByText('バグ'));
 
       const filters = useBoardStore.getState().filters;
-      const tagId = Object.keys(useBoardStore.getState().tags)[0];
+      const tagId = Object.keys(getTags())[0];
       expect(filters.tagIds).toContain(tagId);
     });
 
@@ -75,7 +106,7 @@ describe('FilterPanel', () => {
       const { addTag, setFilters } = useBoardStore.getState();
 
       addTag('バグ', '#ff0000');
-      const tagId = Object.keys(useBoardStore.getState().tags)[0];
+      const tagId = Object.keys(getTags())[0];
       setFilters({ tagIds: [tagId] });
 
       render(<FilterPanel />);
@@ -170,7 +201,7 @@ describe('FilterPanel', () => {
       addTag('バグ', '#ff0000');
       addMember('田中太郎', '#0000ff');
 
-      const tagId = Object.keys(useBoardStore.getState().tags)[0];
+      const tagId = Object.keys(getTags())[0];
       const memberId = Object.keys(useBoardStore.getState().members)[0];
 
       setFilters({
@@ -206,7 +237,7 @@ describe('FilterPanel', () => {
       const { addTag, setFilters } = useBoardStore.getState();
 
       addTag('バグ', '#ff0000');
-      const tagId = Object.keys(useBoardStore.getState().tags)[0];
+      const tagId = Object.keys(getTags())[0];
 
       setFilters({
         tagIds: [tagId],

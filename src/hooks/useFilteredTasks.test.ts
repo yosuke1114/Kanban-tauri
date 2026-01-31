@@ -3,41 +3,54 @@ import { renderHook } from '@testing-library/react';
 import { useFilteredTasks } from './useFilteredTasks';
 import { useBoardStore } from '@/stores/useBoardStore';
 
-// ストアのリセット用ヘルパー
+const DEFAULT_BOARD_ID = 'default';
+
+const createDefaultColumns = () => ({
+  todo: { id: 'todo', title: '未着手', color: '#94a3b8', position: 0, isDefault: true },
+  inProgress: { id: 'inProgress', title: '進行中', color: '#60a5fa', position: 1, isDefault: true },
+  done: { id: 'done', title: '完了', color: '#34d399', position: 2, isDefault: true },
+});
+
+// ストアのリセット用ヘルパー（マルチボード対応）
 const resetStore = () => {
-  const store = useBoardStore.getState();
-  store.tasks = {};
-  store.columns = {
-    todo: {
-      id: 'todo',
-      title: '未着手',
-      color: '#94a3b8',
-      position: 0,
-      isDefault: true,
+  const now = new Date().toISOString();
+  useBoardStore.setState({
+    boards: {
+      [DEFAULT_BOARD_ID]: {
+        id: DEFAULT_BOARD_ID,
+        name: 'メインボード',
+        description: '',
+        tasks: {},
+        columns: createDefaultColumns(),
+        columnOrder: ['todo', 'inProgress', 'done'],
+        tags: {},
+        createdAt: now,
+        updatedAt: now,
+      },
     },
-    inProgress: {
-      id: 'inProgress',
-      title: '進行中',
-      color: '#60a5fa',
-      position: 1,
-      isDefault: true,
+    boardOrder: [DEFAULT_BOARD_ID],
+    currentBoardId: DEFAULT_BOARD_ID,
+    members: {},
+    currentUserId: undefined,
+    filters: {
+      tagIds: [],
+      assigneeIds: [],
+      priorities: [],
     },
-    done: {
-      id: 'done',
-      title: '完了',
-      color: '#34d399',
-      position: 2,
-      isDefault: true,
-    },
-  };
-  store.columnOrder = ['todo', 'inProgress', 'done'];
-  store.members = {};
-  store.tags = {};
-  store.filters = {
-    tagIds: [],
-    assigneeIds: [],
-    priorities: [],
-  };
+    searchQuery: '',
+  });
+};
+
+// ヘルパー: 現在のボードのタスクを取得
+const getTasks = () => {
+  const state = useBoardStore.getState();
+  return state.boards[state.currentBoardId]?.tasks || {};
+};
+
+// ヘルパー: 現在のボードのタグを取得
+const getTags = () => {
+  const state = useBoardStore.getState();
+  return state.boards[state.currentBoardId]?.tags || {};
 };
 
 describe('useFilteredTasks', () => {
@@ -64,13 +77,13 @@ describe('useFilteredTasks', () => {
     addTag('タグA', '#ff0000');
     addTag('タグB', '#00ff00');
 
-    const tagIds = Object.keys(useBoardStore.getState().tags);
+    const tagIds = Object.keys(getTags());
 
     addTask('todo', 'タスク1');
     addTask('todo', 'タスク2');
     addTask('todo', 'タスク3');
 
-    const taskIds = Object.keys(useBoardStore.getState().tasks);
+    const taskIds = Object.keys(getTasks());
     updateTask(taskIds[0], { tagIds: [tagIds[0]] });
     updateTask(taskIds[1], { tagIds: [tagIds[1]] });
     updateTask(taskIds[2], { tagIds: [tagIds[0], tagIds[1]] });
@@ -98,7 +111,7 @@ describe('useFilteredTasks', () => {
     addTask('todo', 'タスク2');
     addTask('todo', 'タスク3');
 
-    const taskIds = Object.keys(useBoardStore.getState().tasks);
+    const taskIds = Object.keys(getTasks());
     updateTask(taskIds[0], { assigneeIds: [memberIds[0]] });
     updateTask(taskIds[1], { assigneeIds: [memberIds[1]] });
     updateTask(taskIds[2], { assigneeIds: [memberIds[0]] });
@@ -120,7 +133,7 @@ describe('useFilteredTasks', () => {
     addTask('todo', 'タスク2');
     addTask('todo', 'タスク3');
 
-    const taskIds = Object.keys(useBoardStore.getState().tasks);
+    const taskIds = Object.keys(getTasks());
     updateTask(taskIds[0], { priority: 'high' });
     updateTask(taskIds[1], { priority: 'low' });
     updateTask(taskIds[2], { priority: 'medium' });
@@ -144,14 +157,14 @@ describe('useFilteredTasks', () => {
     addTag('タグA', '#ff0000');
     addMember('ユーザーA', '#0000ff');
 
-    const tagIds = Object.keys(useBoardStore.getState().tags);
+    const tagIds = Object.keys(getTags());
     const memberIds = Object.keys(useBoardStore.getState().members);
 
     addTask('todo', 'タスク1');
     addTask('todo', 'タスク2');
     addTask('todo', 'タスク3');
 
-    const taskIds = Object.keys(useBoardStore.getState().tasks);
+    const taskIds = Object.keys(getTasks());
     // タスク1: タグA + ユーザーA + high
     updateTask(taskIds[0], {
       tagIds: [tagIds[0]],

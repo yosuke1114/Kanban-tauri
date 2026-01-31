@@ -1,4 +1,4 @@
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Priority } from "@/types";
@@ -8,7 +8,7 @@ export function ActiveFiltersIndicator() {
   const setFilters = useBoardStore((state) => state.setFilters);
   const clearFilters = useBoardStore((state) => state.clearFilters);
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
 
   // フィルターがアクティブかどうかを直接計算
   const hasActiveFilters =

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectColumns, selectTags } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
 import { Task, SortField, SortDirection, Priority } from "@/types";
 import {
@@ -52,9 +52,9 @@ const getDueDateColor = (dueDate?: string): string => {
 };
 
 const ListView: React.FC = () => {
-  const columns = useBoardStore((state) => state.columns);
+  const columns = useBoardStore(selectColumns);
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
 
   const filteredTasks = useFilteredTasks();
 

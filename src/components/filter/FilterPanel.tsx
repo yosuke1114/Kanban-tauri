@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -22,7 +22,7 @@ export function FilterPanel() {
   const setFilters = useBoardStore((state) => state.setFilters);
   const clearFilters = useBoardStore((state) => state.clearFilters);
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
 
   const activeMembers = useMemo(
     () => Object.values(members).filter((m) => m.isActive),

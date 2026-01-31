@@ -76,6 +76,29 @@ export interface FilterState {
   };
 }
 
+// 個別のボード（カンバン）
+export interface Board {
+  id: string;
+  name: string;
+  description?: string;
+  tasks: { [key: string]: Task };
+  columns: { [key: string]: Column };
+  columnOrder: string[];
+  tags: { [key: string]: Tag }; // タグはボードごと
+  createdAt: string;
+  updatedAt: string;
+}
+
+// アプリケーション全体の状態
+export interface AppState {
+  boards: { [key: string]: Board };
+  boardOrder: string[]; // ボードの表示順
+  currentBoardId: string; // 現在選択中のボードID
+  members: { [key: string]: Member }; // メンバーは全ボード共通
+  currentUserId?: string; // 現在のユーザーID（「自分のタスク」フィルター用）
+}
+
+// 後方互換性のための既存インターフェース
 export interface BoardState {
   tasks: { [key: string]: Task };
   columns: { [key: string]: Column };
