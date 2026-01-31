@@ -16,9 +16,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, tasks }) => {
   return (
     <div
       ref={setNodeRef}
-      className="flex-shrink-0 w-full sm:w-80 md:w-96 bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/50 shadow-apple p-6 snap-start transition-all duration-200 hover:shadow-apple-md"
+      className="flex-shrink-0 flex flex-col w-full min-w-[280px] md:w-80 lg:w-96 xl:flex-1 xl:max-w-md h-full bg-muted/30 backdrop-blur-sm rounded-2xl border border-border/50 shadow-apple p-6 transition-all duration-200 hover:shadow-apple-md"
     >
-      <div className="mb-5 flex items-center gap-3">
+      <div className="mb-5 flex items-center gap-3 flex-shrink-0">
         <div
           className="w-1 h-6 rounded-full"
           style={{ backgroundColor: column.color }}
@@ -31,7 +31,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, tasks }) => {
         </span>
       </div>
 
-      <div className="space-y-3 min-h-[200px]">
+      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-2 -mr-2">
         {tasks.map((task) => (
           <SortableTaskCard key={task.id} task={task} />
         ))}

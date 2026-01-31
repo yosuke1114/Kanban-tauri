@@ -37,7 +37,7 @@ function App() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <AppHeader
         onOpenMemberManager={() => setShowMemberManager(true)}
         onOpenTagManager={() => setShowTagManager(true)}
@@ -48,9 +48,9 @@ function App() {
 
       <ActiveFiltersIndicator />
 
-      <main>
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <div className="container mx-auto px-4 pt-4">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-4 pt-4 flex-shrink-0">
             <TabsList>
               <TabsTrigger value="kanban" className="flex items-center gap-2">
                 <LayoutGrid size={16} />
@@ -62,10 +62,10 @@ function App() {
               </TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="kanban" className="mt-0">
+          <TabsContent value="kanban" className="mt-0 flex-1 overflow-hidden">
             <KanbanBoard />
           </TabsContent>
-          <TabsContent value="list" className="mt-0">
+          <TabsContent value="list" className="mt-0 flex-1 overflow-hidden">
             <ListView />
           </TabsContent>
         </Tabs>

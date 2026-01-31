@@ -120,7 +120,7 @@ const KanbanBoard: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full h-full p-4 overflow-hidden flex flex-col">
       {/* モバイル: カラムセレクター */}
       <div className="md:hidden mb-4">
         <Select value={activeColumnId} onValueChange={setActiveColumnId}>
@@ -146,13 +146,13 @@ const KanbanBoard: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col md:flex-row gap-4 md:overflow-x-auto md:pb-4 md:snap-x md:snap-mandatory lg:snap-none">
+        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto overflow-y-hidden pb-4 flex-1 min-h-0">
           {columnOrder.map((columnId) => {
             const column = columns[columnId];
             if (!column) return null;
 
             // モバイル: アクティブカラムのみ表示
-            // タブレット/デスクトップ: すべて表示
+            // デスクトップ: すべて表示（横スクロール可能）
             const isVisible = !isMobile || columnId === activeColumnId;
 
             if (!isVisible) return null;
