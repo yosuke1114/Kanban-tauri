@@ -7,21 +7,26 @@ import TagManager from "./components/tag/TagManager";
 import ColumnManager from "./components/kanban/ColumnManager";
 import { AppHeader } from "./components/layout/AppHeader";
 import { ActiveFiltersIndicator } from "./components/filter/ActiveFiltersIndicator";
+import { ShortcutsDialog } from "./components/shortcuts/ShortcutsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { LayoutGrid, List } from "lucide-react";
 import { ViewMode } from "./types";
 import { useDueDateNotifications } from "./hooks/useDueDateNotifications";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useBoardStore } from "./stores/useBoardStore";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
   const [showMemberManager, setShowMemberManager] = useState(false);
   const [showTagManager, setShowTagManager] = useState(false);
   const [showColumnManager, setShowColumnManager] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const taskInputRef = useRef<HTMLInputElement>(null);
+
+  const clearFilters = useBoardStore((state) => state.clearFilters);
 
   // 期限通知フック
   useDueDateNotifications();
@@ -33,6 +38,27 @@ function App() {
     },
     onNewTask: () => {
       taskInputRef.current?.focus();
+    },
+    onShowShortcuts: () => {
+      setShowShortcuts(true);
+    },
+    onSwitchToKanban: () => {
+      setViewMode("kanban");
+    },
+    onSwitchToList: () => {
+      setViewMode("list");
+    },
+    onOpenMembers: () => {
+      setShowMemberManager(true);
+    },
+    onOpenTags: () => {
+      setShowTagManager(true);
+    },
+    onOpenColumns: () => {
+      setShowColumnManager(true);
+    },
+    onClearFilters: () => {
+      clearFilters();
     },
   });
 
@@ -82,6 +108,10 @@ function App() {
       <TagManager
         open={showTagManager}
         onClose={() => setShowTagManager(false)}
+      />
+      <ShortcutsDialog
+        open={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
       />
       <Toaster />
     </div>
