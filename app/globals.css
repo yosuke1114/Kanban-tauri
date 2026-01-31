@@ -4,74 +4,106 @@
 
 @layer base {
   :root {
-    /* 温かみのあるオフホワイト背景 */
-    --background: 40 20% 98%;
-    --foreground: 215 25% 20%;
-    --card: 40 15% 99%;
-    --card-foreground: 215 25% 20%;
-    --popover: 40 15% 99%;
-    --popover-foreground: 215 25% 20%;
+    /* Apple System Colors - Light Mode */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
 
-    /* 落ち着いたブルー */
-    --primary: 215 55% 45%;
+    /* Apple System Blue */
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* やわらかいセカンダリ */
-    --secondary: 210 30% 92%;
-    --secondary-foreground: 215 25% 20%;
+    /* Apple System Gray */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 4%;
 
-    --muted: 210 30% 92%;
-    --muted-foreground: 215 16% 50%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    /* やわらかいティール */
-    --accent: 175 40% 45%;
+    /* Apple System Teal */
+    --accent: 175 70% 41%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 55%;
+    /* Apple System Red */
+    --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 215 55% 45%;
-    --radius: 0.5rem;
+    /* Borders - より繊細に */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;
 
-    /* 優先度カラー */
-    --priority-low: 142 71% 45%;
-    --priority-medium: 45 93% 47%;
-    --priority-high: 25 95% 53%;
-    --priority-urgent: 0 72% 55%;
+    /* 優先度カラー - Apple System Colors */
+    --priority-low: 142 76% 36%; /* System Green */
+    --priority-medium: 48 100% 50%; /* System Yellow */
+    --priority-high: 24 100% 50%; /* System Orange */
+    --priority-urgent: 0 100% 50%; /* System Red */
 
     /* 期限カラー */
-    --due-overdue: 0 72% 55%;
-    --due-today: 25 95% 53%;
-    --due-soon: 45 93% 47%;
+    --due-overdue: 0 100% 50%;
+    --due-today: 24 100% 50%;
+    --due-soon: 48 100% 50%;
+
+    /* Apple風シャドウ - Big Sur/Monterey風 */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    /* Glassmorphism - macOS Big Sur風 */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.18);
+
+    /* Apple標準イージング */
+    --ease-in-out-cubic: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Apple Dark Mode - macOS Monterey/Ventura風 */
+    --background: 240 10% 8%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Dark Mode Primary - より明るいブルー */
+    --primary: 211 100% 60%;
+    --primary-foreground: 240 10% 8%;
+
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 175 70% 50%;
+    --accent-foreground: 240 10% 8%;
+
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 240 4% 20%;
+    --input: 240 4% 20%;
+    --ring: 211 100% 60%;
+
+    /* Dark Mode Glassmorphism */
+    --glass-bg: rgba(30, 30, 30, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+
+    /* Dark Mode Shadows - より控えめに */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
   }
 }
 
@@ -79,8 +111,23 @@
   * {
     @apply border-border;
   }
+
+  /* San Francisco風フォントスタック */
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3",
+                 Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em; /* Apple標準 */
+  }
+
+  /* 見出しのタイポグラフィ */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600; /* Semibold */
+    letter-spacing: -0.022em; /* 見出しはより狭く */
+    line-height: 1.2;
   }
 
   /* Apple風のスムーズなトランジション */
@@ -89,10 +136,12 @@
   input,
   select,
   textarea {
-    @apply transition-all duration-200 ease-in-out;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-in-out-cubic);
   }
 
-  /* フォーカス状態の改善 */
+  /* フォーカス状態の改善 - Apple風のリング */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -101,10 +150,19 @@
     @apply outline-none ring-2 ring-primary/20 ring-offset-2 ring-offset-background;
   }
 
-  /* カードのホバーエフェクト - Apple風の微細なエフェクト */
+  /* カードのホバーエフェクト - より繊細に */
   [role="button"]:hover,
   button:hover:not(:disabled) {
-    @apply transform scale-[1.005];
+    transform: translateY(-1px);
+    transition-timing-function: var(--ease-out-expo);
+  }
+
+  /* 無効状態 */
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    @apply opacity-40 cursor-not-allowed;
   }
 
   /* スムーズなスクロール */
@@ -112,21 +170,108 @@
     scroll-behavior: smooth;
   }
 
-  /* webkit向けのスクロールバースタイリング */
+  /* macOS風スクロールバー */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary/30;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full;
+    @apply bg-muted-foreground/20 rounded-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/30;
+    @apply bg-muted-foreground/30;
+  }
+
+  /* セレクションカラー */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.2);
+  }
+}
+
+/* Apple風ユーティリティクラス */
+@layer utilities {
+  /* Glassmorphism - macOS Big Sur/Monterey風 */
+  .glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl shadow-lg;
+  }
+
+  /* Apple風シャドウ */
+  .shadow-apple-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-apple {
+    box-shadow: var(--shadow);
+  }
+
+  .shadow-apple-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-apple-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-apple-xl {
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* Apple風トランジション */
+  .transition-apple {
+    transition-timing-function: var(--ease-in-out-cubic);
+    transition-duration: 200ms;
+  }
+
+  .transition-apple-slow {
+    transition-timing-function: var(--ease-out-expo);
+    transition-duration: 350ms;
+  }
+
+  .transition-apple-spring {
+    transition-timing-function: var(--ease-spring);
+    transition-duration: 400ms;
+  }
+
+  /* Apple風ホバーエフェクト */
+  .hover-lift {
+    @apply transition-apple;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* カード風スタイル */
+  .card-apple {
+    @apply bg-card rounded-2xl border border-border/50 shadow-apple p-6;
+  }
+
+  /* ボタン風スタイル */
+  .btn-apple {
+    @apply rounded-xl px-4 py-2 font-medium transition-apple;
+    @apply hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  /* インプット風スタイル */
+  .input-apple {
+    @apply rounded-xl border border-border/50 bg-background/50;
+    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary;
+    @apply transition-apple;
   }
 }

@@ -23,10 +23,10 @@ test.describe('Smoke Tests', () => {
   test('タスク一覧が表示される', async ({ page }) => {
     await page.goto('/');
 
-    // 3つのデフォルトカラムが表示されていることを確認
-    await expect(page.getByText('未着手')).toBeVisible();
-    await expect(page.getByText('進行中')).toBeVisible();
-    await expect(page.getByText('完了')).toBeVisible();
+    // 3つのデフォルトカラムが表示されていることを確認（heading roleで特定）
+    await expect(page.getByRole('heading', { name: /未着手/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /進行中/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /完了/ })).toBeVisible();
   });
 
   test('タスク追加フォームが表示される', async ({ page }) => {

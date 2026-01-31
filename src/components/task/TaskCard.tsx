@@ -92,13 +92,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md",
-        isDragging && "opacity-50 rotate-2"
+        "group cursor-pointer rounded-xl border border-border/50",
+        "bg-card shadow-apple hover:shadow-apple-md",
+        "transition-all duration-200 hover:-translate-y-0.5",
+        "backdrop-blur-sm bg-opacity-95",
+        isDragging && "opacity-50 rotate-2 shadow-apple-xl ring-2 ring-primary/30"
       )}
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium leading-tight">
+        <CardTitle className="text-base font-semibold leading-tight tracking-tight group-hover:text-primary transition-colors">
           {task.title}
         </CardTitle>
       </CardHeader>
@@ -109,10 +112,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </CardDescription>
         )}
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           <Badge
             variant={PRIORITY_CONFIG[task.priority].variant}
-            className="text-xs flex items-center gap-1"
+            className="text-xs font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-full shadow-sm"
           >
             {React.createElement(PRIORITY_CONFIG[task.priority].icon, {
               size: 12,
@@ -127,7 +130,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               <Badge
                 key={tagId}
                 variant="outline"
-                className="text-xs"
+                className="text-xs font-medium px-2.5 py-0.5 rounded-full"
                 style={{
                   borderColor: tag.color,
                   color: tag.color,

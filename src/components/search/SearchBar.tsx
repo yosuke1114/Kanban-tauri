@@ -39,17 +39,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="pl-10 pr-10 rounded-full bg-secondary/50 border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+        className="pl-10 pr-10 rounded-full input-apple bg-muted/50 border-border/30"
         aria-label="タスク検索"
       />
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-apple rounded-full p-1 hover:bg-muted"
           aria-label="検索をクリア"
           type="button"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       )}
     </div>

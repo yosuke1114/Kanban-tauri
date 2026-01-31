@@ -108,25 +108,29 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <div className="flex justify-between items-start">
             <div>
-              <DialogTitle>タスクを編集</DialogTitle>
-              <DialogDescription>タスクの詳細を編集します</DialogDescription>
+              <DialogTitle className="text-xl font-semibold tracking-tight">
+                タスクを編集
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                タスクの詳細を編集します
+              </DialogDescription>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowDeleteAlert(true)}
-              className="text-destructive"
+              className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
             >
               <Trash2 size={20} />
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="px-6 py-4 space-y-4">
           <div>
             <Label htmlFor="title">タイトル</Label>
             <Input
@@ -280,27 +284,40 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/50 bg-muted/20">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="rounded-xl transition-apple"
+          >
             キャンセル
           </Button>
-          <Button onClick={handleSave}>保存</Button>
+          <Button
+            onClick={handleSave}
+            className="rounded-xl transition-apple hover:scale-105"
+          >
+            保存
+          </Button>
         </DialogFooter>
       </DialogContent>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
-            <AlertDialogTitle>タスクを削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-semibold tracking-tight">
+              タスクを削除しますか？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               この操作は取り消せません。タスク「{task.title}」が完全に削除されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl transition-apple">
+              キャンセル
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               削除
             </AlertDialogAction>

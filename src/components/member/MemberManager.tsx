@@ -77,15 +77,17 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>メンバー管理</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-md rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            メンバー管理
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
             チームメンバーを追加・編集します
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="memberName">新しいメンバー</Label>
             <div className="flex gap-2">
@@ -170,8 +172,10 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
           </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={onClose}>閉じる</Button>
+        <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/50 bg-muted/20">
+          <Button onClick={onClose} className="rounded-xl transition-apple">
+            閉じる
+          </Button>
         </DialogFooter>
       </DialogContent>
 
@@ -179,19 +183,23 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
-            <AlertDialogTitle>メンバーを削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-semibold tracking-tight">
+              メンバーを削除しますか？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               この操作は取り消せません。メンバー「{deleteTarget?.name}
               」が完全に削除され、関連するタスクから割り当てが解除されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl transition-apple">
+              キャンセル
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               削除
             </AlertDialogAction>

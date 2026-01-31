@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -12,18 +12,22 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import { Task } from "@/types";
 import KanbanColumn from "./KanbanColumn";
 import TaskCard from "../task/TaskCard";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const KanbanBoard: React.FC = () => {
   const tasks = useBoardStore((state) => state.tasks);
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
-  const addTask = useBoardStore((state) => state.addTask);
   const moveTask = useBoardStore((state) => state.moveTask);
   const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
   const generateRecurringTasks = useBoardStore(
@@ -32,8 +36,24 @@ const KanbanBoard: React.FC = () => {
 
   const filteredTasks = useFilteredTasks();
 
-  const [newTaskTitle, setNewTaskTitle] = useState("");
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeColumnId, setActiveColumnId] = useState<string>(
+    columnOrder[0] || ""
+  );
+
+  // レスポンシブ対応: モバイル判定
+  const isMobile = useIsMobile();
+
+  // カラムごとのタスク数を計算
+  const columnTaskCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    columnOrder.forEach((columnId) => {
+      counts[columnId] = filteredTasks.filter(
+        (task) => task.columnId === columnId
+      ).length;
+    });
+    return counts;
+  }, [columnOrder, filteredTasks]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -99,33 +119,26 @@ const KanbanBoard: React.FC = () => {
     [tasks, columns, filteredTasks, moveTask]
   );
 
-  const handleAddTask = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (newTaskTitle.trim()) {
-        addTask("todo", newTaskTitle);
-        setNewTaskTitle("");
-      }
-    },
-    [newTaskTitle, addTask]
-  );
-
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Kanban Board</h2>
-        <form onSubmit={handleAddTask} className="flex gap-2">
-          <Input
-            type="text"
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            placeholder="新しいタスクを追加..."
-            className="flex-1"
-          />
-          <Button type="submit" size="icon">
-            <PlusCircle size={20} />
-          </Button>
-        </form>
+      {/* モバイル: カラムセレクター */}
+      <div className="md:hidden mb-4">
+        <Select value={activeColumnId} onValueChange={setActiveColumnId}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {columnOrder.map((columnId) => {
+              const column = columns[columnId];
+              if (!column) return null;
+              return (
+                <SelectItem key={columnId} value={columnId}>
+                  {column.title} ({columnTaskCounts[columnId] || 0})
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
 
       <DndContext
@@ -133,10 +146,16 @@ const KanbanBoard: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none">
+        <div className="flex flex-col md:flex-row gap-4 md:overflow-x-auto md:pb-4 md:snap-x md:snap-mandatory lg:snap-none">
           {columnOrder.map((columnId) => {
             const column = columns[columnId];
             if (!column) return null;
+
+            // モバイル: アクティブカラムのみ表示
+            // タブレット/デスクトップ: すべて表示
+            const isVisible = !isMobile || columnId === activeColumnId;
+
+            if (!isVisible) return null;
 
             const columnTasks = filteredTasks
               .filter((task) => task.columnId === columnId)
