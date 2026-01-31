@@ -111,7 +111,7 @@ const ListView: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full h-full overflow-auto p-4">
       <div className="rounded-md border">
         <Table>
           <TableHeader>
