@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Task, Priority } from "@/types";
-import { Trash2 } from "lucide-react";
+import { Trash2, Archive } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
@@ -55,6 +55,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 }) => {
   const updateTask = useBoardStore((state) => state.updateTask);
   const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
+  const archiveTask = useBoardStore((state) => state.archiveTask);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
   const columns = useBoardStore((state) => state.columns);
@@ -83,6 +84,11 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const handleDelete = () => {
     softDeleteTask(task.id);
     setShowDeleteAlert(false);
+    onClose();
+  };
+
+  const handleArchive = () => {
+    archiveTask(task.id);
     onClose();
   };
 
@@ -119,14 +125,26 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 タスクの詳細を編集します
               </DialogDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowDeleteAlert(true)}
-              className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
-            >
-              <Trash2 size={20} />
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleArchive}
+                className="text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-apple"
+                aria-label="アーカイブ"
+              >
+                <Archive size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteAlert(true)}
+                className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
+                aria-label="ゴミ箱に移動"
+              >
+                <Trash2 size={20} />
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 

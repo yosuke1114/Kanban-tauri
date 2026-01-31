@@ -6,11 +6,12 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Edit, Copy, Trash2 } from "lucide-react";
+import { Edit, Copy, Trash2, Archive } from "lucide-react";
 
 interface TaskContextMenuProps {
   onEdit: () => void;
   onDuplicate: () => void;
+  onArchive: () => void;
   onDelete: () => void;
   children: React.ReactNode;
 }
@@ -18,6 +19,7 @@ interface TaskContextMenuProps {
 export const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   onEdit,
   onDuplicate,
+  onArchive,
   onDelete,
   children,
 }) => {
@@ -39,13 +41,20 @@ export const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
           <Copy size={16} className="mr-2" />
           複製
         </ContextMenuItem>
+        <ContextMenuItem
+          onClick={onArchive}
+          className="rounded-lg cursor-pointer transition-apple"
+        >
+          <Archive size={16} className="mr-2" />
+          アーカイブ
+        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem
           onClick={onDelete}
           className="rounded-lg text-destructive focus:text-destructive cursor-pointer transition-apple"
         >
           <Trash2 size={16} className="mr-2" />
-          削除
+          ゴミ箱に移動
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

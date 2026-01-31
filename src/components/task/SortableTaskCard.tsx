@@ -26,6 +26,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
   const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
+  const archiveTask = useBoardStore((state) => state.archiveTask);
   const addTask = useBoardStore((state) => state.addTask);
 
   const {
@@ -49,6 +50,10 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
     addTask(task.columnId, `${task.title} (コピー)`);
   }, [task, addTask]);
 
+  const handleArchive = useCallback(() => {
+    archiveTask(task.id);
+  }, [task.id, archiveTask]);
+
   const handleDelete = useCallback(() => {
     softDeleteTask(task.id);
     setIsDeleteOpen(false);
@@ -59,6 +64,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
       <TaskContextMenu
         onEdit={() => setIsEditOpen(true)}
         onDuplicate={handleDuplicate}
+        onArchive={handleArchive}
         onDelete={() => setIsDeleteOpen(true)}
       >
         <div ref={setNodeRef} style={style} {...attributes} {...listeners}>

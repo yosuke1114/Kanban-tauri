@@ -2,6 +2,9 @@ import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Column, Task } from "@/types";
 import { ViewportSize } from "@/hooks/useMediaQuery";
+import { useBoardStore } from "@/stores/useBoardStore";
+import { Button } from "@/components/ui/button";
+import { Archive } from "lucide-react";
 import SortableTaskCard from "../task/SortableTaskCard";
 
 interface KanbanColumnProps {
@@ -19,6 +22,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     id: column.id,
   });
 
+  const archiveColumnTasks = useBoardStore((state) => state.archiveColumnTasks);
+
+  // 完了列かどうか（"done" または "完了" を含む列）
+  const isCompletedColumn = column.id === "done" || column.title.includes("完了");
+
   // ビューポートサイズに応じたスタイルクラス
   const getColumnWidthClass = () => {
     switch (viewportSize) {
@@ -30,6 +38,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       default:
         return "w-96 min-w-[320px] xl:flex-1 xl:max-w-md";
     }
+  };
+
+  const handleArchiveAll = () => {
+    archiveColumnTasks(column.id);
   };
 
   return (
@@ -49,6 +61,19 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           {tasks.length}
         </span>
       </div>
+
+      {/* 完了列の場合、一括アーカイブボタンを表示 */}
+      {isCompletedColumn && tasks.length > 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleArchiveAll}
+          className="mb-3 rounded-lg text-muted-foreground hover:text-foreground transition-apple"
+        >
+          <Archive size={14} className="mr-2" />
+          すべてアーカイブ
+        </Button>
+      )}
 
       <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-2 -mr-2">
         {tasks.map((task) => (

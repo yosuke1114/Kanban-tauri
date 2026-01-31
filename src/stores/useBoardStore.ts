@@ -59,6 +59,7 @@ interface BoardStore extends BoardStoreState {
 
   // 論理削除操作
   archiveTask: (taskId: string) => void;
+  archiveColumnTasks: (columnId: string) => void;
   softDeleteTask: (taskId: string) => void;
   restoreTask: (taskId: string) => void;
   permanentDeleteTask: (taskId: string) => void;
@@ -238,6 +239,35 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     toast({
       title: "タスクをアーカイブしました",
       description: task.title,
+    });
+  },
+
+  archiveColumnTasks: (columnId: string) => {
+    const { tasks, columns } = get();
+    const column = columns[columnId];
+    const columnTasks = Object.values(tasks).filter(
+      (t) => t.columnId === columnId && (t.status === "active" || !t.status)
+    );
+
+    if (columnTasks.length === 0) return;
+
+    const now = new Date().toISOString();
+    set((state) => {
+      const updatedTasks = { ...state.tasks };
+      columnTasks.forEach((task) => {
+        updatedTasks[task.id] = {
+          ...task,
+          status: "archived",
+          archivedAt: now,
+          updatedAt: now,
+        };
+      });
+      return { tasks: updatedTasks };
+    });
+    get().saveToStorage();
+    toast({
+      title: `${columnTasks.length}件のタスクをアーカイブしました`,
+      description: column?.title || columnId,
     });
   },
 
