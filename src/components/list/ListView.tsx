@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
-import { Task, SortField, SortDirection, Priority } from "@/types";
+import { Task, SortField, SortDirection } from "@/types";
 import {
   Table,
   TableBody,
@@ -15,41 +15,32 @@ import { ja } from "date-fns/locale";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EditTaskDialog from "../task/EditTaskDialog";
+import {
+  PRIORITY_ORDER,
+  PRIORITY_LABELS,
+  PRIORITY_COLORS,
+} from "@/constants/priority";
+import { getDueDateColor } from "@/utils/dueDate";
 
-const PRIORITY_ORDER: Record<Priority, number> = {
-  low: 1,
-  medium: 2,
-  high: 3,
-  urgent: 4,
-};
+// SortIconコンポーネントを外部に移動（パフォーマンス最適化）
+interface SortIconProps {
+  field: SortField;
+  sortField: SortField;
+  sortDirection: SortDirection;
+}
 
-const PRIORITY_LABELS: Record<Priority, string> = {
-  low: "低",
-  medium: "中",
-  high: "高",
-  urgent: "緊急",
-};
-
-const PRIORITY_COLORS: Record<Priority, string> = {
-  low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-};
-
-const getDueDateColor = (dueDate?: string): string => {
-  if (!dueDate) return "";
-  const today = new Date();
-  const due = new Date(dueDate);
-  const diffDays = Math.ceil(
-    (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+const SortIcon: React.FC<SortIconProps> = React.memo(({ field, sortField, sortDirection }) => {
+  if (sortField !== field) {
+    return <ArrowUpDown size={14} className="ml-1 opacity-40" />;
+  }
+  return sortDirection === "asc" ? (
+    <ArrowUp size={14} className="ml-1" />
+  ) : (
+    <ArrowDown size={14} className="ml-1" />
   );
+});
 
-  if (diffDays < 0) return "text-red-600 font-semibold";
-  if (diffDays === 0) return "text-orange-600 font-semibold";
-  if (diffDays <= 3) return "text-yellow-600";
-  return "";
-};
+SortIcon.displayName = "SortIcon";
 
 const ListView: React.FC = () => {
   const columns = useBoardStore((state) => state.columns);
@@ -99,17 +90,6 @@ const ListView: React.FC = () => {
     });
   }, [filteredTasks, sortField, sortDirection]);
 
-  const SortIcon: React.FC<{ field: SortField }> = ({ field }) => {
-    if (sortField !== field) {
-      return <ArrowUpDown size={14} className="ml-1 opacity-40" />;
-    }
-    return sortDirection === "asc" ? (
-      <ArrowUp size={14} className="ml-1" />
-    ) : (
-      <ArrowDown size={14} className="ml-1" />
-    );
-  };
-
   return (
     <div className="w-full h-full overflow-auto p-4">
       <div className="rounded-md border">
@@ -124,7 +104,7 @@ const ListView: React.FC = () => {
                   className="h-8 px-2"
                 >
                   タスク
-                  <SortIcon field="title" />
+                  <SortIcon field="title" sortField={sortField} sortDirection={sortDirection} />
                 </Button>
               </TableHead>
               <TableHead>
@@ -135,7 +115,7 @@ const ListView: React.FC = () => {
                   className="h-8 px-2"
                 >
                   優先度
-                  <SortIcon field="priority" />
+                  <SortIcon field="priority" sortField={sortField} sortDirection={sortDirection} />
                 </Button>
               </TableHead>
               <TableHead>ステータス</TableHead>
@@ -147,7 +127,7 @@ const ListView: React.FC = () => {
                   className="h-8 px-2"
                 >
                   期限
-                  <SortIcon field="dueDate" />
+                  <SortIcon field="dueDate" sortField={sortField} sortDirection={sortDirection} />
                 </Button>
               </TableHead>
               <TableHead>担当者</TableHead>
@@ -160,7 +140,7 @@ const ListView: React.FC = () => {
                   className="h-8 px-2"
                 >
                   作成日
-                  <SortIcon field="createdAt" />
+                  <SortIcon field="createdAt" sortField={sortField} sortDirection={sortDirection} />
                 </Button>
               </TableHead>
             </TableRow>

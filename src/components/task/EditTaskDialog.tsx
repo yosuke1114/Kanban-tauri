@@ -7,16 +7,7 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,25 +20,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Task, Priority } from "@/types";
+import { Task } from "@/types";
 import { Trash2, Plus, CheckSquare } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
 import { Separator } from "@/components/ui/separator";
+import { PRIORITY_OPTIONS } from "@/constants/priority";
 
 interface EditTaskDialogProps {
   task: Task;
   open: boolean;
   onClose: () => void;
 }
-
-const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
-  { value: "low", label: "低" },
-  { value: "medium", label: "中" },
-  { value: "high", label: "高" },
-  { value: "urgent", label: "緊急" },
-];
 
 const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   task,
@@ -130,6 +115,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               size="icon"
               onClick={() => setShowDeleteAlert(true)}
               className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
+              aria-label="削除"
             >
               <Trash2 size={20} />
             </Button>
@@ -294,10 +280,12 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <div
                   key={subtask.id}
                   className="flex items-center gap-2 p-2 rounded-lg border bg-background/50"
+                  data-testid={`subtask-item-${subtask.id}`}
                 >
                   <Checkbox
                     checked={subtask.completed}
                     onCheckedChange={() => toggleSubtask(task.id, subtask.id)}
+                    data-testid={`subtask-checkbox-${subtask.id}`}
                   />
                   <Input
                     value={subtask.title}
@@ -307,12 +295,14 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                     className={`flex-1 border-0 bg-transparent ${
                       subtask.completed ? "line-through text-muted-foreground" : ""
                     }`}
+                    data-testid={`subtask-title-${subtask.id}`}
                   />
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => deleteSubtask(task.id, subtask.id)}
                     className="text-destructive hover:bg-destructive/10 transition-apple rounded-lg flex-shrink-0"
+                    data-testid={`delete-subtask-${subtask.id}`}
                   >
                     <Trash2 size={16} />
                   </Button>
@@ -325,6 +315,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 value={newSubtaskTitle}
                 onChange={(e) => setNewSubtaskTitle(e.target.value)}
                 placeholder="新しいサブタスクを追加..."
+                data-testid="new-subtask-input"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && newSubtaskTitle.trim()) {
                     e.preventDefault();
@@ -343,6 +334,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 size="icon"
                 variant="outline"
                 className="flex-shrink-0"
+                data-testid="add-subtask-button"
               >
                 <Plus size={16} />
               </Button>
@@ -382,29 +374,13 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         </DialogFooter>
       </DialogContent>
 
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-semibold tracking-tight">
-              タスクを削除しますか？
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground">
-              この操作は取り消せません。タスク「{task.title}」が完全に削除されます。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
-              キャンセル
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
-            >
-              削除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmationDialog
+        open={showDeleteAlert}
+        onOpenChange={setShowDeleteAlert}
+        onConfirm={handleDelete}
+        title="タスクを削除しますか？"
+        description={`この操作は取り消せません。タスク「${task.title}」が完全に削除されます。`}
+      />
     </Dialog>
   );
 };

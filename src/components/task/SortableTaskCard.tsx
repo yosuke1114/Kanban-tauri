@@ -21,7 +21,7 @@ interface SortableTaskCardProps {
   task: Task;
 }
 
-const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
+const SortableTaskCard: React.FC<SortableTaskCardProps> = React.memo(({ task }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
@@ -53,12 +53,16 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   const handleDuplicate = useCallback(() => {
     // シンプルな複製: タイトルだけコピー
     addTask(task.columnId, `${task.title} (コピー)`);
-  }, [task, addTask]);
+  }, [task.columnId, task.title, addTask]);
 
   const handleDelete = useCallback(() => {
     deleteTask(task.id);
     setIsDeleteOpen(false);
   }, [task.id, deleteTask]);
+
+  const handleCardClick = useCallback(() => {
+    setIsEditOpen(true);
+  }, []);
 
   return (
     <>
@@ -71,9 +75,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
           <TaskCard
             task={task}
             isDragging={isDragging}
-            onClick={() => {
-              setIsEditOpen(true);
-            }}
+            onClick={handleCardClick}
           />
         </div>
       </TaskContextMenu>
@@ -109,6 +111,8 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
       </AlertDialog>
     </>
   );
-};
+});
+
+SortableTaskCard.displayName = "SortableTaskCard";
 
 export default SortableTaskCard;

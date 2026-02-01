@@ -38,6 +38,17 @@ const KanbanBoard: React.FC = () => {
 
   const filteredTasks = useFilteredTasks();
 
+  // タスクをカラムごとにグループ化（パフォーマンス最適化）
+  const tasksByColumn = useMemo(() => {
+    const grouped: Record<string, Task[]> = {};
+    columnOrder.forEach((columnId) => {
+      grouped[columnId] = filteredTasks
+        .filter((task) => task.columnId === columnId)
+        .sort((a, b) => a.position - b.position);
+    });
+    return grouped;
+  }, [filteredTasks, columnOrder]);
+
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string>(
     columnOrder[0] || ""
@@ -234,9 +245,7 @@ const KanbanBoard: React.FC = () => {
 
             if (!isVisible) return null;
 
-            const columnTasks = filteredTasks
-              .filter((task) => task.columnId === columnId)
-              .sort((a, b) => a.position - b.position);
+            const columnTasks = tasksByColumn[columnId] || [];
 
             return (
               <SortableContext
