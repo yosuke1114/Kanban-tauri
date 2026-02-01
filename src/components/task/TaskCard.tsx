@@ -15,7 +15,7 @@ import { ja } from "date-fns/locale";
 import { Calendar, User, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PRIORITY_CONFIG } from "@/constants/priority";
-import { getDueDateStatus, getDueDateColorClass } from "@/utils/dueDate";
+import { getDueDateStatus } from "@/utils/dueDate";
 
 interface TaskCardProps {
   task: Task;
