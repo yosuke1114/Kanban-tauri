@@ -153,11 +153,13 @@ When moving tasks, the `moveTask` action recalculates positions for all tasks in
 These features are now fully implemented:
 
 1. **Multi-Board Support**: Create and manage multiple project boards
+
    - Board switching with selector
    - Each board has independent tasks, columns, members, tags
    - Board management UI
 
 2. **Filters (Full Implementation)**: Complete filter system
+
    - Tag filtering (UI: FilterPanel)
    - Assignee filtering (UI: FilterPanel)
    - Priority filtering (UI: FilterPanel)
@@ -165,6 +167,7 @@ These features are now fully implemented:
    - Clear filters button
 
 3. **Input Validation**: Comprehensive validation system (`src/constants/validation.ts`)
+
    - Task title: 100 characters max
    - Task description: 500 characters max
    - Subtask title: 100 characters max
@@ -175,36 +178,43 @@ These features are now fully implemented:
    - Character counters on all inputs
 
 4. **Subtasks**: Checklist-style subtasks in tasks
+
    - Add, toggle, delete subtasks
    - Progress tracking in EditTaskDialog
 
 5. **Calendar View**: Date-based task visualization
+
    - Monthly calendar with react-day-picker
    - Tasks displayed on due date
    - Click to open task details
 
 6. **List View**: Table-based alternative view
+
    - Sortable columns (title, priority, due date, created date)
    - Click row to edit task
    - Optimized SortIcon component
 
 7. **Keyboard Shortcuts**: Extensive keyboard navigation
+
    - ⌘K (Ctrl+K): Focus search
    - ⌘N (Ctrl+N): New task
    - Esc: Close dialogs
    - [Full list in AppHeader component]
 
 8. **Responsive Design**: Mobile-first approach
+
    - Breakpoints: mobile (<768px), tablet (768-1024px), desktop (>1024px)
    - Mobile: Icon-only buttons, responsive spacing
    - All components optimized for small screens
 
 9. **Soft Delete & Archive**: Non-destructive task management
+
    - Trash: Soft delete with 30-day auto-deletion
    - Archive: Long-term storage
    - Restore functionality
 
 10. **Recurrence**: RecurrenceRule for repeating tasks
+
     - Automatic generation on app startup via `generateRecurringTasks()`
     - Completed recurring tasks generate new instances in "未着手" column
 
@@ -216,7 +226,7 @@ These features are now fully implemented:
 
 These are next on the roadmap:
 
-1. **Column Reordering**: GripVerticalアイコンはあるが、D&D機能は未実装
+1. **Column Reordering**: GripVertical アイコンはあるが、D&D 機能は未実装
 2. **Desktop Notifications**: Planned for overdue tasks (Tauri notification API)
 3. **Date Range Filter**: react-day-picker installed, integrate into FilterPanel
 4. **Dark Mode**: Theme toggle with system preference support
@@ -235,8 +245,8 @@ These are next on the roadmap:
 
 ## TDD
 
-- t-wada style
-- as you could , e2e with playwright
+- t-wada 形式で要件が出たらテストを書くこと
+- E2E テストは playwright を使用しフェイズの終わりにカバレッジ確認。テスト作成、修正実施すること。
 
 ## 品質確認チェックリスト
 
@@ -245,20 +255,20 @@ These are next on the roadmap:
 すべてのコード変更後に以下を**必ず実行**してください:
 
 1. **ビルド確認**: `npm run build` が成功すること
-2. **テスト確認**: `npm run test -- --run` が全パスすること (324テスト)
-3. **E2E確認**: `npm run test:e2e` がパスすること
+2. **テスト確認**: `npm run test -- --run` が全パスすること (324 テスト)
+3. **E2E 確認**: `npm run test:e2e` がパスすること
 4. **画面表示確認**: アプリを起動して白い画面でないこと
 5. **コンソール確認**: ブラウザコンソールにエラーがないこと
 6. **機能確認**: 変更した機能が正常に動作すること
-7. **Best Practiceレビュー**: React/UI変更時は必須
+7. **Best Practice レビュー**: React/UI 変更時は必須
 
 ### 特に注意が必要な変更
 
-- **Zustandストアの変更**: セレクター内で関数呼び出しをしない（下記参照）
-- **useEffectの変更**: 無限ループの可能性を確認
+- **Zustand ストアの変更**: セレクター内で関数呼び出しをしない（下記参照）
+- **useEffect の変更**: 無限ループの可能性を確認
 - **状態管理の変更**: 再レンダリングの影響を確認
 
-### Zustandストアのベストプラクティス
+### Zustand ストアのベストプラクティス
 
 **❌ 危険なパターン（無限ループの原因）:**
 
@@ -281,3 +291,7 @@ const filteredTasks = useMemo(() => filterTasks(tasks), [tasks]);
 ## Review
 
 - frontend の場合は Vercel React Best Practice スキルを使って毎回レビューすること。
+
+## Document
+
+- 機能完了、計画実施、修正など対応した場合は逐次 MD ファイルを確認し、最新内容に更新すること

@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { BoardSelector } from "@/components/board/BoardSelector";
-import { Users, Tag, Columns, PlusCircle, Trash2, Settings } from "lucide-react";
+import { DataStorageSettings } from "@/components/settings/DataStorageSettings";
+import { Users, Tag, Columns, PlusCircle, Trash2, Settings, Database } from "lucide-react";
 import { useBoardStore, selectTrashCount } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,6 +43,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [taskTitleError, setTaskTitleError] = useState<string | null>(null);
   const [isTaskPopoverOpen, setIsTaskPopoverOpen] = useState(false);
+  const [isStorageSettingsOpen, setIsStorageSettingsOpen] = useState(false);
   const searchQuery = useBoardStore((state) => state.searchQuery);
   const setSearchQuery = useBoardStore((state) => state.setSearchQuery);
   const addTask = useBoardStore((state) => state.addTask);
@@ -173,6 +175,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   <Tag size={16} className="mr-2" />
                   タグ管理
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setIsStorageSettingsOpen(true)}
+                  data-testid="open-storage-settings"
+                  className="cursor-pointer"
+                >
+                  <Database size={16} className="mr-2" />
+                  データ保存設定
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -203,6 +213,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           className="mt-3 md:mt-4"
         />
       </div>
+
+      <DataStorageSettings
+        open={isStorageSettingsOpen}
+        onClose={() => setIsStorageSettingsOpen(false)}
+      />
     </header>
   );
 };
