@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useBoardStore, selectColumns } from "@/stores/useBoardStore";
+import { useBoardStore, selectColumns, selectTasks } from "@/stores/useBoardStore";
 import { Task } from "@/types";
 import { Archive, Trash2, RotateCcw, Trash, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -105,11 +105,21 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
   const [showEmptyConfirm, setShowEmptyConfirm] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<Task | null>(null);
 
-  const archivedTasks = useBoardStore((state) => state.getArchivedTasks());
-  const deletedTasks = useBoardStore((state) => state.getDeletedTasks());
+  const tasks = useBoardStore(selectTasks);
   const restoreTask = useBoardStore((state) => state.restoreTask);
   const permanentDeleteTask = useBoardStore((state) => state.permanentDeleteTask);
   const emptyTrash = useBoardStore((state) => state.emptyTrash);
+
+  // tasksからフィルタリング（useMemoでメモ化）
+  const deletedTasks = useMemo(
+    () => Object.values(tasks).filter((task) => task.status === "deleted"),
+    [tasks]
+  );
+
+  const archivedTasks = useMemo(
+    () => Object.values(tasks).filter((task) => task.status === "archived"),
+    [tasks]
+  );
 
   const handleRestore = (taskId: string) => {
     restoreTask(taskId);
