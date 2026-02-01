@@ -103,6 +103,7 @@ interface BoardStore extends BoardStoreState {
   getArchivedTasks: () => Task[];
   getDeletedTasks: () => Task[];
   emptyTrash: () => void;
+  cleanupOldDeletedTasks: () => void;
 
   // サブタスク操作
   addSubtask: (taskId: string, title: string) => void;
@@ -680,6 +681,47 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     });
   },
 
+  cleanupOldDeletedTasks: () => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return;
+
+    const now = new Date();
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+    const tasksToDelete: string[] = [];
+    Object.values(board.tasks).forEach((task) => {
+      if (task.status === "deleted" && task.deletedAt) {
+        const deletedDate = new Date(task.deletedAt);
+        const daysSinceDeleted = now.getTime() - deletedDate.getTime();
+        if (daysSinceDeleted >= THIRTY_DAYS_MS) {
+          tasksToDelete.push(task.id);
+        }
+      }
+    });
+
+    if (tasksToDelete.length === 0) return;
+
+    const remainingTasks = { ...board.tasks };
+    tasksToDelete.forEach((taskId) => {
+      delete remainingTasks[taskId];
+    });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: remainingTasks,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }));
+    get().saveToStorage();
+
+    console.log(`30日以上経過した${tasksToDelete.length}件のタスクを自動削除しました`);
+  },
+
   // サブタスク操作
   addSubtask: (taskId: string, title: string) => {
     const task = get().tasks[taskId];
@@ -1226,6 +1268,9 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
           get().saveToStorage();
           console.log("データを新形式にマイグレーションしました");
         }
+
+        // 30日以上経過した削除済みタスクを自動削除
+        get().cleanupOldDeletedTasks();
       }
     } catch (error) {
       console.error("データの読み込みに失敗しました:", error);
