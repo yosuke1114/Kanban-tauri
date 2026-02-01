@@ -5,7 +5,7 @@ import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { BoardSelector } from "@/components/board/BoardSelector";
 import { Users, Tag, Columns, PlusCircle, User, Trash2 } from "lucide-react";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTrashCount } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -43,18 +43,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const setCurrentUserId = useBoardStore((state) => state.setCurrentUserId);
   const toggleMyTasks = useBoardStore((state) => state.toggleMyTasks);
   const filters = useBoardStore((state) => state.filters);
-  const getDeletedTasks = useBoardStore((state) => state.getDeletedTasks);
-  const getArchivedTasks = useBoardStore((state) => state.getArchivedTasks);
-
-  // 関数をコンポーネント内で呼び出す（セレクター内ではない）
-  const deletedTasks = getDeletedTasks();
-  const archivedTasks = getArchivedTasks();
+  const trashCount = useBoardStore(selectTrashCount);
 
   // 「自分のタスク」フィルターが有効かチェック
   const isMyTasksActive = currentUserId && filters.assigneeIds.includes(currentUserId);
-
-  // ゴミ箱/アーカイブ内のタスク数
-  const trashCount = deletedTasks.length + archivedTasks.length;
 
   const handleAddTask = useCallback(
     (e: React.FormEvent) => {

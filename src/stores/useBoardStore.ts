@@ -1273,3 +1273,12 @@ export const selectTags = (state: BoardStoreState) => {
   const board = state.boards[state.currentBoardId];
   return board?.tags ?? EMPTY_OBJECT;
 };
+
+// ゴミ箱内のタスク数を取得（削除済み + アーカイブ済み）
+export const selectTrashCount = (state: BoardStoreState) => {
+  const board = state.boards[state.currentBoardId];
+  if (!board) return 0;
+  return Object.values(board.tasks).filter(
+    (task) => task.status === "deleted" || task.status === "archived"
+  ).length;
+};
