@@ -18,6 +18,7 @@ import {
   StorageConfig,
 } from "@/services/storage/storageManager";
 import { useToast } from "@/hooks/use-toast";
+import { dialog } from "@tauri-apps/api";
 
 interface DataStorageSettingsProps {
   open: boolean;
@@ -140,26 +141,92 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
     try {
       setIsLoading(true);
       const data = await storageManager.exportBackup();
-
-      // データをダウンロード
       const fileName = `kanban-backup-${new Date().toISOString().split("T")[0]}.json`;
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
 
-      toast({
-        title: "✅ エクスポート完了",
-        description: `ファイル: ${fileName}\nダウンロードフォルダに保存されました`,
-      });
+      // Tauri環境かどうかをチェック
+      const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+
+      if (isTauri) {
+        // Tauri環境: ファイル保存ダイアログを表示
+        try {
+          // ダウンロードフォルダのパスを取得
+          const { downloadDir } = await import("@tauri-apps/api/path");
+          const downloadPath = await downloadDir();
+          const defaultPath = `${downloadPath}${fileName}`;
+
+          const filePath = await dialog.save({
+            defaultPath,
+            filters: [
+              {
+                name: "JSON",
+                extensions: ["json"],
+              },
+            ],
+          });
+
+          if (filePath) {
+            // Tauriのファイル書き込みAPIを使用
+            const { writeTextFile } = await import("@tauri-apps/api/fs");
+            await writeTextFile(filePath, data);
+
+            toast({
+              title: "✅ エクスポート完了",
+              description: `保存先: ${filePath}`,
+            });
+          }
+        } catch (error) {
+          throw error;
+        }
+      } else {
+        // Web環境: File System Access APIを試みる（サポートされていればダイアログ表示）
+        if ("showSaveFilePicker" in window) {
+          try {
+            const handle = await (window as any).showSaveFilePicker({
+              suggestedName: fileName,
+              types: [
+                {
+                  description: "JSON Files",
+                  accept: { "application/json": [".json"] },
+                },
+              ],
+            });
+
+            const writable = await handle.createWritable();
+            await writable.write(data);
+            await writable.close();
+
+            toast({
+              title: "✅ エクスポート完了",
+              description: `ファイル: ${fileName}\n選択した場所に保存されました`,
+            });
+          } catch (error) {
+            // ユーザーがキャンセルした場合は何もしない
+            if ((error as Error).name === "AbortError") {
+              return;
+            }
+            throw error;
+          }
+        } else {
+          // File System Access API非対応: 従来の方法（デフォルトダウンロードフォルダ）
+          const blob = new Blob([data], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "✅ エクスポート完了",
+            description: `ファイル: ${fileName}\nダウンロードフォルダに保存されました`,
+          });
+        }
+      }
     } catch (error) {
       toast({
-        title: "エラー",
+        title: "❌ エクスポート失敗",
         description:
           error instanceof Error ? error.message : "エクスポートに失敗しました",
         variant: "destructive",
