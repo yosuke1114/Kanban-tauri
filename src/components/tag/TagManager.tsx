@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Trash2, Tag as TagIcon } from "lucide-react";
+import { INPUT_LIMITS, validateInput } from "@/constants/validation";
 
 interface TagManagerProps {
   open: boolean;
@@ -50,13 +51,19 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
     id: string;
     name: string;
   } | null>(null);
+  const [tagNameError, setTagNameError] = useState<string | null>(null);
 
   const handleAddTag = () => {
-    if (newTagName.trim()) {
-      addTag(newTagName, selectedColor);
-      setNewTagName("");
-      setSelectedColor(colorOptions[0]);
+    const error = validateInput.general(newTagName, INPUT_LIMITS.TAG_NAME);
+    if (error) {
+      setTagNameError(error);
+      return;
     }
+
+    addTag(newTagName.trim(), selectedColor);
+    setNewTagName("");
+    setSelectedColor(colorOptions[0]);
+    setTagNameError(null);
   };
 
   const handleDeleteTag = (tagId: string, tagName: string) => {
@@ -72,7 +79,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+      <DialogContent className="sm:max-w-md rounded-lg border-border/50 shadow-apple-xl glass p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <DialogTitle className="text-xl font-semibold tracking-tight">
             タグ管理
@@ -85,23 +92,48 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="tagName">新しいタグ</Label>
-            <div className="flex gap-2">
-              <Input
-                id="tagName"
-                data-testid="tag-name-input"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                placeholder="タグ名を入力"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-              />
-              <Button onClick={handleAddTag} size="icon" data-testid="add-tag-button">
-                <TagIcon size={20} />
-              </Button>
+            <div className="space-y-1">
+              <div className="flex gap-2">
+                <Input
+                  id="tagName"
+                  data-testid="tag-name-input"
+                  value={newTagName}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewTagName(value);
+                    // リアルタイムバリデーション
+                    if (value.length > INPUT_LIMITS.TAG_NAME) {
+                      setTagNameError(validateInput.maxLength(value, INPUT_LIMITS.TAG_NAME));
+                    } else {
+                      setTagNameError(null);
+                    }
+                  }}
+                  placeholder="タグ名を入力"
+                  maxLength={INPUT_LIMITS.TAG_NAME}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleAddTag}
+                  size="icon"
+                  data-testid="add-tag-button"
+                  disabled={!!tagNameError || !newTagName.trim()}
+                >
+                  <TagIcon size={20} />
+                </Button>
+              </div>
+              {tagNameError && (
+                <p className="text-xs text-destructive">{tagNameError}</p>
+              )}
+              {newTagName && (
+                <p className="text-xs text-muted-foreground text-right">
+                  {newTagName.length}/{INPUT_LIMITS.TAG_NAME}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2 mt-2">
@@ -158,7 +190,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
         </div>
 
         <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/50 bg-muted/20">
-          <Button onClick={onClose} className="rounded-xl transition-apple">
+          <Button onClick={onClose} className="rounded-md transition-apple">
             閉じる
           </Button>
         </DialogFooter>
@@ -168,7 +200,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               タグを削除しますか？
@@ -179,12 +211,12 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
+            <AlertDialogCancel className="rounded-md transition-apple">
               キャンセル
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               削除
             </AlertDialogAction>

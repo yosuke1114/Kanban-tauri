@@ -64,12 +64,12 @@ export function FilterPanel() {
         <Button
           variant={hasActiveFilters ? "default" : "outline"}
           size="sm"
-          className="relative"
+          className="relative rounded-lg transition-apple"
         >
           <Filter size={16} className="mr-2" />
           フィルター
           {hasActiveFilters && (
-            <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs text-primary">
+            <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs font-semibold text-primary">
               {filters.tagIds.length +
                 filters.assigneeIds.length +
                 filters.priorities.length}

@@ -31,7 +31,7 @@ describe('AppHeader', () => {
       expect(screen.getByText('Kanban Board')).toBeInTheDocument();
     });
 
-    it('タスク追加フォームが表示される', () => {
+    it('タスク追加ボタンが表示される', () => {
       render(
         <AppHeader
           onOpenMemberManager={onOpenMemberManager}
@@ -40,9 +40,7 @@ describe('AppHeader', () => {
         />
       );
 
-      expect(screen.getByTestId('new-task-input')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('新しいタスクを追加...')).toBeInTheDocument();
-      expect(screen.getByTestId('add-task-button')).toBeInTheDocument();
+      expect(screen.getByText('タスク追加')).toBeInTheDocument();
     });
 
     it('検索バーが表示される', () => {
@@ -66,9 +64,7 @@ describe('AppHeader', () => {
         />
       );
 
-      expect(screen.getByText('列の管理')).toBeInTheDocument();
-      expect(screen.getByText('メンバー管理')).toBeInTheDocument();
-      expect(screen.getByText('タグ管理')).toBeInTheDocument();
+      expect(screen.getByText('管理')).toBeInTheDocument();
     });
   });
 
@@ -83,8 +79,11 @@ describe('AppHeader', () => {
         />
       );
 
-      const input = screen.getByTestId('new-task-input') as HTMLInputElement;
+      // Popoverを開く
+      const addTaskButton = screen.getByText('タスク追加');
+      await user.click(addTaskButton);
 
+      const input = screen.getByTestId('new-task-input') as HTMLInputElement;
       await user.type(input, 'テストタスク');
 
       expect(input.value).toBe('テストタスク');
@@ -99,6 +98,10 @@ describe('AppHeader', () => {
           onOpenColumnManager={onOpenColumnManager}
         />
       );
+
+      // Popoverを開く
+      const taskButton = screen.getByText('タスク追加');
+      await user.click(taskButton);
 
       const input = screen.getByTestId('new-task-input');
       const addButton = screen.getByTestId('add-task-button');
@@ -115,7 +118,7 @@ describe('AppHeader', () => {
       });
     });
 
-    it('タスク追加後に入力欄がクリアされる', async () => {
+    it('タスク追加後にポップオーバーが閉じる', async () => {
       const user = userEvent.setup();
       render(
         <AppHeader
@@ -125,14 +128,19 @@ describe('AppHeader', () => {
         />
       );
 
+      // Popoverを開く
+      const taskButton = screen.getByText('タスク追加');
+      await user.click(taskButton);
+
       const input = screen.getByTestId('new-task-input') as HTMLInputElement;
       const addButton = screen.getByTestId('add-task-button');
 
       await user.type(input, '新しいタスク');
       await user.click(addButton);
 
+      // Popoverが閉じることを確認（inputが見つからなくなる）
       await waitFor(() => {
-        expect(input.value).toBe('');
+        expect(screen.queryByTestId('new-task-input')).not.toBeInTheDocument();
       });
     });
 
@@ -146,11 +154,15 @@ describe('AppHeader', () => {
         />
       );
 
-      const addButton = screen.getByTestId('add-task-button');
       const state1 = useBoardStore.getState();
       const board1 = state1.boards[state1.currentBoardId];
       const initialTaskCount = Object.keys(board1?.tasks || {}).length;
 
+      // Popoverを開く
+      const taskButton = screen.getByText('タスク追加');
+      await user.click(taskButton);
+
+      const addButton = screen.getByTestId('add-task-button');
       await user.click(addButton);
 
       const state2 = useBoardStore.getState();
@@ -169,11 +181,16 @@ describe('AppHeader', () => {
         />
       );
 
-      const input = screen.getByTestId('new-task-input');
-      const addButton = screen.getByTestId('add-task-button');
       const state1 = useBoardStore.getState();
       const board1 = state1.boards[state1.currentBoardId];
       const initialTaskCount = Object.keys(board1?.tasks || {}).length;
+
+      // Popoverを開く
+      const taskButton = screen.getByText('タスク追加');
+      await user.click(taskButton);
+
+      const input = screen.getByTestId('new-task-input');
+      const addButton = screen.getByTestId('add-task-button');
 
       await user.type(input, '   ');
       await user.click(addButton);
@@ -242,30 +259,13 @@ describe('AppHeader', () => {
     });
   });
 
-  describe('自分のタスクトグル', () => {
+  describe.skip('自分のタスクトグル（削除された機能）', () => {
     it('ユーザー未選択時は無効化されている', () => {
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      const toggleButton = screen.getByTestId('my-tasks-toggle');
-      expect(toggleButton).toBeDisabled();
+      // 削除された機能
     });
 
     it('自分のタスクボタンが表示される', () => {
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      expect(screen.getByText('自分のタスク')).toBeInTheDocument();
+      // 削除された機能
     });
   });
 
@@ -279,6 +279,10 @@ describe('AppHeader', () => {
           onOpenColumnManager={onOpenColumnManager}
         />
       );
+
+      // DropdownMenuを開く
+      const menuButton = screen.getByText('管理');
+      await user.click(menuButton);
 
       const button = screen.getByTestId('open-column-manager');
       await user.click(button);
@@ -296,6 +300,10 @@ describe('AppHeader', () => {
         />
       );
 
+      // DropdownMenuを開く
+      const menuButton = screen.getByText('管理');
+      await user.click(menuButton);
+
       const button = screen.getByTestId('open-member-manager');
       await user.click(button);
 
@@ -312,6 +320,10 @@ describe('AppHeader', () => {
         />
       );
 
+      // DropdownMenuを開く
+      const menuButton = screen.getByText('管理');
+      await user.click(menuButton);
+
       const button = screen.getByTestId('open-tag-manager');
       await user.click(button);
 
@@ -320,7 +332,8 @@ describe('AppHeader', () => {
   });
 
   describe('refの転送', () => {
-    it('taskInputRefが正しく転送される', () => {
+    it('taskInputRefが正しく転送される', async () => {
+      const user = userEvent.setup();
       const taskInputRef = { current: null as HTMLInputElement | null };
 
       render(
@@ -331,6 +344,10 @@ describe('AppHeader', () => {
           taskInputRef={taskInputRef}
         />
       );
+
+      // Popoverを開く
+      const taskButton = screen.getByText('タスク追加');
+      await user.click(taskButton);
 
       expect(taskInputRef.current).toBeInstanceOf(HTMLInputElement);
       expect(taskInputRef.current?.type).toBe('text');

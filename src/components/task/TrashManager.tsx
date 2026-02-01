@@ -53,7 +53,7 @@ const TaskItem: React.FC<{
   }, [task.deletedAt, task.archivedAt, showDeletedAt]);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/50 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{task.title}</p>
         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -157,7 +157,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
   return (
     <>
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] rounded-2xl border-border/50 shadow-apple-xl glass p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] rounded-lg border-border/50 shadow-apple-xl glass p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
             <DialogTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
               <Trash2 size={20} />
@@ -251,7 +251,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
 
       {/* ゴミ箱を空にする確認ダイアログ */}
       <AlertDialog open={showEmptyConfirm} onOpenChange={setShowEmptyConfirm}>
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               ゴミ箱を空にしますか？
@@ -261,12 +261,12 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
+            <AlertDialogCancel className="rounded-md transition-apple">
               キャンセル
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleEmptyTrash}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               空にする
             </AlertDialogAction>
@@ -276,7 +276,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
 
       {/* 個別削除確認ダイアログ */}
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               タスクを完全に削除しますか？
@@ -286,12 +286,12 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
+            <AlertDialogCancel className="rounded-md transition-apple">
               キャンセル
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handlePermanentDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               削除
             </AlertDialogAction>

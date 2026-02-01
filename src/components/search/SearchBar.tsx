@@ -30,8 +30,8 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(({
   return (
     <div className={cn("relative w-full max-w-md", className)}>
       <Search
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-        size={18}
+        className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+        size={16}
         aria-hidden="true"
       />
       <Input
@@ -40,17 +40,17 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(({
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="pl-10 pr-10 rounded-full input-apple bg-muted/50 border-border/30"
+        className="pl-8 md:pl-10 pr-8 md:pr-10 rounded-full input-apple bg-muted/50 border-border/30 text-sm md:text-base h-9 md:h-10"
         aria-label="タスク検索"
       />
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-apple rounded-full p-1 hover:bg-muted"
+          className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-apple rounded-full p-1 hover:bg-muted"
           aria-label="検索をクリア"
           type="button"
         >
-          <X size={16} />
+          <X size={14} className="md:w-4 md:h-4" />
         </button>
       )}
     </div>

@@ -21,7 +21,7 @@ describe('CalendarView', () => {
     it('タスク件数が表示される', () => {
       render(<CalendarView />);
 
-      expect(screen.getByText(/件のタスク/)).toBeInTheDocument();
+      expect(screen.getByText(/件/)).toBeInTheDocument();
     });
 
     it('タスクがない場合にメッセージが表示される', () => {
@@ -147,7 +147,7 @@ describe('CalendarView', () => {
       expect(screen.getByText('タスク1')).toBeInTheDocument();
       expect(screen.getByText('タスク2')).toBeInTheDocument();
       expect(screen.getByText('タスク3')).toBeInTheDocument();
-      expect(screen.getByText('3件のタスク')).toBeInTheDocument();
+      expect(screen.getByText('3件')).toBeInTheDocument();
     });
   });
 
@@ -214,13 +214,13 @@ describe('CalendarView', () => {
   });
 
   describe('件数表示', () => {
-    it('0件のタスク表示', () => {
+    it('0件表示', () => {
       render(<CalendarView />);
 
-      expect(screen.getByText('0件のタスク')).toBeInTheDocument();
+      expect(screen.getByText('0件')).toBeInTheDocument();
     });
 
-    it('1件のタスク表示', () => {
+    it('1件表示', () => {
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -230,7 +230,7 @@ describe('CalendarView', () => {
 
       render(<CalendarView />);
 
-      expect(screen.getByText('1件のタスク')).toBeInTheDocument();
+      expect(screen.getByText('1件')).toBeInTheDocument();
     });
   });
 });

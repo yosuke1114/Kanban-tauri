@@ -26,7 +26,7 @@ export const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-56 rounded-xl border-border/50 shadow-apple-lg glass">
+      <ContextMenuContent className="w-56 rounded-lg border-border/50 shadow-apple-lg glass">
         <ContextMenuItem
           onClick={onEdit}
           className="rounded-lg cursor-pointer transition-apple"

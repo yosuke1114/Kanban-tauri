@@ -249,9 +249,7 @@ describe('EditTaskDialog', () => {
       const user = userEvent.setup();
 
       // ストアにタスクを追加
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 
@@ -263,7 +261,8 @@ describe('EditTaskDialog', () => {
 
       await waitFor(() => {
         const store = useBoardStore.getState();
-        const task = store.tasks[mockTask.id];
+        const board = store.boards[store.currentBoardId];
+        const task = board?.tasks[mockTask.id];
         expect(task?.subtasks).toHaveLength(1);
         expect(task?.subtasks?.[0].title).toBe('サブタスク1');
       });
@@ -273,9 +272,7 @@ describe('EditTaskDialog', () => {
       const user = userEvent.setup();
 
       // ストアにタスクを追加
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 
@@ -285,7 +282,8 @@ describe('EditTaskDialog', () => {
 
       await waitFor(() => {
         const store = useBoardStore.getState();
-        const task = store.tasks[mockTask.id];
+        const board = store.boards[store.currentBoardId];
+        const task = board?.tasks[mockTask.id];
         expect(task?.subtasks).toHaveLength(1);
         expect(task?.subtasks?.[0].title).toBe('サブタスク2');
       });
@@ -309,13 +307,11 @@ describe('EditTaskDialog', () => {
       const user = userEvent.setup();
 
       // ストアにタスクを追加
-      const store = useBoardStore.getState();
       const taskWithSubtasks = createMockTask({
         id: 'task-with-sub',
         subtasks: [{ id: 'sub-1', title: 'サブタスク', completed: false }],
       });
-      store.tasks[taskWithSubtasks.id] = taskWithSubtasks;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(taskWithSubtasks);
 
       render(<EditTaskDialog task={taskWithSubtasks} open={true} onClose={onClose} />);
 
@@ -324,7 +320,8 @@ describe('EditTaskDialog', () => {
 
       await waitFor(() => {
         const updatedStore = useBoardStore.getState();
-        const updatedTask = updatedStore.tasks[taskWithSubtasks.id];
+        const board = updatedStore.boards[updatedStore.currentBoardId];
+        const updatedTask = board?.tasks[taskWithSubtasks.id];
         expect(updatedTask?.subtasks?.[0].completed).toBe(true);
       });
     });
@@ -332,13 +329,11 @@ describe('EditTaskDialog', () => {
     it('サブタスクを削除できる', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
       const taskWithSubtasks = createMockTask({
         id: 'task-with-sub-2',
         subtasks: [{ id: 'sub-1', title: '削除するサブタスク', completed: false }],
       });
-      store.tasks[taskWithSubtasks.id] = taskWithSubtasks;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(taskWithSubtasks);
 
       render(<EditTaskDialog task={taskWithSubtasks} open={true} onClose={onClose} />);
 
@@ -348,7 +343,8 @@ describe('EditTaskDialog', () => {
 
       await waitFor(() => {
         const updatedStore = useBoardStore.getState();
-        const updatedTask = updatedStore.tasks[taskWithSubtasks.id];
+        const board = updatedStore.boards[updatedStore.currentBoardId];
+        const updatedTask = board?.tasks[taskWithSubtasks.id];
         expect(updatedTask?.subtasks).toHaveLength(0);
       });
     });

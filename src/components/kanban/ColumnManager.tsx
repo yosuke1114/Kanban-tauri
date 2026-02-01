@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useBoardStore, selectColumns, selectColumnOrder, selectTasks } from "@/stores/useBoardStore";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus, GripVertical, Pencil, Check, X } from "lucide-react";
 import {
   DndContext,
   DragEndEvent,
@@ -38,6 +38,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Column } from "@/types";
+import { INPUT_LIMITS, validateInput } from "@/constants/validation";
 
 interface ColumnManagerProps {
   open: boolean;
@@ -58,11 +59,31 @@ const colorOptions = [
 interface SortableColumnItemProps {
   column: Column;
   onDelete: (id: string, name: string) => void;
+  onEdit: (id: string) => void;
+  isEditing: boolean;
+  editingTitle: string;
+  editingColor: string;
+  onTitleChange: (title: string) => void;
+  onColorChange: (color: string) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  colorOptions: { color: string; name: string }[];
+  editTitleError: string | null;
 }
 
 const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
   column,
   onDelete,
+  onEdit,
+  isEditing,
+  editingTitle,
+  editingColor,
+  onTitleChange,
+  onColorChange,
+  onSaveEdit,
+  onCancelEdit,
+  colorOptions,
+  editTitleError,
 }) => {
   const {
     attributes,
@@ -93,21 +114,99 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
       >
         <GripVertical size={16} className="text-muted-foreground" />
       </button>
-      <div
-        className="w-3 h-3 rounded-full"
-        data-testid={`column-color-${column.id}`}
-        style={{ backgroundColor: column.color }}
-      />
-      <span className="flex-1">{column.title}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        data-testid={`delete-column-${column.id}`}
-        onClick={() => onDelete(column.id, column.title)}
-        className="text-destructive hover:bg-destructive/10 transition-apple rounded-lg"
-      >
-        <Trash2 size={16} />
-      </Button>
+
+      {isEditing ? (
+        <>
+          {/* カラー選択 */}
+          <div className="flex gap-1">
+            {colorOptions.map((option) => (
+              <button
+                key={option.color}
+                type="button"
+                className={`w-4 h-4 rounded-full border-2 transition-all ${
+                  editingColor === option.color
+                    ? "border-primary scale-110"
+                    : "border-transparent"
+                }`}
+                style={{ backgroundColor: option.color }}
+                onClick={() => onColorChange(option.color)}
+                title={option.name}
+              />
+            ))}
+          </div>
+
+          {/* 名前編集 */}
+          <div className="flex-1">
+            <Input
+              value={editingTitle}
+              onChange={(e) => onTitleChange(e.target.value)}
+              className="h-8"
+              maxLength={INPUT_LIMITS.COLUMN_TITLE}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onSaveEdit();
+                } else if (e.key === "Escape") {
+                  onCancelEdit();
+                }
+              }}
+            />
+            {editTitleError && (
+              <p className="text-xs text-destructive mt-0.5">{editTitleError}</p>
+            )}
+          </div>
+
+          {/* 保存/キャンセルボタン */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSaveEdit}
+            className="h-8 w-8 text-primary hover:bg-primary/10"
+            disabled={!!editTitleError || !editingTitle.trim()}
+          >
+            <Check size={16} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancelEdit}
+            className="h-8 w-8"
+          >
+            <X size={16} />
+          </Button>
+        </>
+      ) : (
+        <>
+          <div
+            className="w-3 h-3 rounded-full"
+            data-testid={`column-color-${column.id}`}
+            style={{ backgroundColor: column.color }}
+          />
+          <span className="flex-1">{column.title}</span>
+
+          {/* 編集ボタン */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(column.id)}
+            className="h-8 w-8 hover:bg-muted transition-apple rounded-lg"
+          >
+            <Pencil size={14} />
+          </Button>
+
+          {/* 削除ボタン */}
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid={`delete-column-${column.id}`}
+            onClick={() => onDelete(column.id, column.title)}
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 transition-apple rounded-lg"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </>
+      )}
     </div>
   );
 };
@@ -118,6 +217,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   const tasks = useBoardStore(selectTasks);
   const addColumn = useBoardStore((state) => state.addColumn);
   const deleteColumn = useBoardStore((state) => state.deleteColumn);
+  const updateColumn = useBoardStore((state) => state.updateColumn);
   const reorderColumns = useBoardStore((state) => state.reorderColumns);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].color);
@@ -126,6 +226,11 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
     name: string;
   } | null>(null);
   const [deleteError, setDeleteError] = useState<string>("");
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingColor, setEditingColor] = useState("");
+  const [columnTitleError, setColumnTitleError] = useState<string | null>(null);
+  const [editTitleError, setEditTitleError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -136,11 +241,16 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   );
 
   const handleAddColumn = () => {
-    if (newColumnTitle.trim()) {
-      addColumn(newColumnTitle, selectedColor);
-      setNewColumnTitle("");
-      setSelectedColor(colorOptions[0].color);
+    const error = validateInput.general(newColumnTitle, INPUT_LIMITS.COLUMN_TITLE);
+    if (error) {
+      setColumnTitleError(error);
+      return;
     }
+
+    addColumn(newColumnTitle.trim(), selectedColor);
+    setNewColumnTitle("");
+    setSelectedColor(colorOptions[0].color);
+    setColumnTitleError(null);
   };
 
   const handleDeleteColumn = (columnId: string, columnName: string) => {
@@ -172,6 +282,41 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
     }
   };
 
+  const handleEditColumn = (columnId: string) => {
+    const column = columns[columnId];
+    if (column) {
+      setEditingColumnId(columnId);
+      setEditingTitle(column.title);
+      setEditingColor(column.color);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingColumnId) return;
+
+    const error = validateInput.general(editingTitle, INPUT_LIMITS.COLUMN_TITLE);
+    if (error) {
+      setEditTitleError(error);
+      return;
+    }
+
+    updateColumn(editingColumnId, {
+      title: editingTitle.trim(),
+      color: editingColor,
+    });
+    setEditingColumnId(null);
+    setEditingTitle("");
+    setEditingColor("");
+    setEditTitleError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingColumnId(null);
+    setEditingTitle("");
+    setEditingColor("");
+    setEditTitleError(null);
+  };
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -187,7 +332,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+      <DialogContent className="sm:max-w-md rounded-lg border-border/50 shadow-apple-xl glass p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <DialogTitle className="text-xl font-semibold tracking-tight">
             列の管理
@@ -200,23 +345,48 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="columnTitle">新しい列</Label>
-            <div className="flex gap-2">
-              <Input
-                id="columnTitle"
-                data-testid="column-name-input"
-                value={newColumnTitle}
-                onChange={(e) => setNewColumnTitle(e.target.value)}
-                placeholder="列名を入力"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddColumn();
-                  }
-                }}
-              />
-              <Button onClick={handleAddColumn} size="icon" data-testid="add-column-button">
-                <Plus size={20} />
-              </Button>
+            <div className="space-y-1">
+              <div className="flex gap-2">
+                <Input
+                  id="columnTitle"
+                  data-testid="column-name-input"
+                  value={newColumnTitle}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewColumnTitle(value);
+                    // リアルタイムバリデーション
+                    if (value.length > INPUT_LIMITS.COLUMN_TITLE) {
+                      setColumnTitleError(validateInput.maxLength(value, INPUT_LIMITS.COLUMN_TITLE));
+                    } else {
+                      setColumnTitleError(null);
+                    }
+                  }}
+                  placeholder="列名を入力"
+                  maxLength={INPUT_LIMITS.COLUMN_TITLE}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddColumn();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleAddColumn}
+                  size="icon"
+                  data-testid="add-column-button"
+                  disabled={!!columnTitleError || !newColumnTitle.trim()}
+                >
+                  <Plus size={20} />
+                </Button>
+              </div>
+              {columnTitleError && (
+                <p className="text-xs text-destructive">{columnTitleError}</p>
+              )}
+              {newColumnTitle && (
+                <p className="text-xs text-muted-foreground text-right">
+                  {newColumnTitle.length}/{INPUT_LIMITS.COLUMN_TITLE}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-4 gap-2 mt-2">
@@ -271,6 +441,24 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
                         key={column.id}
                         column={column}
                         onDelete={handleDeleteColumn}
+                        onEdit={handleEditColumn}
+                        isEditing={editingColumnId === column.id}
+                        editingTitle={editingTitle}
+                        editingColor={editingColor}
+                        onTitleChange={(value) => {
+                          setEditingTitle(value);
+                          // リアルタイムバリデーション
+                          if (value.length > INPUT_LIMITS.COLUMN_TITLE) {
+                            setEditTitleError(validateInput.maxLength(value, INPUT_LIMITS.COLUMN_TITLE));
+                          } else {
+                            setEditTitleError(null);
+                          }
+                        }}
+                        onColorChange={setEditingColor}
+                        onSaveEdit={handleSaveEdit}
+                        onCancelEdit={handleCancelEdit}
+                        colorOptions={colorOptions}
+                        editTitleError={editTitleError}
                       />
                     );
                   })}
@@ -281,7 +469,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
         </div>
 
         <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/50 bg-muted/20">
-          <Button onClick={onClose} className="rounded-xl transition-apple">
+          <Button onClick={onClose} className="rounded-md transition-apple">
             閉じる
           </Button>
         </DialogFooter>
@@ -292,7 +480,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
         open={deleteError !== ""}
         onOpenChange={(open) => !open && setDeleteError("")}
       >
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               列を削除できません
@@ -304,7 +492,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
           <AlertDialogFooter>
             <AlertDialogAction
               onClick={() => setDeleteError("")}
-              className="rounded-xl transition-apple"
+              className="rounded-md transition-apple"
             >
               OK
             </AlertDialogAction>
@@ -317,7 +505,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               列を削除しますか？
@@ -327,12 +515,12 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
+            <AlertDialogCancel className="rounded-md transition-apple">
               キャンセル
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               削除
             </AlertDialogAction>

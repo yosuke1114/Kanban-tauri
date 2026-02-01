@@ -90,13 +90,13 @@ const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
+    <div className="w-full h-full flex flex-col lg:flex-row gap-4 md:gap-6 p-3 md:p-6 overflow-auto">
       {/* カレンダー部分 */}
-      <div className="flex-shrink-0 lg:w-auto">
-        <div className="bg-background rounded-2xl border border-border/50 shadow-apple p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <CalendarIcon size={20} className="text-primary" />
-            <h2 className="text-lg font-semibold tracking-tight">カレンダー</h2>
+      <div className="flex-shrink-0 lg:w-auto w-full lg:max-w-md">
+        <div className="bg-background rounded-lg border border-border/50 shadow-apple p-3 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <CalendarIcon size={18} className="text-primary md:w-5 md:h-5" />
+            <h2 className="text-base md:text-lg font-semibold tracking-tight">カレンダー</h2>
           </div>
           <DayPicker
             mode="single"
@@ -116,9 +116,15 @@ const CalendarView: React.FC = () => {
           />
           <style>{`
             .calendar-apple {
-              --rdp-cell-size: 44px;
+              --rdp-cell-size: 36px;
               --rdp-accent-color: hsl(var(--primary));
               --rdp-background-color: hsl(var(--primary) / 0.1);
+            }
+
+            @media (min-width: 640px) {
+              .calendar-apple {
+                --rdp-cell-size: 44px;
+              }
             }
 
             .calendar-apple .rdp-day_selected {
@@ -184,14 +190,14 @@ const CalendarView: React.FC = () => {
       </div>
 
       {/* タスクリスト部分 */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="bg-background rounded-2xl border border-border/50 shadow-apple p-6 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold tracking-tight">
+      <div className="flex-1 overflow-hidden flex flex-col min-h-[300px] lg:min-h-0">
+        <div className="bg-background rounded-lg border border-border/50 shadow-apple p-3 md:p-6 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-3 md:mb-4 flex-shrink-0">
+            <h2 className="text-base md:text-lg font-semibold tracking-tight">
               {selectedDate ? format(selectedDate, "M月d日（E）", { locale: ja }) : "日付を選択"}
             </h2>
-            <span className="text-sm text-muted-foreground">
-              {selectedDateTasks.length}件のタスク
+            <span className="text-xs md:text-sm text-muted-foreground">
+              {selectedDateTasks.length}件
             </span>
           </div>
 
@@ -213,27 +219,27 @@ const CalendarView: React.FC = () => {
                     key={task.id}
                     onClick={() => handleTaskClick(task)}
                     className={cn(
-                      "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                      "p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all",
                       "hover:shadow-apple-md hover:scale-[1.01]",
                       isOverdue
                         ? "border-red-200 bg-red-50/50"
                         : "border-border bg-background"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-2 md:gap-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">
+                        <h3 className="text-sm md:text-base font-medium text-foreground truncate">
                           {task.title}
                         </h3>
                         {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
                             {task.description}
                           </p>
                         )}
                       </div>
                       <div
                         className={cn(
-                          "flex-shrink-0 px-2 py-1 rounded-md text-xs font-medium border",
+                          "flex-shrink-0 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md text-xs font-medium border",
                           getPriorityColor(task.priority)
                         )}
                       >
@@ -241,13 +247,13 @@ const CalendarView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 md:gap-4 mt-2 md:mt-3 text-xs text-muted-foreground">
                       {task.dueDate && (
                         <div className="flex items-center gap-1">
                           {isOverdue ? (
-                            <AlertCircle size={14} className="text-red-600" />
+                            <AlertCircle size={12} className="text-red-600 md:w-3.5 md:h-3.5" />
                           ) : (
-                            <Clock size={14} />
+                            <Clock size={12} className="md:w-3.5 md:h-3.5" />
                           )}
                           <span className={isOverdue ? "text-red-600 font-medium" : ""}>
                             {format(parseISO(task.dueDate), "HH:mm")}
@@ -257,8 +263,8 @@ const CalendarView: React.FC = () => {
 
                       {task.assigneeIds.length > 0 && (
                         <div className="flex items-center gap-1">
-                          <User size={14} />
-                          <span>
+                          <User size={12} className="md:w-3.5 md:h-3.5" />
+                          <span className="truncate">
                             {task.assigneeIds
                               .map((id) => members[id]?.name || "不明")
                               .join(", ")}

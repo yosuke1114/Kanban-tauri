@@ -59,18 +59,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <Card
       className={cn(
-        "group cursor-pointer rounded-xl border border-border/50",
-        "bg-card shadow-apple hover:shadow-apple-md",
+        "group cursor-pointer rounded-lg border border-border",
+        "bg-card shadow-apple-md hover:shadow-apple-lg",
         "transition-all duration-200 hover:-translate-y-0.5",
-        "backdrop-blur-sm bg-opacity-95",
         isDragging && "opacity-50 rotate-2 shadow-apple-xl ring-2 ring-primary/30"
       )}
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold leading-tight tracking-tight group-hover:text-primary transition-colors">
-          {task.title}
-        </CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base font-semibold leading-tight tracking-tight group-hover:text-primary transition-colors flex-1 min-w-0 line-clamp-2">
+            {task.title}
+          </CardTitle>
+          {/* 優先度：右上、塗りつぶし、目立たせる */}
+          <Badge
+            variant={PRIORITY_CONFIG[task.priority].variant}
+            className="text-xs font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-full shadow-sm shrink-0"
+          >
+            {React.createElement(PRIORITY_CONFIG[task.priority].icon, {
+              size: 12,
+            })}
+            {PRIORITY_CONFIG[task.priority].label}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {task.description && (
@@ -79,76 +90,76 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </CardDescription>
         )}
 
-        <div className="flex flex-wrap gap-1.5">
-          <Badge
-            variant={PRIORITY_CONFIG[task.priority].variant}
-            className="text-xs font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-full shadow-sm"
-          >
-            {React.createElement(PRIORITY_CONFIG[task.priority].icon, {
-              size: 12,
-            })}
-            {PRIORITY_CONFIG[task.priority].label}
-          </Badge>
-
-          {task.tagIds.map((tagId) => {
-            const tag = tags[tagId];
-            if (!tag) return null;
-            return (
-              <Badge
-                key={tagId}
-                variant="outline"
-                className="text-xs font-medium px-2.5 py-0.5 rounded-full"
-                style={{
-                  borderColor: tag.color,
-                  color: tag.color,
-                }}
-              >
-                {tag.name}
-              </Badge>
-            );
-          })}
-        </div>
-
-        {task.dueDate && (
-          <div className="flex items-center gap-1 text-xs">
-            <Calendar size={12} />
-            <span
-              className={cn(
-                dueDateStatus && "font-semibold"
-              )}
-              style={{
-                color: dueDateStatus?.color,
-              }}
-            >
-              {format(new Date(task.dueDate), "M/d (E)", { locale: ja })}
-              {dueDateStatus && ` - ${dueDateStatus.label}`}
-            </span>
-          </div>
-        )}
-
-        {task.assigneeIds.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap">
-            <User size={12} className="text-muted-foreground" />
-            {task.assigneeIds.map((assigneeId) => {
-              const member = members[assigneeId];
-              if (!member) return null;
+        {/* タグ：カラードット + 枠線 */}
+        {task.tagIds.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {task.tagIds.map((tagId) => {
+              const tag = tags[tagId];
+              if (!tag) return null;
               return (
-                <Badge
-                  key={assigneeId}
-                  variant="outline"
-                  className="text-xs"
+                <div
+                  key={tagId}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs"
                   style={{
-                    borderColor: member.color,
-                    color: member.color,
+                    borderColor: tag.color,
+                    color: tag.color,
                   }}
                 >
-                  {member.name}
-                </Badge>
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  {tag.name}
+                </div>
               );
             })}
           </div>
         )}
 
+        {/* 期限と担当者：横並び、アイコン付き */}
+        <div className="flex flex-col gap-2 text-xs">
+          {task.dueDate && (
+            <div className="flex items-center gap-1">
+              <Calendar size={12} className="text-muted-foreground shrink-0" />
+              <span
+                className={cn(
+                  dueDateStatus && "font-semibold"
+                )}
+                style={{
+                  color: dueDateStatus?.color,
+                }}
+              >
+                {format(new Date(task.dueDate), "M/d (E)", { locale: ja })}
+                {dueDateStatus && ` - ${dueDateStatus.label}`}
+              </span>
+            </div>
+          )}
+
+          {/* 担当者：アバター風 */}
+          {task.assigneeIds.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <User size={12} className="text-muted-foreground shrink-0" />
+              {task.assigneeIds.map((assigneeId) => {
+                const member = members[assigneeId];
+                if (!member) return null;
+                return (
+                  <div
+                    key={assigneeId}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: member.color }}
+                    />
+                    <span className="text-xs font-medium">{member.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* サブタスク進捗 */}
         {subtaskProgress && (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

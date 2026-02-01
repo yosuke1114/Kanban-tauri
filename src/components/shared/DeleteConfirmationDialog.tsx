@@ -22,7 +22,7 @@ export const DeleteConfirmationDialog: React.FC<
 > = ({ open, onOpenChange, onConfirm, title, description }) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+      <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-semibold tracking-tight">
             {title}
@@ -32,12 +32,12 @@ export const DeleteConfirmationDialog: React.FC<
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-xl transition-apple">
+          <AlertDialogCancel className="rounded-md transition-apple">
             キャンセル
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+            className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
           >
             削除
           </AlertDialogAction>

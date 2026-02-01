@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
 import { Separator } from "@/components/ui/separator";
 import { PRIORITY_OPTIONS } from "@/constants/priority";
+import { INPUT_LIMITS, validateInput } from "@/constants/validation";
 
 interface EditTaskDialogProps {
   task: Task;
@@ -52,6 +53,9 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const [formData, setFormData] = useState<Partial<Task>>(task);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [subtaskError, setSubtaskError] = useState<string | null>(null);
 
   const activeMembers = useMemo(
     () => Object.values(members).filter((m) => m.isActive),
@@ -67,6 +71,21 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   }, [task, open]);
 
   const handleSave = () => {
+    // バリデーション
+    const titleErr = validateInput.general(formData.title || "", INPUT_LIMITS.TASK_TITLE);
+    const descErr = formData.description
+      ? validateInput.maxLength(formData.description, INPUT_LIMITS.TASK_DESCRIPTION)
+      : null;
+
+    if (titleErr) {
+      setTitleError(titleErr);
+      return;
+    }
+    if (descErr) {
+      setDescriptionError(descErr);
+      return;
+    }
+
     updateTask(task.id, formData);
     onClose();
   };
@@ -103,10 +122,16 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   };
 
   const handleAddSubtask = () => {
-    if (newSubtaskTitle.trim()) {
-      addSubtask(task.id, newSubtaskTitle.trim());
-      setNewSubtaskTitle("");
+    // バリデーション
+    const error = validateInput.general(newSubtaskTitle, INPUT_LIMITS.SUBTASK_TITLE);
+    if (error) {
+      setSubtaskError(error);
+      return;
     }
+
+    addSubtask(task.id, newSubtaskTitle.trim());
+    setNewSubtaskTitle("");
+    setSubtaskError(null);
   };
 
   const handleToggleSubtask = (subtaskId: string) => {
@@ -126,7 +151,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-border/50 shadow-apple-xl glass p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <div className="flex justify-between items-start">
             <div>
@@ -162,27 +187,55 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         </DialogHeader>
 
         <div className="px-6 py-4 space-y-4">
-          <div>
+          <div className="space-y-1">
             <Label htmlFor="title">タイトル</Label>
             <Input
               id="title"
               value={formData.title || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, title: value });
+                // リアルタイムバリデーション
+                if (value.length > INPUT_LIMITS.TASK_TITLE) {
+                  setTitleError(validateInput.maxLength(value, INPUT_LIMITS.TASK_TITLE));
+                } else {
+                  setTitleError(null);
+                }
+              }}
+              maxLength={INPUT_LIMITS.TASK_TITLE}
             />
+            {titleError && (
+              <p className="text-xs text-destructive">{titleError}</p>
+            )}
+            <p className="text-xs text-muted-foreground text-right">
+              {(formData.title || "").length}/{INPUT_LIMITS.TASK_TITLE}
+            </p>
           </div>
 
-          <div>
+          <div className="space-y-1">
             <Label htmlFor="description">説明</Label>
             <Textarea
               id="description"
               value={formData.description || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, description: value });
+                // リアルタイムバリデーション
+                if (value.length > INPUT_LIMITS.TASK_DESCRIPTION) {
+                  setDescriptionError(validateInput.maxLength(value, INPUT_LIMITS.TASK_DESCRIPTION));
+                } else {
+                  setDescriptionError(null);
+                }
+              }}
               rows={4}
+              maxLength={INPUT_LIMITS.TASK_DESCRIPTION}
             />
+            {descriptionError && (
+              <p className="text-xs text-destructive">{descriptionError}</p>
+            )}
+            <p className="text-xs text-muted-foreground text-right">
+              {(formData.description || "").length}/{INPUT_LIMITS.TASK_DESCRIPTION}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -314,25 +367,45 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               サブタスク
             </Label>
             <div className="mt-2 space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  data-testid="new-subtask-input"
-                  placeholder="新しいサブタスクを追加..."
-                  value={newSubtaskTitle}
-                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                  onKeyDown={handleSubtaskKeyDown}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  data-testid="add-subtask-button"
-                  onClick={handleAddSubtask}
-                  disabled={!newSubtaskTitle.trim()}
-                  aria-label="サブタスクを追加"
-                >
-                  <Plus size={20} />
-                </Button>
+              <div className="space-y-1">
+                <div className="flex gap-2">
+                  <Input
+                    data-testid="new-subtask-input"
+                    placeholder="新しいサブタスクを追加..."
+                    value={newSubtaskTitle}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNewSubtaskTitle(value);
+                      // リアルタイムバリデーション
+                      if (value.length > INPUT_LIMITS.SUBTASK_TITLE) {
+                        setSubtaskError(validateInput.maxLength(value, INPUT_LIMITS.SUBTASK_TITLE));
+                      } else {
+                        setSubtaskError(null);
+                      }
+                    }}
+                    onKeyDown={handleSubtaskKeyDown}
+                    className="flex-1"
+                    maxLength={INPUT_LIMITS.SUBTASK_TITLE}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    data-testid="add-subtask-button"
+                    onClick={handleAddSubtask}
+                    disabled={!newSubtaskTitle.trim() || !!subtaskError}
+                    aria-label="サブタスクを追加"
+                  >
+                    <Plus size={20} />
+                  </Button>
+                </div>
+                {subtaskError && (
+                  <p className="text-xs text-destructive">{subtaskError}</p>
+                )}
+                {newSubtaskTitle && (
+                  <p className="text-xs text-muted-foreground text-right">
+                    {newSubtaskTitle.length}/{INPUT_LIMITS.SUBTASK_TITLE}
+                  </p>
+                )}
               </div>
               {task.subtasks && task.subtasks.length > 0 && (
                 <div className="space-y-2">
@@ -388,14 +461,14 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           <Button
             variant="outline"
             onClick={onClose}
-            className="rounded-xl transition-apple"
+            className="rounded-md transition-apple"
           >
             キャンセル
           </Button>
           <Button
             data-testid="save-task-button"
             onClick={handleSave}
-            className="rounded-xl transition-apple hover:scale-105"
+            className="rounded-md transition-apple hover:scale-105"
           >
             保存
           </Button>

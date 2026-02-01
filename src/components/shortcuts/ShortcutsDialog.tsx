@@ -62,7 +62,7 @@ export const ShortcutsDialog: React.FC<ShortcutsDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-2xl rounded-2xl border-border/50 shadow-apple-xl glass">
+      <DialogContent className="sm:max-w-2xl rounded-lg border-border/50 shadow-apple-xl glass">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Keyboard size={24} className="text-primary" />

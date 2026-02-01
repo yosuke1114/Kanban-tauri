@@ -93,7 +93,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = React.memo(({ task }) 
       />
 
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent className="rounded-2xl border-border/50 shadow-apple-xl glass">
+        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold tracking-tight">
               タスクをゴミ箱に移動しますか？
@@ -103,12 +103,12 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = React.memo(({ task }) 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl transition-apple">
+            <AlertDialogCancel className="rounded-md transition-apple">
               キャンセル
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
+              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
             >
               ゴミ箱に移動
             </AlertDialogAction>
