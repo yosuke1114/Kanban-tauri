@@ -157,7 +157,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
   return (
     <>
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] rounded-2xl border-border/50 shadow-apple-xl glass p-0">
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] rounded-2xl border-border/50 shadow-apple-xl glass p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
             <DialogTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
               <Trash2 size={20} />
@@ -168,10 +168,10 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="trash" className="flex-1">
+          <Tabs defaultValue="trash" className="flex-1 overflow-hidden">
             <div className="px-6 pt-4">
-              <TabsList className="w-full">
-                <TabsTrigger value="trash" className="flex-1 flex items-center gap-2">
+              <TabsList className="w-full grid grid-cols-2">
+                <TabsTrigger value="trash" className="flex items-center justify-center gap-2">
                   <Trash2 size={14} />
                   ゴミ箱
                   {deletedTasks.length > 0 && (
@@ -180,7 +180,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="archive" className="flex-1 flex items-center gap-2">
+                <TabsTrigger value="archive" className="flex items-center justify-center gap-2">
                   <Archive size={14} />
                   アーカイブ
                   {archivedTasks.length > 0 && (
@@ -192,7 +192,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
               </TabsList>
             </div>
 
-            <TabsContent value="trash" className="px-6 pb-6 mt-4">
+            <TabsContent value="trash" className="px-6 pb-6 mt-4 overflow-hidden">
               {deletedTasks.length > 0 && (
                 <div className="flex justify-end mb-3">
                   <Button
@@ -226,7 +226,7 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
               </div>
             </TabsContent>
 
-            <TabsContent value="archive" className="px-6 pb-6 mt-4">
+            <TabsContent value="archive" className="px-6 pb-6 mt-4 overflow-hidden">
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {sortedArchivedTasks.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
