@@ -150,6 +150,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
+                data-testid="delete-task-button"
                 onClick={() => setShowDeleteAlert(true)}
                 className="text-destructive rounded-lg hover:bg-destructive/10 transition-apple"
                 aria-label="ゴミ箱に移動"
@@ -315,6 +316,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
             <div className="mt-2 space-y-2">
               <div className="flex gap-2">
                 <Input
+                  data-testid="new-subtask-input"
                   placeholder="新しいサブタスクを追加..."
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
@@ -324,6 +326,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <Button
                   type="button"
                   size="icon"
+                  data-testid="add-subtask-button"
                   onClick={handleAddSubtask}
                   disabled={!newSubtaskTitle.trim()}
                   aria-label="サブタスクを追加"
@@ -336,11 +339,13 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                   {task.subtasks.map((subtask) => (
                     <div
                       key={subtask.id}
+                      data-testid={`subtask-item-${subtask.id}`}
                       className="flex items-center gap-2 p-2 rounded-md border"
                     >
                       <Checkbox
                         checked={subtask.completed}
                         onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                        data-testid={`subtask-checkbox-${subtask.id}`}
                       />
                       <span
                         className={`flex-1 text-sm ${
@@ -355,6 +360,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        data-testid={`delete-subtask-${subtask.id}`}
                         onClick={() => handleDeleteSubtask(subtask.id)}
                         className="h-8 w-8"
                         aria-label="サブタスクを削除"
@@ -387,6 +393,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
             キャンセル
           </Button>
           <Button
+            data-testid="save-task-button"
             onClick={handleSave}
             className="rounded-xl transition-apple hover:scale-105"
           >
