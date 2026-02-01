@@ -34,11 +34,12 @@ tsc --noEmit         # Type check without emitting files
 
 The application uses a centralized Zustand store (`src/stores/useBoardStore.ts`) that manages all application state. This is the **single source of truth** for:
 
-- Tasks (with position tracking for drag-and-drop)
+- Tasks (with position tracking for drag-and-drop, subtasks support)
 - Columns (customizable, with 3 default columns)
 - Members (team members with active/inactive status)
 - Tags (color-coded labels)
-- Filters (not yet implemented)
+- Filters (fully implemented with UI)
+- Boards (multi-board support)
 
 **Key Pattern**: All state mutations happen through store actions (e.g., `addTask`, `moveTask`, `updateTask`). Components should never mutate state directly. The store automatically persists to localStorage after mutations via `saveToStorage()`.
 
@@ -95,13 +96,15 @@ src/
 └── services/storage/    # Storage abstraction (prepared for Tauri)
 ```
 
-### Styling: Tailwind + Custom Color Scheme
+### Styling: Tailwind + Slack-Inspired Theme
 
-The project uses Tailwind CSS with a custom color scheme optimized for visibility (defined in `app/globals.css`):
+The project uses Tailwind CSS with a Slack-inspired color scheme (defined in `app/globals.css`):
 
-- **Background**: Warm off-white (`--background: 40 20% 98%`)
-- **Primary**: Calm blue (`--primary: 215 55% 45%`)
-- **Accent**: Soft teal (`--accent: 175 40% 45%`)
+- **Background**: Clean white (`--background: 0 0% 100%`)
+- **Primary**: Aubergine purple (`--primary: 306 50% 30%`) - Slack's signature color
+- **Accent**: Professional teal (`--accent: 174 71% 39%`)
+- **Muted**: Warm gray (`--muted: 27 8% 94%`)
+- **Glass effect**: `backdrop-blur-xl` with transparency for modern UI
 - **Priority colors**: Green (low) → Yellow (medium) → Orange (high) → Red (urgent)
 - **Due date colors**: Red (overdue) → Orange (today) → Yellow (soon)
 
@@ -149,34 +152,86 @@ When moving tasks, the `moveTask` action recalculates positions for all tasks in
 
 These features are now fully implemented:
 
-1. **Filters**: FilterState type and logic are implemented in `useBoardStore.getFilteredTasks()`
-   - Tag filtering
-   - Assignee filtering
-   - Priority filtering
-   - Due date range filtering (prepared in types)
-2. **Recurrence**: RecurrenceRule for repeating tasks is implemented
-   - Automatic generation on app startup via `generateRecurringTasks()`
-   - Completed recurring tasks generate new instances in "未着手" column
-3. **Tauri File Storage**: Integrated via `src/services/storage/tauriStorage.ts`
-   - Automatic fallback to localStorage in web mode
-   - Seamless storage abstraction
+1. **Multi-Board Support**: Create and manage multiple project boards
+   - Board switching with selector
+   - Each board has independent tasks, columns, members, tags
+   - Board management UI
+
+2. **Filters (Full Implementation)**: Complete filter system
+   - Tag filtering (UI: FilterPanel)
+   - Assignee filtering (UI: FilterPanel)
+   - Priority filtering (UI: FilterPanel)
+   - Filter count badge display
+   - Clear filters button
+
+3. **Input Validation**: Comprehensive validation system (`src/constants/validation.ts`)
+   - Task title: 100 characters max
+   - Task description: 500 characters max
+   - Subtask title: 100 characters max
+   - Member name: 50 characters max
+   - Tag name: 30 characters max
+   - Column title: 30 characters max
+   - Real-time validation with error messages
+   - Character counters on all inputs
+
+4. **Subtasks**: Checklist-style subtasks in tasks
+   - Add, toggle, delete subtasks
+   - Progress tracking in EditTaskDialog
+
+5. **Calendar View**: Date-based task visualization
+   - Monthly calendar with react-day-picker
+   - Tasks displayed on due date
+   - Click to open task details
+
+6. **List View**: Table-based alternative view
+   - Sortable columns (title, priority, due date, created date)
+   - Click row to edit task
+   - Optimized SortIcon component
+
+7. **Keyboard Shortcuts**: Extensive keyboard navigation
+   - ⌘K (Ctrl+K): Focus search
+   - ⌘N (Ctrl+N): New task
+   - Esc: Close dialogs
+   - [Full list in AppHeader component]
+
+8. **Responsive Design**: Mobile-first approach
+   - Breakpoints: mobile (<768px), tablet (768-1024px), desktop (>1024px)
+   - Mobile: Icon-only buttons, responsive spacing
+   - All components optimized for small screens
+
+9. **Soft Delete & Archive**: Non-destructive task management
+   - Trash: Soft delete with 30-day auto-deletion
+   - Archive: Long-term storage
+   - Restore functionality
+
+10. **Recurrence**: RecurrenceRule for repeating tasks
+    - Automatic generation on app startup via `generateRecurringTasks()`
+    - Completed recurring tasks generate new instances in "未着手" column
+
+11. **Tauri File Storage**: Integrated via `src/services/storage/tauriStorage.ts`
+    - Automatic fallback to localStorage in web mode
+    - Seamless storage abstraction
 
 ## Pending/Future Features
 
-These are prepared in types but not yet implemented:
+These are next on the roadmap:
 
-1. **SharePoint Sync**: SyncMetadata prepared for future integration
+1. **Column Reordering**: GripVerticalアイコンはあるが、D&D機能は未実装
 2. **Desktop Notifications**: Planned for overdue tasks (Tauri notification API)
-3. **List View**: Alternative table-based view (not implemented)
-4. **Filter UI**: Backend logic exists, but UI controls (FilterPanel) not yet implemented
-5. **Date Picker Integration**: react-day-picker installed but not yet used in UI for due date range filtering
+3. **Date Range Filter**: react-day-picker installed, integrate into FilterPanel
+4. **Dark Mode**: Theme toggle with system preference support
+5. **SharePoint Sync**: SyncMetadata prepared for future integration
+6. **Statistics Dashboard**: Completion rate, productivity metrics
+7. **Performance Optimizations**: React.memo, useCallback, virtualization
+
+詳細は `/Users/yo_kuro/kanban-rust/NEXT_DEVELOPMENT_PLAN.md` を参照
 
 ## Known Constraints
 
 - Tauri v1 (not v2) - uses older API patterns
-- No test suite currently exists
-- No linting configured (only TypeScript strict mode)
-- Date picker (react-day-picker) installed but not yet used in UI
+- ESLint not configured (TypeScript strict mode only)
+- Column reordering UI incomplete (GripVertical icon present but non-functional)
+- Title duplication exists (App.tsx header and KanbanBoard.tsx both show "Kanban Board")
 
 ## TDD
 
@@ -190,7 +245,7 @@ These are prepared in types but not yet implemented:
 すべてのコード変更後に以下を**必ず実行**してください:
 
 1. **ビルド確認**: `npm run build` が成功すること
-2. **テスト確認**: `npm run test -- --run` が全パスすること (93テスト)
+2. **テスト確認**: `npm run test -- --run` が全パスすること (324テスト)
 3. **E2E確認**: `npm run test:e2e` がパスすること
 4. **画面表示確認**: アプリを起動して白い画面でないこと
 5. **コンソール確認**: ブラウザコンソールにエラーがないこと
