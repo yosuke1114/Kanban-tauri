@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "kanban-rust",
+    "productName": "Kanban Board",
     "version": "0.1.0"
   },
   "tauri": {
@@ -58,7 +58,19 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
-      ]
+      ],
+      "copyright": "Copyright © 2026",
+      "category": "Productivity",
+      "shortDescription": "Kanban Board for Teams",
+      "longDescription": "A modern Kanban board application for managing tasks and projects. Built with Tauri, React, and TypeScript.",
+      "macOS": {
+        "minimumSystemVersion": "10.13"
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
     }
   }
 }
