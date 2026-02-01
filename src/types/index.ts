@@ -4,7 +4,7 @@ export type Priority = "low" | "medium" | "high" | "urgent";
 
 export type SyncStatus = "local" | "synced" | "conflict";
 
-export type ViewMode = "kanban" | "list";
+export type ViewMode = "kanban" | "list" | "calendar";
 
 export type SortField = "title" | "priority" | "dueDate" | "createdAt";
 
@@ -22,6 +22,12 @@ export interface RecurrenceRule {
   endDate?: string;
 }
 
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -33,6 +39,7 @@ export interface Task {
   assigneeIds: string[];
   tagIds: string[];
   recurrence?: RecurrenceRule;
+  subtasks?: Subtask[];
   createdAt: string;
   updatedAt: string;
   sync: SyncMetadata;

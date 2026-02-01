@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import "./App.css";
 import KanbanBoard from "./components/kanban/KanbanBoard";
 import ListView from "./components/list/ListView";
+import CalendarView from "./components/calendar/CalendarView";
 import MemberManager from "./components/member/MemberManager";
 import TagManager from "./components/tag/TagManager";
 import ColumnManager from "./components/kanban/ColumnManager";
@@ -9,7 +10,7 @@ import { AppHeader } from "./components/layout/AppHeader";
 import { ActiveFiltersIndicator } from "./components/filter/ActiveFiltersIndicator";
 import { ShortcutsDialog } from "./components/shortcuts/ShortcutsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Calendar } from "lucide-react";
 import { ViewMode } from "./types";
 import { useDueDateNotifications } from "./hooks/useDueDateNotifications";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -86,6 +87,10 @@ function App() {
                 <List size={16} />
                 リストビュー
               </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <Calendar size={16} />
+                カレンダービュー
+              </TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="kanban" className="mt-0 flex-1 overflow-hidden">
@@ -93,6 +98,9 @@ function App() {
           </TabsContent>
           <TabsContent value="list" className="mt-0 flex-1 overflow-hidden">
             <ListView />
+          </TabsContent>
+          <TabsContent value="calendar" className="mt-0 flex-1 overflow-hidden">
+            <CalendarView />
           </TabsContent>
         </Tabs>
       </main>

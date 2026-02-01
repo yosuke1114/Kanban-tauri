@@ -255,7 +255,11 @@ const KanbanBoard: React.FC = () => {
         </div>
 
         <DragOverlay>
-          {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
+          {activeTask ? (
+            <div className="drag-overlay">
+              <TaskCard task={activeTask} isDragging />
+            </div>
+          ) : null}
         </DragOverlay>
       </DndContext>
     </div>

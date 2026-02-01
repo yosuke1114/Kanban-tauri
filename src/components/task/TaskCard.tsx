@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Task } from "@/types";
 import {
   Card,
@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -18,6 +19,7 @@ import {
   AlertCircle,
   AlertTriangle,
   AlertOctagon,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +90,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const tags = useBoardStore((state) => state.tags);
 
   const dueDateStatus = getDueDateStatus(task.dueDate);
+
+  // サブタスクの進捗計算
+  const subtaskProgress = useMemo(() => {
+    if (!task.subtasks || task.subtasks.length === 0) return null;
+    const completed = task.subtasks.filter((st) => st.completed).length;
+    const total = task.subtasks.length;
+    const percentage = (completed / total) * 100;
+    return { completed, total, percentage };
+  }, [task.subtasks]);
 
   return (
     <Card
@@ -179,6 +190,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </Badge>
               );
             })}
+          </div>
+        )}
+
+        {subtaskProgress && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CheckSquare size={12} />
+              <span className="font-medium">
+                {subtaskProgress.completed}/{subtaskProgress.total} 完了
+              </span>
+            </div>
+            <Progress
+              value={subtaskProgress.percentage}
+              className="h-1.5"
+            />
           </div>
         )}
       </CardContent>

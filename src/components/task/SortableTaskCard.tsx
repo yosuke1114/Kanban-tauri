@@ -42,7 +42,13 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+    opacity: isDragging ? 0.5 : 1,
+    scale: isDragging ? "1.05" : "1",
+    zIndex: isDragging ? 1000 : "auto",
+    boxShadow: isDragging
+      ? "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+      : undefined,
+  } as React.CSSProperties;
 
   const handleDuplicate = useCallback(() => {
     // シンプルな複製: タイトルだけコピー

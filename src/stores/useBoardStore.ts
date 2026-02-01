@@ -57,6 +57,12 @@ interface BoardStore extends BoardStoreState {
   deleteTask: (taskId: string) => void;
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => void;
 
+  // サブタスク操作
+  addSubtask: (taskId: string, title: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string) => void;
+  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  updateSubtask: (taskId: string, subtaskId: string, title: string) => void;
+
   // 列操作
   addColumn: (title: string, color: string) => void;
   updateColumn: (columnId: string, updates: Partial<Column>) => void;
@@ -205,6 +211,115 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
       return { tasks: updatedTasks };
     });
+    get().saveToStorage();
+  },
+
+  // サブタスク操作
+  addSubtask: (taskId: string, title: string) => {
+    const task = get().tasks[taskId];
+    if (!task) return;
+
+    const newSubtask = {
+      id: uuidv4(),
+      title,
+      completed: false,
+    };
+
+    const now = new Date().toISOString();
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          subtasks: [...(task.subtasks || []), newSubtask],
+          updatedAt: now,
+          sync: {
+            ...task.sync,
+            version: task.sync.version + 1,
+            lastModifiedAt: now,
+          },
+        },
+      },
+    }));
+    get().saveToStorage();
+  },
+
+  toggleSubtask: (taskId: string, subtaskId: string) => {
+    const task = get().tasks[taskId];
+    if (!task || !task.subtasks) return;
+
+    const now = new Date().toISOString();
+    const updatedSubtasks = task.subtasks.map((st) =>
+      st.id === subtaskId ? { ...st, completed: !st.completed } : st
+    );
+
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          subtasks: updatedSubtasks,
+          updatedAt: now,
+          sync: {
+            ...task.sync,
+            version: task.sync.version + 1,
+            lastModifiedAt: now,
+          },
+        },
+      },
+    }));
+    get().saveToStorage();
+  },
+
+  deleteSubtask: (taskId: string, subtaskId: string) => {
+    const task = get().tasks[taskId];
+    if (!task || !task.subtasks) return;
+
+    const now = new Date().toISOString();
+    const updatedSubtasks = task.subtasks.filter((st) => st.id !== subtaskId);
+
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          subtasks: updatedSubtasks,
+          updatedAt: now,
+          sync: {
+            ...task.sync,
+            version: task.sync.version + 1,
+            lastModifiedAt: now,
+          },
+        },
+      },
+    }));
+    get().saveToStorage();
+  },
+
+  updateSubtask: (taskId: string, subtaskId: string, title: string) => {
+    const task = get().tasks[taskId];
+    if (!task || !task.subtasks) return;
+
+    const now = new Date().toISOString();
+    const updatedSubtasks = task.subtasks.map((st) =>
+      st.id === subtaskId ? { ...st, title } : st
+    );
+
+    set((state) => ({
+      tasks: {
+        ...state.tasks,
+        [taskId]: {
+          ...task,
+          subtasks: updatedSubtasks,
+          updatedAt: now,
+          sync: {
+            ...task.sync,
+            version: task.sync.version + 1,
+            lastModifiedAt: now,
+          },
+        },
+      },
+    }));
     get().saveToStorage();
   },
 

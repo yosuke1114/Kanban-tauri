@@ -28,8 +28,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Priority } from "@/types";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, CheckSquare } from "lucide-react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
@@ -55,12 +56,17 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 }) => {
   const updateTask = useBoardStore((state) => state.updateTask);
   const deleteTask = useBoardStore((state) => state.deleteTask);
+  const addSubtask = useBoardStore((state) => state.addSubtask);
+  const toggleSubtask = useBoardStore((state) => state.toggleSubtask);
+  const deleteSubtask = useBoardStore((state) => state.deleteSubtask);
+  const updateSubtask = useBoardStore((state) => state.updateSubtask);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore((state) => state.tags);
   const columns = useBoardStore((state) => state.columns);
   const columnOrder = useBoardStore((state) => state.columnOrder);
   const [formData, setFormData] = useState<Partial<Task>>(task);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const activeMembers = useMemo(
     () => Object.values(members).filter((m) => m.isActive),
@@ -272,6 +278,81 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 </p>
               )}
             </div>
+          </div>
+
+          <Separator />
+
+          {/* サブタスクセクション */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <CheckSquare size={16} className="text-primary" />
+              <Label>サブタスク</Label>
+            </div>
+
+            <div className="space-y-2 mb-3">
+              {(task.subtasks || []).map((subtask) => (
+                <div
+                  key={subtask.id}
+                  className="flex items-center gap-2 p-2 rounded-lg border bg-background/50"
+                >
+                  <Checkbox
+                    checked={subtask.completed}
+                    onCheckedChange={() => toggleSubtask(task.id, subtask.id)}
+                  />
+                  <Input
+                    value={subtask.title}
+                    onChange={(e) =>
+                      updateSubtask(task.id, subtask.id, e.target.value)
+                    }
+                    className={`flex-1 border-0 bg-transparent ${
+                      subtask.completed ? "line-through text-muted-foreground" : ""
+                    }`}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteSubtask(task.id, subtask.id)}
+                    className="text-destructive hover:bg-destructive/10 transition-apple rounded-lg flex-shrink-0"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                placeholder="新しいサブタスクを追加..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newSubtaskTitle.trim()) {
+                    e.preventDefault();
+                    addSubtask(task.id, newSubtaskTitle);
+                    setNewSubtaskTitle("");
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  if (newSubtaskTitle.trim()) {
+                    addSubtask(task.id, newSubtaskTitle);
+                    setNewSubtaskTitle("");
+                  }
+                }}
+                size="icon"
+                variant="outline"
+                className="flex-shrink-0"
+              >
+                <Plus size={16} />
+              </Button>
+            </div>
+
+            {task.subtasks && task.subtasks.length > 0 && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                {task.subtasks.filter((st) => st.completed).length} / {task.subtasks.length} 完了
+              </div>
+            )}
           </div>
 
           <Separator />
