@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Task } from "@/types";
 import {
   Card,
@@ -8,18 +8,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useBoardStore, selectTags } from "@/stores/useBoardStore";
+import { Progress } from "@/components/ui/progress";
+import { useBoardStore } from "@/stores/useBoardStore";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import {
-  Calendar,
-  User,
-  Circle,
-  AlertCircle,
-  AlertTriangle,
-  AlertOctagon,
-} from "lucide-react";
+import { Calendar, User, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PRIORITY_CONFIG } from "@/constants/priority";
+import { getDueDateStatus } from "@/utils/dueDate";
 
 interface TaskCardProps {
   task: Task;
@@ -30,54 +26,13 @@ interface TaskCardProps {
 // デフォルト値を定数として定義（メモ化破壊を防ぐ）
 const NOOP = () => {};
 
-const PRIORITY_CONFIG = {
-  low: {
-    label: "低",
-    variant: "secondary" as const,
-    color: "#34d399",
-    icon: Circle,
-  },
-  medium: {
-    label: "中",
-    variant: "default" as const,
-    color: "#fbbf24",
-    icon: AlertCircle,
-  },
-  high: {
-    label: "高",
-    variant: "destructive" as const,
-    color: "#fb923c",
-    icon: AlertTriangle,
-  },
-  urgent: {
-    label: "緊急",
-    variant: "destructive" as const,
-    color: "#ef4444",
-    icon: AlertOctagon,
-  },
-};
-
-const getDueDateStatus = (dueDate?: string) => {
-  if (!dueDate) return null;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDateObj = new Date(dueDate);
-  dueDateObj.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.floor(
-    (dueDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (diffDays < 0) {
-    return { status: "overdue", label: "期限切れ", color: "#ef4444" };
-  } else if (diffDays === 0) {
-    return { status: "today", label: "今日", color: "#fb923c" };
-  } else if (diffDays <= 3) {
-    return { status: "soon", label: "期限間近", color: "#fbbf24" };
-  }
-  return null;
-};
+// 期限日ステータスのラベルと色のマッピング
+const DUE_DATE_STATUS_CONFIG = {
+  overdue: { label: "期限切れ", color: "#ef4444" },
+  today: { label: "今日", color: "#fb923c" },
+  soon: { label: "期限間近", color: "#fbbf24" },
+  future: { label: "", color: "" },
+} as const;
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
@@ -85,9 +40,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onClick = NOOP,
 }) => {
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore(selectTags);
+  const tags = useBoardStore((state) => state.tags);
 
-  const dueDateStatus = getDueDateStatus(task.dueDate);
+  const dueDateStatusResult = getDueDateStatus(task.dueDate);
+  const dueDateStatus = dueDateStatusResult
+    ? DUE_DATE_STATUS_CONFIG[dueDateStatusResult.status]
+    : null;
+
+  // サブタスクの進捗計算
+  const subtaskProgress = useMemo(() => {
+    if (!task.subtasks || task.subtasks.length === 0) return null;
+    const completed = task.subtasks.filter((st) => st.completed).length;
+    const total = task.subtasks.length;
+    const percentage = (completed / total) * 100;
+    return { completed, total, percentage };
+  }, [task.subtasks]);
 
   return (
     <Card
@@ -179,6 +146,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </Badge>
               );
             })}
+          </div>
+        )}
+
+        {subtaskProgress && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CheckSquare size={12} />
+              <span className="font-medium">
+                {subtaskProgress.completed}/{subtaskProgress.total} 完了
+              </span>
+            </div>
+            <Progress
+              value={subtaskProgress.percentage}
+              className="h-1.5"
+            />
           </div>
         )}
       </CardContent>

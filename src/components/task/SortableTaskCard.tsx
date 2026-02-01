@@ -21,7 +21,7 @@ interface SortableTaskCardProps {
   task: Task;
 }
 
-const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
+const SortableTaskCard: React.FC<SortableTaskCardProps> = React.memo(({ task }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
@@ -43,12 +43,18 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+    opacity: isDragging ? 0.5 : 1,
+    scale: isDragging ? "1.05" : "1",
+    zIndex: isDragging ? 1000 : "auto",
+    boxShadow: isDragging
+      ? "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+      : undefined,
+  } as React.CSSProperties;
 
   const handleDuplicate = useCallback(() => {
     // シンプルな複製: タイトルだけコピー
     addTask(task.columnId, `${task.title} (コピー)`);
-  }, [task, addTask]);
+  }, [task.columnId, task.title, addTask]);
 
   const handleArchive = useCallback(() => {
     archiveTask(task.id);
@@ -58,6 +64,10 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
     softDeleteTask(task.id);
     setIsDeleteOpen(false);
   }, [task.id, softDeleteTask]);
+
+  const handleCardClick = useCallback(() => {
+    setIsEditOpen(true);
+  }, []);
 
   return (
     <>
@@ -71,9 +81,7 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
           <TaskCard
             task={task}
             isDragging={isDragging}
-            onClick={() => {
-              setIsEditOpen(true);
-            }}
+            onClick={handleCardClick}
           />
         </div>
       </TaskContextMenu>
@@ -109,6 +117,8 @@ const SortableTaskCard: React.FC<SortableTaskCardProps> = ({ task }) => {
       </AlertDialog>
     </>
   );
-};
+});
+
+SortableTaskCard.displayName = "SortableTaskCard";
 
 export default SortableTaskCard;
