@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +62,8 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const [titleError, setTitleError] = useState<string | null>(null);
   const [descriptionError, setDescriptionError] = useState<string | null>(null);
   const [subtaskError, setSubtaskError] = useState<string | null>(null);
+  const isInitialMount = useRef(true);
+  const autoSaveTimer = useRef<number | null>(null);
 
   const activeMembers = useMemo(
     () => Object.values(members).filter((m) => m.isActive),
@@ -73,8 +75,44 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   useEffect(() => {
     if (open) {
       setFormData(task);
+      isInitialMount.current = true;
     }
   }, [task, open]);
+
+  // 自動保存機能
+  useEffect(() => {
+    // 初回マウント時はスキップ
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // ダイアログが閉じている場合はスキップ
+    if (!open) return;
+
+    // バリデーションエラーがある場合はスキップ
+    const titleErr = validateInput.general(formData.title || "", INPUT_LIMITS.TASK_TITLE);
+    const descErr = formData.description
+      ? validateInput.maxLength(formData.description, INPUT_LIMITS.TASK_DESCRIPTION)
+      : null;
+    if (titleErr || descErr) return;
+
+    // 前回のタイマーをクリア
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+
+    // デバウンス: 500ms後に保存
+    autoSaveTimer.current = setTimeout(() => {
+      updateTask(task.id, formData);
+    }, 500);
+
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [formData, open, task.id, updateTask]);
 
   const handleSave = () => {
     // バリデーション
