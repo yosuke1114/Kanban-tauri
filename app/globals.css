@@ -4,106 +4,106 @@
 
 @layer base {
   :root {
-    /* Apple System Colors - Light Mode */
-    --background: 0 0% 98%;
-    --foreground: 240 10% 4%;
+    /* Slack Theme - Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Apple System Blue */
-    --primary: 211 100% 50%;
+    /* Slack Aubergine Purple - Professional without being corporate */
+    --primary: 300 47% 35%;
     --primary-foreground: 0 0% 100%;
 
-    /* Apple System Gray */
+    /* Slack Secondary - Clean and minimal */
     --secondary: 240 5% 96%;
-    --secondary-foreground: 240 10% 4%;
+    --secondary-foreground: 0 0% 9%;
 
     --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Apple System Teal */
-    --accent: 175 70% 41%;
+    /* Slack Accent - Subtle teal */
+    --accent: 175 50% 45%;
     --accent-foreground: 0 0% 100%;
 
-    /* Apple System Red */
-    --destructive: 0 100% 50%;
+    /* Slack Red */
+    --destructive: 0 65% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders - より繊細に */
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 211 100% 50%;
-    --radius: 0.75rem;
+    /* Borders - Clean and subtle */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 300 47% 35%;
+    --radius: 0.5rem;
 
-    /* 優先度カラー - Apple System Colors */
-    --priority-low: 142 76% 36%; /* System Green */
-    --priority-medium: 48 100% 50%; /* System Yellow */
-    --priority-high: 24 100% 50%; /* System Orange */
-    --priority-urgent: 0 100% 50%; /* System Red */
+    /* 優先度カラー - Slack風 */
+    --priority-low: 142 71% 45%;
+    --priority-medium: 45 93% 47%;
+    --priority-high: 24 95% 53%;
+    --priority-urgent: 0 65% 51%;
 
     /* 期限カラー */
-    --due-overdue: 0 100% 50%;
-    --due-today: 24 100% 50%;
-    --due-soon: 48 100% 50%;
+    --due-overdue: 0 65% 51%;
+    --due-today: 24 95% 53%;
+    --due-soon: 45 93% 47%;
 
-    /* Apple風シャドウ - Big Sur/Monterey風 */
+    /* Slack風シャドウ - 控えめで洗練された */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-    /* Glassmorphism - macOS Big Sur風 */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.18);
+    /* Clean background */
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(0, 0, 0, 0.08);
 
-    /* Apple標準イージング */
+    /* Smooth transitions */
     --ease-in-out-cubic: cubic-bezier(0.4, 0.0, 0.2, 1);
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    /* Apple Dark Mode - macOS Monterey/Ventura風 */
-    --background: 240 10% 8%;
+    /* Slack Dark Mode - Clean and professional */
+    --background: 0 0% 7%;
     --foreground: 0 0% 95%;
-    --card: 240 10% 12%;
+    --card: 0 0% 10%;
     --card-foreground: 0 0% 95%;
-    --popover: 240 10% 12%;
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
 
-    /* Dark Mode Primary - より明るいブルー */
-    --primary: 211 100% 60%;
-    --primary-foreground: 240 10% 8%;
+    /* Dark Mode Primary - Lighter aubergine */
+    --primary: 300 47% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4% 16%;
+    --secondary: 0 0% 14%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 175 70% 50%;
-    --accent-foreground: 240 10% 8%;
+    --accent: 175 50% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 100% 60%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 65% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 4% 20%;
-    --input: 240 4% 20%;
-    --ring: 211 100% 60%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 300 47% 50%;
 
-    /* Dark Mode Glassmorphism */
-    --glass-bg: rgba(30, 30, 30, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    /* Dark Mode Glass */
+    --glass-bg: rgba(18, 18, 18, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.08);
 
-    /* Dark Mode Shadows - より控えめに */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
+    /* Dark Mode Shadows - Subtle */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.7), 0 4px 6px -4px rgb(0 0 0 / 0.7);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.8), 0 8px 10px -6px rgb(0 0 0 / 0.8);
   }
 }
 
@@ -112,48 +112,48 @@
     @apply border-border;
   }
 
-  /* San Francisco風フォントスタック */
+  /* Slack風フォントスタック - Clean and readable */
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3",
-                 Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+                 "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.011em; /* Apple標準 */
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
 
-  /* 見出しのタイポグラフィ */
+  /* タイポグラフィ - Generous spacing */
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 600; /* Semibold */
-    letter-spacing: -0.022em; /* 見出しはより狭く */
-    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
   }
 
-  /* Apple風のスムーズなトランジション */
+  /* Smooth transitions */
   button,
   a,
   input,
   select,
   textarea {
     transition-property: all;
-    transition-duration: 200ms;
+    transition-duration: 150ms;
     transition-timing-function: var(--ease-in-out-cubic);
   }
 
-  /* フォーカス状態の改善 - Apple風のリング */
+  /* フォーカス状態 - Slackスタイル */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
-    @apply outline-none ring-2 ring-primary/20 ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-primary/30 ring-offset-2 ring-offset-background;
   }
 
-  /* カードのホバーエフェクト - より繊細に */
+  /* ホバーエフェクト - 控えめ */
   [role="button"]:hover,
   button:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-0.5px);
     transition-timing-function: var(--ease-out-expo);
   }
 
@@ -162,18 +162,18 @@
   input:disabled,
   select:disabled,
   textarea:disabled {
-    @apply opacity-40 cursor-not-allowed;
+    @apply opacity-50 cursor-not-allowed;
   }
 
-  /* スムーズなスクロール */
+  /* スムーズスクロール */
   html {
     scroll-behavior: smooth;
   }
 
-  /* macOS風スクロールバー */
+  /* Slackスタイルスクロールバー */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
@@ -181,36 +181,34 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
-    border: 2px solid transparent;
-    background-clip: padding-box;
+    @apply bg-muted-foreground/20 rounded-md;
   }
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/30;
   }
 
-  /* セレクションカラー */
+  /* セレクション */
   ::selection {
     background-color: hsl(var(--primary) / 0.2);
   }
 }
 
-/* Apple風ユーティリティクラス */
+/* Slack風ユーティリティクラス */
 @layer utilities {
-  /* Glassmorphism - macOS Big Sur/Monterey風 */
+  /* Glass effect - Clean and minimal */
   .glass {
     background-color: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
     border: 1px solid var(--glass-border);
   }
 
   .glass-card {
-    @apply glass rounded-2xl shadow-lg;
+    @apply glass rounded-lg shadow-lg;
   }
 
-  /* Apple風シャドウ */
+  /* Slack風シャドウ */
   .shadow-apple-sm {
     box-shadow: var(--shadow-sm);
   }
@@ -231,47 +229,47 @@
     box-shadow: var(--shadow-xl);
   }
 
-  /* Apple風トランジション */
+  /* Slackトランジション */
   .transition-apple {
     transition-timing-function: var(--ease-in-out-cubic);
-    transition-duration: 200ms;
+    transition-duration: 150ms;
   }
 
   .transition-apple-slow {
     transition-timing-function: var(--ease-out-expo);
-    transition-duration: 350ms;
+    transition-duration: 250ms;
   }
 
   .transition-apple-spring {
     transition-timing-function: var(--ease-spring);
-    transition-duration: 400ms;
+    transition-duration: 300ms;
   }
 
-  /* Apple風ホバーエフェクト */
+  /* ホバーエフェクト */
   .hover-lift {
     @apply transition-apple;
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
   }
 
-  /* カード風スタイル */
+  /* カードスタイル - Clean borders */
   .card-apple {
-    @apply bg-card rounded-2xl border border-border/50 shadow-apple p-6;
+    @apply bg-card rounded-lg border border-border shadow-apple p-6;
   }
 
-  /* ボタン風スタイル */
+  /* ボタンスタイル */
   .btn-apple {
-    @apply rounded-xl px-4 py-2 font-medium transition-apple;
-    @apply hover:scale-[1.02] active:scale-[0.98];
+    @apply rounded-md px-4 py-2 font-semibold transition-apple;
+    @apply hover:scale-[1.01] active:scale-[0.99];
   }
 
-  /* インプット風スタイル */
+  /* インプットスタイル */
   .input-apple {
-    @apply rounded-xl border border-border/50 bg-background/50;
-    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary;
+    @apply rounded-md border border-border bg-background;
+    @apply focus:ring-2 focus:ring-primary/30 focus:border-primary;
     @apply transition-apple;
   }
 }
