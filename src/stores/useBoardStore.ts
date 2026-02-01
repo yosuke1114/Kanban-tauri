@@ -492,8 +492,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }));
     get().saveToStorage();
     toast({
-      title: "タスクをアーカイブしました",
-      description: task.title,
+      title: "✓ タスクをアーカイブしました",
+      description: `${task.title}\n完了済みタスクとして保存されます。いつでも復元可能です。`,
     });
   },
 
@@ -566,8 +566,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }));
     get().saveToStorage();
     toast({
-      title: "タスクをゴミ箱に移動しました",
-      description: `${task.title}（30日後に自動削除されます）`,
+      title: "🗑️ タスクをゴミ箱に移動しました",
+      description: `${task.title}\n30日後に自動削除されます。それまでは復元可能です。`,
     });
   },
 
@@ -601,8 +601,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }));
     get().saveToStorage();
     toast({
-      title: "タスクを復元しました",
-      description: task.title,
+      title: "↩️ タスクを復元しました",
+      description: `${task.title}\nカンバンボードに戻されました。`,
     });
   },
 
@@ -628,8 +628,9 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     get().saveToStorage();
     if (task) {
       toast({
-        title: "タスクを完全に削除しました",
-        description: task.title,
+        title: "⚠️ タスクを完全に削除しました",
+        description: `${task.title}\nこの操作は取り消せません。`,
+        variant: "destructive",
       });
     }
   },
@@ -673,8 +674,9 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }));
     get().saveToStorage();
     toast({
-      title: "ゴミ箱を空にしました",
-      description: `${deletedTasks.length}件のタスクを完全に削除しました`,
+      title: "⚠️ ゴミ箱を空にしました",
+      description: `${deletedTasks.length}件のタスクを完全に削除しました。この操作は取り消せません。`,
+      variant: "destructive",
     });
   },
 
