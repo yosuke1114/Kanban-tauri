@@ -77,6 +77,18 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
   };
 
   const handleSelectDirectory = async () => {
+    // Tauri環境チェック
+    const isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+    if (!isTauri) {
+      toast({
+        title: "エラー",
+        description:
+          "ディレクトリ選択はデスクトップアプリでのみ利用可能です",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const selectedPath = await storageManager.selectTauriFilePath();
       if (selectedPath) {
@@ -130,24 +142,26 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
       const data = await storageManager.exportBackup();
 
       // データをダウンロード
+      const fileName = `kanban-backup-${new Date().toISOString().split("T")[0]}.json`;
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `kanban-backup-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       toast({
-        title: "エクスポート完了",
-        description: "データをダウンロードしました",
+        title: "✅ エクスポート完了",
+        description: `ファイル: ${fileName}\nダウンロードフォルダに保存されました`,
       });
     } catch (error) {
       toast({
         title: "エラー",
-        description: "エクスポートに失敗しました",
+        description:
+          error instanceof Error ? error.message : "エクスポートに失敗しました",
         variant: "destructive",
       });
     } finally {
@@ -169,8 +183,8 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
         await storageManager.importBackup(text);
 
         toast({
-          title: "インポート完了",
-          description: "データを復元しました。ページを再読み込みしてください。",
+          title: "✅ インポート完了",
+          description: `ファイル: ${file.name}\n2秒後にページを再読み込みします...`,
         });
 
         // ページをリロード
@@ -179,7 +193,7 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
         }, 2000);
       } catch (error) {
         toast({
-          title: "エラー",
+          title: "❌ インポート失敗",
           description:
             error instanceof Error ? error.message : "インポートに失敗しました",
           variant: "destructive",
@@ -284,10 +298,14 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
                   size="icon"
                   onClick={handleSelectDirectory}
                   disabled={isLoading}
+                  title="ディレクトリを選択"
                 >
                   <FolderOpen size={16} />
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                ※ ディレクトリ選択はデスクトップアプリでのみ利用可能です
+              </p>
             </div>
           )}
 
