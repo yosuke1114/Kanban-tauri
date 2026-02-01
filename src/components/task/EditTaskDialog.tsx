@@ -21,13 +21,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Priority } from "@/types";
-import { Trash2, Archive, Plus, CheckSquare } from "lucide-react";
+import { Trash2, Archive, Plus, CheckSquare, Calendar as CalendarIcon } from "lucide-react";
 import { useBoardStore, selectTags, selectColumns, selectColumnOrder } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
 import { Separator } from "@/components/ui/separator";
 import { PRIORITY_OPTIONS } from "@/constants/priority";
 import { INPUT_LIMITS, validateInput } from "@/constants/validation";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DayPicker } from "react-day-picker";
+import { format } from "date-fns";
+import { ja } from "date-fns/locale";
+import "react-day-picker/dist/style.css";
 
 interface EditTaskDialogProps {
   task: Task;
@@ -46,6 +51,7 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const addSubtask = useBoardStore((state) => state.addSubtask);
   const toggleSubtask = useBoardStore((state) => state.toggleSubtask);
   const deleteSubtask = useBoardStore((state) => state.deleteSubtask);
+  const updateSubtask = useBoardStore((state) => state.updateSubtask);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore(selectTags);
   const columns = useBoardStore(selectColumns);
@@ -140,6 +146,12 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   const handleDeleteSubtask = (subtaskId: string) => {
     deleteSubtask(task.id, subtaskId);
+  };
+
+  const handleSubtaskDueDateChange = (subtaskId: string, date: Date | undefined) => {
+    updateSubtask(task.id, subtaskId, {
+      dueDate: date ? date.toISOString() : undefined,
+    });
   };
 
   const handleSubtaskKeyDown = (e: React.KeyboardEvent) => {
@@ -429,6 +441,32 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                       >
                         {subtask.title}
                       </span>
+                      {subtask.dueDate && (
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(subtask.dueDate), "M/d (E)", { locale: ja })}
+                        </span>
+                      )}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="期限を設定"
+                          >
+                            <CalendarIcon size={16} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <DayPicker
+                            mode="single"
+                            selected={subtask.dueDate ? new Date(subtask.dueDate) : undefined}
+                            onSelect={(date: Date | undefined) => handleSubtaskDueDateChange(subtask.id, date)}
+                            locale={ja}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <Button
                         type="button"
                         variant="ghost"

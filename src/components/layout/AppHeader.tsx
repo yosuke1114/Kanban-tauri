@@ -1,6 +1,5 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { BoardSelector } from "@/components/board/BoardSelector";
@@ -14,12 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { INPUT_LIMITS, validateInput } from "@/constants/validation";
 
 interface AppHeaderProps {
   onOpenMemberManager: () => void;
@@ -27,8 +20,8 @@ interface AppHeaderProps {
   onOpenColumnManager: () => void;
   onOpenTrashManager: () => void;
   onOpenBoardManager: () => void;
+  onAddNewTask: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement>;
-  taskInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -37,48 +30,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenColumnManager,
   onOpenTrashManager,
   onOpenBoardManager,
+  onAddNewTask,
   searchInputRef,
-  taskInputRef,
 }) => {
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [taskTitleError, setTaskTitleError] = useState<string | null>(null);
-  const [isTaskPopoverOpen, setIsTaskPopoverOpen] = useState(false);
   const [isStorageSettingsOpen, setIsStorageSettingsOpen] = useState(false);
   const searchQuery = useBoardStore((state) => state.searchQuery);
   const setSearchQuery = useBoardStore((state) => state.setSearchQuery);
-  const addTask = useBoardStore((state) => state.addTask);
   const trashCount = useBoardStore(selectTrashCount);
-
-  const handleTaskTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewTaskTitle(value);
-
-    // リアルタイムバリデーション（文字数制限のみ）
-    if (value.length > INPUT_LIMITS.TASK_TITLE) {
-      setTaskTitleError(validateInput.maxLength(value, INPUT_LIMITS.TASK_TITLE));
-    } else {
-      setTaskTitleError(null);
-    }
-  }, []);
-
-  const handleAddTask = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-
-      // バリデーション
-      const error = validateInput.general(newTaskTitle, INPUT_LIMITS.TASK_TITLE);
-      if (error) {
-        setTaskTitleError(error);
-        return;
-      }
-
-      addTask("todo", newTaskTitle.trim());
-      setNewTaskTitle("");
-      setTaskTitleError(null);
-      setIsTaskPopoverOpen(false);
-    },
-    [newTaskTitle, addTask]
-  );
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/60 shadow-apple">
@@ -91,50 +49,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <BoardSelector onOpenBoardManager={onOpenBoardManager} />
           </div>
           <div className="flex gap-1.5 md:gap-2 shrink-0">
-            {/* タスク追加ポップオーバー */}
-            <Popover open={isTaskPopoverOpen} onOpenChange={setIsTaskPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="rounded-lg transition-apple"
-                >
-                  <PlusCircle size={16} className="md:mr-2" />
-                  <span className="hidden md:inline">タスク追加</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <form onSubmit={handleAddTask} className="space-y-2">
-                  <div className="space-y-1">
-                    <Input
-                      ref={taskInputRef}
-                      type="text"
-                      data-testid="new-task-input"
-                      value={newTaskTitle}
-                      onChange={handleTaskTitleChange}
-                      placeholder="新しいタスクを追加..."
-                      className="w-full"
-                      maxLength={INPUT_LIMITS.TASK_TITLE}
-                      autoFocus
-                    />
-                    {taskTitleError && (
-                      <p className="text-xs text-destructive">{taskTitleError}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground text-right">
-                      {newTaskTitle.length}/{INPUT_LIMITS.TASK_TITLE}
-                    </p>
-                  </div>
-                  <Button
-                    type="submit"
-                    data-testid="add-task-button"
-                    className="w-full rounded-lg"
-                    disabled={!!taskTitleError || !newTaskTitle.trim()}
-                  >
-                    追加
-                  </Button>
-                </form>
-              </PopoverContent>
-            </Popover>
+            {/* タスク追加ボタン */}
+            <Button
+              variant="default"
+              size="sm"
+              className="rounded-lg transition-apple"
+              onClick={onAddNewTask}
+              data-testid="add-task-button"
+            >
+              <PlusCircle size={16} className="md:mr-2" />
+              <span className="hidden md:inline">タスク追加</span>
+            </Button>
 
             <FilterPanel />
 

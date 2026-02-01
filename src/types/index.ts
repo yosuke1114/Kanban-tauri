@@ -29,6 +29,7 @@ export interface Subtask {
   id: string;
   title: string;
   completed: boolean;
+  dueDate?: string; // サブタスクの期限（オプショナル、互換性維持）
 }
 
 export interface Task {

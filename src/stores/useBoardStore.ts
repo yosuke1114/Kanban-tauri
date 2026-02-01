@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { Board, Task, Column, Member, Tag, FilterState } from "@/types";
+import { Board, Task, Column, Member, Tag, FilterState, Subtask } from "@/types";
 import {
   calculateNextDueDate,
   isRecurrenceEnded,
@@ -89,7 +89,7 @@ interface BoardStore extends BoardStoreState {
   getCurrentBoard: () => Board;
 
   // 現在のボードに対するタスク操作
-  addTask: (columnId: string, title: string) => void;
+  addTask: (columnId: string, title: string) => string;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => void;
@@ -109,7 +109,7 @@ interface BoardStore extends BoardStoreState {
   addSubtask: (taskId: string, title: string) => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
   deleteSubtask: (taskId: string, subtaskId: string) => void;
-  updateSubtask: (taskId: string, subtaskId: string, title: string) => void;
+  updateSubtask: (taskId: string, subtaskId: string, updates: Partial<Subtask>) => void;
 
   // 列操作
   addColumn: (title: string, color: string) => void;
@@ -316,7 +316,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   addTask: (columnId: string, title: string) => {
     const state = get();
     const board = state.boards[state.currentBoardId];
-    if (!board) return;
+    if (!board) return "";
 
     const now = new Date().toISOString();
     const newTask: Task = {
@@ -352,6 +352,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       title: "タスクを作成しました",
       description: title,
     });
+    return newTask.id;
   },
 
   updateTask: (taskId: string, updates: Partial<Task>) => {
@@ -837,7 +838,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     get().saveToStorage();
   },
 
-  updateSubtask: (taskId: string, subtaskId: string, title: string) => {
+  updateSubtask: (taskId: string, subtaskId: string, updates: Partial<Subtask>) => {
     const state = get();
     const board = state.boards[state.currentBoardId];
     if (!board) return;
@@ -847,7 +848,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
     const now = new Date().toISOString();
     const updatedSubtasks = task.subtasks.map((st) =>
-      st.id === subtaskId ? { ...st, title } : st
+      st.id === subtaskId ? { ...st, ...updates } : st
     );
 
     set((state) => ({

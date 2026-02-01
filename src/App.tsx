@@ -11,6 +11,7 @@ import { BoardManagerDialog } from "./components/board/BoardManagerDialog";
 import { AppHeader } from "./components/layout/AppHeader";
 import { ActiveFiltersIndicator } from "./components/filter/ActiveFiltersIndicator";
 import { ShortcutsDialog } from "./components/shortcuts/ShortcutsDialog";
+import EditTaskDialog from "./components/task/EditTaskDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { LayoutGrid, List, Calendar } from "lucide-react";
 import { ViewMode } from "./types";
@@ -26,12 +27,22 @@ function App() {
   const [showTrashManager, setShowTrashManager] = useState(false);
   const [showBoardManager, setShowBoardManager] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [newTaskId, setNewTaskId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const taskInputRef = useRef<HTMLInputElement>(null);
 
   const clearFilters = useBoardStore((state) => state.clearFilters);
+  const addTask = useBoardStore((state) => state.addTask);
+  const tasks = useBoardStore((state) => state.boards[state.currentBoardId]?.tasks || {});
+
+  const handleAddNewTask = () => {
+    // デフォルトの「todo」列に空タスクを作成
+    const taskId = addTask("todo", "新しいタスク");
+    if (taskId) {
+      setNewTaskId(taskId);
+    }
+  };
 
   // 期限通知フック
   useDueDateNotifications();
@@ -41,9 +52,7 @@ function App() {
     onSearch: () => {
       searchInputRef.current?.focus();
     },
-    onNewTask: () => {
-      taskInputRef.current?.focus();
-    },
+    onNewTask: handleAddNewTask,
     onShowShortcuts: () => {
       setShowShortcuts(true);
     },
@@ -75,8 +84,8 @@ function App() {
         onOpenColumnManager={() => setShowColumnManager(true)}
         onOpenTrashManager={() => setShowTrashManager(true)}
         onOpenBoardManager={() => setShowBoardManager(true)}
+        onAddNewTask={handleAddNewTask}
         searchInputRef={searchInputRef}
-        taskInputRef={taskInputRef}
       />
 
       <ActiveFiltersIndicator />
@@ -135,6 +144,13 @@ function App() {
         open={showBoardManager}
         onOpenChange={setShowBoardManager}
       />
+      {newTaskId && tasks[newTaskId] && (
+        <EditTaskDialog
+          task={tasks[newTaskId]}
+          open={true}
+          onClose={() => setNewTaskId(null)}
+        />
+      )}
       <Toaster />
     </div>
   );

@@ -8,6 +8,10 @@ export function useFilteredTasks() {
 
   return useMemo(() => {
     return Object.values(tasks).filter((task) => {
+      // アクティブなタスクのみを対象（削除済み・アーカイブ済みを除外）
+      const taskStatus = task.status || "active";
+      if (taskStatus !== "active") return false;
+
       // 検索クエリフィルター
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
