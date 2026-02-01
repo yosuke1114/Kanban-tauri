@@ -60,7 +60,104 @@
 
 ---
 
-### 2. 「自分のタスク」クイックフィルター 🆕 Quick Win
+### 2. データファイル保存先の管理 🆕 Quick Win
+**スコア**: 8点（価値2 × 工数3 × カバー2）
+**見積もり**: 3-4時間
+
+**現状問題**:
+- localStorageとTauriファイルストレージが混在
+- ユーザーがデータの保存先を選択・管理できない
+- SharePoint連携の前提として保存先管理が必要
+
+**ユーザーストーリー**:
+- **As a 山田（企業）**, I want to データの保存先を選択できる, So that SharePoint連携の準備ができる
+- **As a 田中（個人）**, I want to データをローカルファイルに保存できる, So that データのバックアップが取れる
+
+**実装内容**:
+
+**新規ファイル**:
+- `src/components/settings/DataStorageSettings.tsx` - データ保存先設定UI
+- `src/services/storage/storageManager.ts` - ストレージマネージャー
+
+**機能**:
+1. **ストレージタイプ選択**:
+   - localStorage（ブラウザ）
+   - Tauriファイル（ローカルファイル）
+   - SharePoint（将来対応、準備のみ）
+
+2. **Tauriファイルストレージの設定**:
+   - 保存先ディレクトリの選択（Tauriダイアログ使用）
+   - デフォルト: `~/Documents/KanbanData/`
+   - エクスポート/インポート機能
+
+3. **設定UI（AppHeader内）**:
+   - 設定ボタン（⚙️アイコン）
+   - DataStorageSettingsダイアログ
+   - 現在の保存先表示
+   - ストレージタイプ切り替え
+   - データ移行ボタン（ストレージ間のデータコピー）
+
+4. **データ移行機能**:
+   - localStorageからTauriファイルへ移行
+   - TauriファイルからlocalStorageへ移行
+   - バックアップ作成（JSON形式）
+
+**実装方針**:
+```typescript
+// src/services/storage/storageManager.ts
+export type StorageType = 'localStorage' | 'tauriFile' | 'sharepoint';
+
+export class StorageManager {
+  async setStorageType(type: StorageType): Promise<void>;
+  async saveData(data: BoardState): Promise<void>;
+  async loadData(): Promise<BoardState | null>;
+  async migrate(from: StorageType, to: StorageType): Promise<void>;
+  async exportBackup(): Promise<string>; // JSON string
+  async importBackup(json: string): Promise<void>;
+}
+```
+
+**UI設計**:
+```
+┌─────────────────────────────────────┐
+│ データ保存設定                       │
+├─────────────────────────────────────┤
+│ 現在の保存先: ローカルファイル       │
+│ パス: ~/Documents/KanbanData/        │
+│                                     │
+│ ストレージタイプ:                    │
+│ ○ ローカルファイル（Tauri）          │
+│ ○ ブラウザストレージ                │
+│ ○ SharePoint（準備中）              │
+│                                     │
+│ [保存先を変更...]                    │
+│ [データをエクスポート]                │
+│ [バックアップからインポート]          │
+└─────────────────────────────────────┘
+```
+
+**影響範囲**:
+- `src/stores/useBoardStore.ts` - StorageManager統合
+- `src/components/layout/AppHeader.tsx` - 設定ボタン追加
+- `src/services/storage/` - 新規ファイル追加
+
+**完了基準**:
+- ✅ ストレージタイプを選択できる
+- ✅ Tauriファイルの保存先を選択できる
+- ✅ データ移行（localStorage ↔ Tauriファイル）が動作する
+- ✅ エクスポート/インポート機能が動作する
+- ✅ 設定がlocalStorageに保存される
+- ✅ テスト追加
+
+**SharePoint連携への準備**:
+この機能により、SharePoint対応時に以下が可能になる:
+- ストレージタイプに'sharepoint'を追加
+- StorageManagerのインターフェースを拡張
+- データ移行機能でSharePointとの同期
+
+---
+
+### 3. 「自分のタスク」クイックフィルター 🆕 Quick Win
 **スコア**: 7点（価値2 × 工数3 × カバー2）
 **見積もり**: 3時間
 
@@ -88,7 +185,7 @@
 
 ## 🔶 高優先度（来週中）
 
-### 3. 日付範囲フィルター
+### 4. 日付範囲フィルター
 **スコア**: 6点（価値2 × 工数2 × カバー2）
 **見積もり**: 4-5時間
 
@@ -122,7 +219,7 @@
 
 ---
 
-### 4. デスクトップ通知機能
+### 5. デスクトップ通知機能
 **スコア**: 6点（価値2 × 工数2 × カバー2）
 **見積もり**: 6-7時間
 
@@ -167,7 +264,7 @@ if (window.__TAURI__) {
 
 ## 🟡 中優先度（今月中）
 
-### 5. ダークモード対応
+### 6. ダークモード対応
 **スコア**: 5点（価値2 × 工数2 × カバー1）
 **見積もり**: 5-6時間
 
@@ -198,7 +295,7 @@ if (window.__TAURI__) {
 
 ---
 
-### 6. ドラッグ&ドロップの視覚改善
+### 7. ドラッグ&ドロップの視覚改善
 **スコア**: 4点（価値1 × 工数3 × カバー1）
 **見積もり**: 5-6時間
 
@@ -227,7 +324,7 @@ if (window.__TAURI__) {
 
 ## 🔵 低優先度（来月以降）
 
-### 7. SharePoint連携 🔗 Phase 6
+### 8. SharePoint連携 🔗 Phase 6
 **スコア**: 3点（価値3 × 工数1 × カバー1）
 **見積もり**: 35-42時間
 
@@ -240,7 +337,7 @@ if (window.__TAURI__) {
 
 ---
 
-### 8. 統計・分析機能 📊 Phase 7
+### 9. 統計・分析機能 📊 Phase 7
 **スコア**: 3点（価値1 × 工数1 × カバー3）
 **見積もり**: 20-25時間
 
@@ -296,9 +393,10 @@ if (window.__TAURI__) {
 | # | 機能 | 工数 | 価値 | スコア | 状態 |
 |---|------|------|------|--------|------|
 | 1 | タイトル重複解消 | 1h | 高 | 9 | ⏳ 次 |
-| 2 | 「自分のタスク」フィルター | 3h | 中 | 7 | ⏳ |
+| 2 | データファイル保存先管理 | 3-4h | 中 | 8 | ⏳ |
+| 3 | 「自分のタスク」フィルター | 3h | 中 | 7 | ⏳ |
 
-**合計**: 4時間 → **半日で完了可能**
+**合計**: 7-8時間 → **1日で完了可能**
 
 ---
 
