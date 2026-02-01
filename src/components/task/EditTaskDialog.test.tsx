@@ -2,70 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EditTaskDialog from './EditTaskDialog';
-import { useBoardStore } from '@/stores/useBoardStore';
-import type { Task, Member, Tag, BoardState } from '@/types';
-
-const resetStore = () => {
-  const initialState: BoardState = {
-    tasks: {},
-    columns: {
-      todo: {
-        id: 'todo',
-        title: '未着手',
-        color: '#94a3b8',
-        position: 0,
-        isDefault: true,
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: '進行中',
-        color: '#60a5fa',
-        position: 1,
-        isDefault: true,
-      },
-      done: {
-        id: 'done',
-        title: '完了',
-        color: '#34d399',
-        position: 2,
-        isDefault: true,
-      },
-    },
-    columnOrder: ['todo', 'inProgress', 'done'],
-    members: {},
-    tags: {},
-    filters: {
-      tagIds: [],
-      assigneeIds: [],
-      priorities: [],
-    },
-    currentUserId: undefined,
-  };
-
-  useBoardStore.setState({
-    ...initialState,
-    searchQuery: '',
-  });
-};
-
-const createMockTask = (overrides?: Partial<Task>): Task => ({
-  id: `task-${Date.now()}-${Math.random()}`,
-  title: 'テストタスク',
-  description: 'テストタスクの説明',
-  columnId: 'todo',
-  position: 0,
-  priority: 'medium',
-  assigneeIds: [],
-  tagIds: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  sync: {
-    version: 1,
-    lastModifiedAt: new Date().toISOString(),
-    syncStatus: 'local',
-  },
-  ...overrides,
-});
+import type { Task, Member, Tag } from '@/types';
+import { resetStore, createMockTask, createMockMember, createMockTag, addTaskToStore, addMemberToStore, addTagToStore } from '@/test-utils/mockStore';
 
 describe('EditTaskDialog', () => {
   let onClose: ReturnType<typeof vi.fn>;

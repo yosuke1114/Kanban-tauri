@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Task } from "@/types";
+import { Task, Priority } from "@/types";
 import { Trash2, Archive, Plus, CheckSquare } from "lucide-react";
 import { useBoardStore, selectTags, selectColumns, selectColumnOrder } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,6 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const addSubtask = useBoardStore((state) => state.addSubtask);
   const toggleSubtask = useBoardStore((state) => state.toggleSubtask);
   const deleteSubtask = useBoardStore((state) => state.deleteSubtask);
-  const updateSubtask = useBoardStore((state) => state.updateSubtask);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore(selectTags);
   const columns = useBoardStore(selectColumns);

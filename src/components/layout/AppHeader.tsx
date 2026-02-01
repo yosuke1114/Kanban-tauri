@@ -43,8 +43,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const setCurrentUserId = useBoardStore((state) => state.setCurrentUserId);
   const toggleMyTasks = useBoardStore((state) => state.toggleMyTasks);
   const filters = useBoardStore((state) => state.filters);
-  const deletedTasks = useBoardStore((state) => state.getDeletedTasks());
-  const archivedTasks = useBoardStore((state) => state.getArchivedTasks());
+  const getDeletedTasks = useBoardStore((state) => state.getDeletedTasks);
+  const getArchivedTasks = useBoardStore((state) => state.getArchivedTasks);
+
+  // 関数をコンポーネント内で呼び出す（セレクター内ではない）
+  const deletedTasks = getDeletedTasks();
+  const archivedTasks = getArchivedTasks();
 
   // 「自分のタスク」フィルターが有効かチェック
   const isMyTasksActive = currentUserId && filters.assigneeIds.includes(currentUserId);

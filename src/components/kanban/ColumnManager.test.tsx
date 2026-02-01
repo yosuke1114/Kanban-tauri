@@ -3,69 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ColumnManager from './ColumnManager';
 import { useBoardStore } from '@/stores/useBoardStore';
-import type { Task, Column, BoardState } from '@/types';
-
-const resetStore = () => {
-  const initialState: BoardState = {
-    tasks: {},
-    columns: {
-      todo: {
-        id: 'todo',
-        title: '未着手',
-        color: '#94a3b8',
-        position: 0,
-        isDefault: true,
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: '進行中',
-        color: '#60a5fa',
-        position: 1,
-        isDefault: true,
-      },
-      done: {
-        id: 'done',
-        title: '完了',
-        color: '#34d399',
-        position: 2,
-        isDefault: true,
-      },
-    },
-    columnOrder: ['todo', 'inProgress', 'done'],
-    members: {},
-    tags: {},
-    filters: {
-      tagIds: [],
-      assigneeIds: [],
-      priorities: [],
-    },
-    currentUserId: undefined,
-  };
-
-  useBoardStore.setState({
-    ...initialState,
-    searchQuery: '',
-  });
-};
-
-const createMockTask = (overrides?: Partial<Task>): Task => ({
-  id: `task-${Date.now()}-${Math.random()}`,
-  title: 'テストタスク',
-  description: '',
-  columnId: 'todo',
-  position: 0,
-  priority: 'medium',
-  assigneeIds: [],
-  tagIds: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  sync: {
-    version: 1,
-    lastModifiedAt: new Date().toISOString(),
-    syncStatus: 'local',
-  },
-  ...overrides,
-});
+import { resetStore, createMockTask, addTaskToStore } from '@/test-utils/mockStore';
 
 describe('ColumnManager', () => {
   let onClose: ReturnType<typeof vi.fn>;
@@ -188,7 +126,8 @@ describe('ColumnManager', () => {
 
       await waitFor(() => {
         const store = useBoardStore.getState();
-        expect(store.columnOrder).toHaveLength(2);
+        const board = store.boards[store.currentBoardId];
+        expect(board?.columnOrder).toHaveLength(2);
       });
     });
 
@@ -196,10 +135,8 @@ describe('ColumnManager', () => {
       const user = userEvent.setup();
 
       // タスクを追加
-      const store = useBoardStore.getState();
       const task = createMockTask({ columnId: 'todo' });
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ColumnManager open={true} onClose={onClose} />);
 
@@ -221,7 +158,8 @@ describe('ColumnManager', () => {
 
       // 列は削除されていない
       const finalStore = useBoardStore.getState();
-      expect(finalStore.columnOrder).toHaveLength(3);
+      const board = finalStore.boards[finalStore.currentBoardId];
+      expect(board?.columnOrder).toHaveLength(3);
     });
 
     it('最後の列は削除できない', async () => {
@@ -229,12 +167,19 @@ describe('ColumnManager', () => {
 
       // 2つの列を削除して1つだけ残す
       const store = useBoardStore.getState();
-      store.columnOrder = ['todo'];
-      store.columns = { todo: store.columns.todo };
-      useBoardStore.setState({
-        columnOrder: store.columnOrder,
-        columns: store.columns,
-      });
+      const board = store.boards[store.currentBoardId];
+      if (board) {
+        useBoardStore.setState({
+          boards: {
+            ...store.boards,
+            [store.currentBoardId]: {
+              ...board,
+              columnOrder: ['todo'],
+              columns: { todo: board.columns.todo },
+            },
+          },
+        });
+      }
 
       render(<ColumnManager open={true} onClose={onClose} />);
 
@@ -268,7 +213,8 @@ describe('ColumnManager', () => {
 
       // 列は削除されていない
       const store = useBoardStore.getState();
-      expect(store.columnOrder).toHaveLength(3);
+      const board = store.boards[store.currentBoardId];
+      expect(board?.columnOrder).toHaveLength(3);
     });
   });
 
@@ -318,7 +264,8 @@ describe('ColumnManager', () => {
 
       await waitFor(() => {
         const store = useBoardStore.getState();
-        const greenColumn = Object.values(store.columns).find(
+        const board = store.boards[store.currentBoardId];
+        const greenColumn = Object.values(board?.columns || {}).find(
           (col) => col.title === 'グリーン列'
         );
         expect(greenColumn?.color).toBe('#34d399');
@@ -377,26 +324,38 @@ describe('ColumnManager', () => {
   describe('複数の列がある場合', () => {
     it('4つ以上の列も正しく表示される', () => {
       const store = useBoardStore.getState();
-      store.columns['review'] = {
-        id: 'review',
-        title: 'レビュー中',
-        color: '#a78bfa',
-        position: 3,
-        isDefault: false,
-      };
-      store.columns['testing'] = {
-        id: 'testing',
-        title: 'テスト中',
-        color: '#ec4899',
-        position: 4,
-        isDefault: false,
-      };
-      store.columnOrder = ['todo', 'inProgress', 'review', 'testing', 'done'];
+      const board = store.boards[store.currentBoardId];
 
-      useBoardStore.setState({
-        columns: store.columns,
-        columnOrder: store.columnOrder,
-      });
+      if (board) {
+        const updatedBoard = {
+          ...board,
+          columns: {
+            ...board.columns,
+            review: {
+              id: 'review',
+              title: 'レビュー中',
+              color: '#a78bfa',
+              position: 3,
+              isDefault: false,
+            },
+            testing: {
+              id: 'testing',
+              title: 'テスト中',
+              color: '#ec4899',
+              position: 4,
+              isDefault: false,
+            },
+          },
+          columnOrder: ['todo', 'inProgress', 'review', 'testing', 'done'],
+        };
+
+        useBoardStore.setState({
+          boards: {
+            ...store.boards,
+            [store.currentBoardId]: updatedBoard,
+          },
+        });
+      }
 
       render(<ColumnManager open={true} onClose={onClose} />);
 
@@ -404,7 +363,8 @@ describe('ColumnManager', () => {
       expect(screen.getByText('テスト中')).toBeInTheDocument();
 
       const store2 = useBoardStore.getState();
-      expect(store2.columnOrder).toHaveLength(5);
+      const board2 = store2.boards[store2.currentBoardId];
+      expect(board2?.columnOrder).toHaveLength(5);
     });
   });
 });

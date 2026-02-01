@@ -1245,6 +1245,10 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 }));
 
+// デフォルト値（参照の安定性のため）
+const EMPTY_OBJECT = {};
+const EMPTY_ARRAY: string[] = [];
+
 // セレクターヘルパー（現在のボードのデータにアクセスするため）
 export const selectCurrentBoard = (state: BoardStoreState) => {
   return state.boards[state.currentBoardId];
@@ -1252,20 +1256,20 @@ export const selectCurrentBoard = (state: BoardStoreState) => {
 
 export const selectTasks = (state: BoardStoreState) => {
   const board = state.boards[state.currentBoardId];
-  return board?.tasks || {};
+  return board?.tasks ?? EMPTY_OBJECT;
 };
 
 export const selectColumns = (state: BoardStoreState) => {
   const board = state.boards[state.currentBoardId];
-  return board?.columns || {};
+  return board?.columns ?? EMPTY_OBJECT;
 };
 
 export const selectColumnOrder = (state: BoardStoreState) => {
   const board = state.boards[state.currentBoardId];
-  return board?.columnOrder || [];
+  return board?.columnOrder ?? EMPTY_ARRAY;
 };
 
 export const selectTags = (state: BoardStoreState) => {
   const board = state.boards[state.currentBoardId];
-  return board?.tags || {};
+  return board?.tags ?? EMPTY_OBJECT;
 };
