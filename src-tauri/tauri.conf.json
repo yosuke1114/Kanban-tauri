@@ -18,6 +18,18 @@
       },
       "notification": {
         "all": true
+      },
+      "dialog": {
+        "all": false,
+        "open": true,
+        "save": true
+      },
+      "fs": {
+        "all": true,
+        "scope": ["$DOWNLOAD/**", "$APPDATA/**", "$APPCONFIG/**", "$APPLOCALDATA/**", "$APPCACHE/**", "$APPLOG/**"]
+      },
+      "path": {
+        "all": true
       }
     },
     "windows": [
