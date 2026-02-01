@@ -18,13 +18,6 @@ import { Task } from "@/types";
 import KanbanColumn from "./KanbanColumn";
 import TaskCard from "../task/TaskCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const KanbanBoard: React.FC = () => {
   const tasks = useBoardStore((state) => state.tasks);
@@ -85,17 +78,6 @@ const KanbanBoard: React.FC = () => {
   const currentColumnIndex = columnOrder.indexOf(activeColumnId);
   const canGoLeft = currentColumnIndex > 0;
   const canGoRight = currentColumnIndex < columnOrder.length - 1;
-
-  // カラムごとのタスク数を計算
-  const columnTaskCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    columnOrder.forEach((columnId) => {
-      counts[columnId] = filteredTasks.filter(
-        (task) => task.columnId === columnId
-      ).length;
-    });
-    return counts;
-  }, [columnOrder, filteredTasks]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -163,26 +145,9 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <div className="w-full h-full p-4 overflow-hidden flex flex-col">
-      {/* モバイル: カラムセレクター + ナビゲーション */}
+      {/* モバイル: スワイプインジケーター */}
       {isMobile && (
-        <div className="mb-4 space-y-2">
-          <Select value={activeColumnId} onValueChange={setActiveColumnId}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {columnOrder.map((columnId) => {
-                const column = columns[columnId];
-                if (!column) return null;
-                return (
-                  <SelectItem key={columnId} value={columnId}>
-                    {column.title} ({columnTaskCounts[columnId] || 0})
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          {/* スワイプインジケーター */}
+        <div className="mb-4">
           <div className="flex items-center justify-between px-2">
             <button
               onClick={handleSwipeRight}
