@@ -88,18 +88,21 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
       <button
         {...attributes}
         {...listeners}
+        data-testid={`column-drag-handle-${column.id}`}
         className="cursor-grab active:cursor-grabbing touch-none"
       >
         <GripVertical size={16} className="text-muted-foreground" />
       </button>
       <div
         className="w-3 h-3 rounded-full"
+        data-testid={`column-color-${column.id}`}
         style={{ backgroundColor: column.color }}
       />
       <span className="flex-1">{column.title}</span>
       <Button
         variant="ghost"
         size="icon"
+        data-testid={`delete-column-${column.id}`}
         onClick={() => onDelete(column.id, column.title)}
         className="text-destructive hover:bg-destructive/10 transition-apple rounded-lg"
       >
@@ -200,6 +203,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
             <div className="flex gap-2">
               <Input
                 id="columnTitle"
+                data-testid="column-name-input"
                 value={newColumnTitle}
                 onChange={(e) => setNewColumnTitle(e.target.value)}
                 placeholder="列名を入力"
@@ -210,7 +214,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
                   }
                 }}
               />
-              <Button onClick={handleAddColumn} size="icon">
+              <Button onClick={handleAddColumn} size="icon" data-testid="add-column-button">
                 <Plus size={20} />
               </Button>
             </div>
@@ -220,6 +224,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
                 <button
                   key={option.color}
                   type="button"
+                  data-testid={`color-option-${option.name}`}
                   className={`
                     flex items-center gap-2 px-3 py-2 rounded-lg
                     border-2 transition-all

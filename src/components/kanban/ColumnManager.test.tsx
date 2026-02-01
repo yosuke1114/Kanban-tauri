@@ -50,8 +50,9 @@ describe('ColumnManager', () => {
       await user.click(addButton);
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const reviewColumn = Object.values(store.columns).find(
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const reviewColumn = Object.values(board?.columns || {}).find(
           (col) => col.title === 'レビュー中'
         );
         expect(reviewColumn).toBeDefined();
@@ -68,8 +69,9 @@ describe('ColumnManager', () => {
       await user.type(input, 'テスト列{Enter}');
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const testColumn = Object.values(store.columns).find(
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const testColumn = Object.values(board?.columns || {}).find(
           (col) => col.title === 'テスト列'
         );
         expect(testColumn).toBeDefined();

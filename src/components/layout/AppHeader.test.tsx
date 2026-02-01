@@ -3,50 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppHeader } from './AppHeader';
 import { useBoardStore } from '@/stores/useBoardStore';
-import type { Member, BoardState } from '@/types';
-
-const resetStore = () => {
-  const initialState: BoardState = {
-    tasks: {},
-    columns: {
-      todo: {
-        id: 'todo',
-        title: '未着手',
-        color: '#94a3b8',
-        position: 0,
-        isDefault: true,
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: '進行中',
-        color: '#60a5fa',
-        position: 1,
-        isDefault: true,
-      },
-      done: {
-        id: 'done',
-        title: '完了',
-        color: '#34d399',
-        position: 2,
-        isDefault: true,
-      },
-    },
-    columnOrder: ['todo', 'inProgress', 'done'],
-    members: {},
-    tags: {},
-    filters: {
-      tagIds: [],
-      assigneeIds: [],
-      priorities: [],
-    },
-    currentUserId: undefined,
-  };
-
-  useBoardStore.setState({
-    ...initialState,
-    searchQuery: '',
-  });
-};
+import type { Member } from '@/types';
+import { resetStore, createMockMember, addMemberToStore } from '@/test-utils/mockStore';
 
 describe('AppHeader', () => {
   let onOpenMemberManager: ReturnType<typeof vi.fn>;
@@ -150,7 +108,8 @@ describe('AppHeader', () => {
 
       await waitFor(() => {
         const store = useBoardStore.getState();
-        const task = Object.values(store.tasks).find((t) => t.title === '新しいタスク');
+        const board = store.boards[store.currentBoardId];
+        const task = Object.values(board?.tasks || {}).find((t) => t.title === '新しいタスク');
         expect(task).toBeDefined();
         expect(task?.columnId).toBe('todo');
       });
@@ -188,11 +147,15 @@ describe('AppHeader', () => {
       );
 
       const addButton = screen.getByTestId('add-task-button');
-      const initialTaskCount = Object.keys(useBoardStore.getState().tasks).length;
+      const state1 = useBoardStore.getState();
+      const board1 = state1.boards[state1.currentBoardId];
+      const initialTaskCount = Object.keys(board1?.tasks || {}).length;
 
       await user.click(addButton);
 
-      const finalTaskCount = Object.keys(useBoardStore.getState().tasks).length;
+      const state2 = useBoardStore.getState();
+      const board2 = state2.boards[state2.currentBoardId];
+      const finalTaskCount = Object.keys(board2?.tasks || {}).length;
       expect(finalTaskCount).toBe(initialTaskCount);
     });
 
@@ -208,12 +171,16 @@ describe('AppHeader', () => {
 
       const input = screen.getByTestId('new-task-input');
       const addButton = screen.getByTestId('add-task-button');
-      const initialTaskCount = Object.keys(useBoardStore.getState().tasks).length;
+      const state1 = useBoardStore.getState();
+      const board1 = state1.boards[state1.currentBoardId];
+      const initialTaskCount = Object.keys(board1?.tasks || {}).length;
 
       await user.type(input, '   ');
       await user.click(addButton);
 
-      const finalTaskCount = Object.keys(useBoardStore.getState().tasks).length;
+      const state2 = useBoardStore.getState();
+      const board2 = state2.boards[state2.currentBoardId];
+      const finalTaskCount = Object.keys(board2?.tasks || {}).length;
       expect(finalTaskCount).toBe(initialTaskCount);
     });
   });
@@ -254,16 +221,13 @@ describe('AppHeader', () => {
     });
 
     it.skip('メンバーが登録されている場合、選択肢に表示される', () => {
-      const store = useBoardStore.getState();
-      const member: Member = {
+      const member = createMockMember({
         id: 'member-1',
         name: '田中太郎',
         color: '#ef4444',
-        isActive: true,
-      };
+      });
 
-      store.members = { [member.id]: member };
-      useBoardStore.setState({ members: store.members });
+      addMemberToStore(member);
 
       render(
         <AppHeader

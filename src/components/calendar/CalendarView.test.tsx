@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import CalendarView from './CalendarView';
 import type { Member } from '@/types';
 import { resetStore, createMockTask, createMockMember, addTaskToStore, addMemberToStore } from '@/test-utils/mockStore';
+import { useBoardStore } from '@/stores/useBoardStore';
 
 describe('CalendarView', () => {
   beforeEach(() => {
@@ -32,7 +33,6 @@ describe('CalendarView', () => {
 
   describe('タスク表示', () => {
     it('期限があるタスクが表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -42,8 +42,7 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -51,7 +50,6 @@ describe('CalendarView', () => {
     });
 
     it('タスクタイトルが表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -61,8 +59,7 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -70,7 +67,6 @@ describe('CalendarView', () => {
     });
 
     it('タスク説明が表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -81,8 +77,7 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -90,7 +85,6 @@ describe('CalendarView', () => {
     });
 
     it('優先度ラベルが表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -101,8 +95,7 @@ describe('CalendarView', () => {
         createMockTask({ id: 'task-4', title: 'タスク4', priority: 'urgent', dueDate }),
       ];
 
-      store.tasks = Object.fromEntries(tasks.map((t) => [t.id, t]));
-      useBoardStore.setState({ tasks: store.tasks });
+      tasks.forEach(task => addTaskToStore(task));
 
       render(<CalendarView />);
 
@@ -113,16 +106,14 @@ describe('CalendarView', () => {
     });
 
     it('担当者が表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-      const member: Member = {
+      const member = createMockMember({
         id: 'member-1',
         name: '田中太郎',
         color: '#ef4444',
-        isActive: true,
-      };
+      });
 
       const task = createMockTask({
         id: 'task-1',
@@ -131,9 +122,8 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.members = { [member.id]: member };
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ members: store.members, tasks: store.tasks });
+      addMemberToStore(member);
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -141,7 +131,6 @@ describe('CalendarView', () => {
     });
 
     it('複数のタスクが表示される', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -151,8 +140,7 @@ describe('CalendarView', () => {
         createMockTask({ id: 'task-3', title: 'タスク3', dueDate }),
       ];
 
-      store.tasks = Object.fromEntries(tasks.map((t) => [t.id, t]));
-      useBoardStore.setState({ tasks: store.tasks });
+      tasks.forEach(task => addTaskToStore(task));
 
       render(<CalendarView />);
 
@@ -167,7 +155,6 @@ describe('CalendarView', () => {
     it('タスクをクリックでEditTaskDialogが開く', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -177,8 +164,7 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -192,15 +178,12 @@ describe('CalendarView', () => {
 
   describe('期限なしタスク', () => {
     it('期限がないタスクは表示されない', () => {
-      const store = useBoardStore.getState();
-
       const task = createMockTask({
         id: 'task-1',
         title: '期限なしタスク',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -211,7 +194,6 @@ describe('CalendarView', () => {
 
   describe('異なる日付のタスク', () => {
     it('異なる日付のタスクは表示されない', () => {
-      const store = useBoardStore.getState();
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const dueDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
@@ -222,8 +204,7 @@ describe('CalendarView', () => {
         dueDate,
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 
@@ -240,14 +221,12 @@ describe('CalendarView', () => {
     });
 
     it('1件のタスク表示', () => {
-      const store = useBoardStore.getState();
       const today = new Date();
       const dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       const task = createMockTask({ id: 'task-1', title: 'タスク1', dueDate });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<CalendarView />);
 

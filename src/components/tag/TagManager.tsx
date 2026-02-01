@@ -88,6 +88,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
             <div className="flex gap-2">
               <Input
                 id="tagName"
+                data-testid="tag-name-input"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 placeholder="タグ名を入力"
@@ -98,7 +99,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
                   }
                 }}
               />
-              <Button onClick={handleAddTag} size="icon">
+              <Button onClick={handleAddTag} size="icon" data-testid="add-tag-button">
                 <TagIcon size={20} />
               </Button>
             </div>
@@ -107,6 +108,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
               {colorOptions.map((color) => (
                 <button
                   key={color}
+                  data-testid={`color-option-${color}`}
                   className={`w-6 h-6 rounded-full border-2 transition-all ${
                     selectedColor === color
                       ? "border-primary scale-110"
@@ -125,6 +127,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
               {Object.values(tags).map((tag) => (
                 <div
                   key={tag.id}
+                  data-testid={`tag-item-${tag.id}`}
                   className="flex items-center gap-1 p-1 pr-2 rounded-full border"
                   style={{ borderColor: tag.color }}
                 >
@@ -137,6 +140,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    data-testid={`delete-tag-${tag.id}`}
                     className="h-5 w-5 text-destructive"
                     onClick={() => handleDeleteTag(tag.id, tag.name)}
                   >

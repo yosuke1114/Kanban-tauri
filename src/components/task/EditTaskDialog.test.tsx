@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EditTaskDialog from './EditTaskDialog';
 import type { Task, Member, Tag } from '@/types';
+import { useBoardStore } from '@/stores/useBoardStore';
 import { resetStore, createMockTask, createMockMember, createMockTag, addTaskToStore, addMemberToStore, addTagToStore } from '@/test-utils/mockStore';
 
 describe('EditTaskDialog', () => {
@@ -192,23 +193,19 @@ describe('EditTaskDialog', () => {
 
   describe('タグの選択', () => {
     beforeEach(() => {
-      const tag1: Tag = {
+      const tag1 = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
-      const tag2: Tag = {
+      });
+      const tag2 = createMockTag({
         id: 'tag-2',
         name: '機能追加',
         color: '#3b82f6',
-      };
-
-      useBoardStore.setState({
-        tags: {
-          [tag1.id]: tag1,
-          [tag2.id]: tag2,
-        },
       });
+
+      addTagToStore(tag1);
+      addTagToStore(tag2);
     });
 
     it('タグが表示される', () => {
@@ -399,9 +396,7 @@ describe('EditTaskDialog', () => {
     it('保存後にダイアログが閉じる', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 
@@ -418,9 +413,7 @@ describe('EditTaskDialog', () => {
     it('削除ボタンで確認ダイアログが表示される', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 
@@ -436,9 +429,7 @@ describe('EditTaskDialog', () => {
     it('削除確認でタスクが削除される', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 
@@ -451,17 +442,16 @@ describe('EditTaskDialog', () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        const updatedStore = useBoardStore.getState();
-        expect(updatedStore.tasks[mockTask.id]).toBeUndefined();
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        expect(board?.tasks[mockTask.id]).toBeUndefined();
       });
     });
 
     it('削除キャンセルでタスクは削除されない', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      store.tasks[mockTask.id] = mockTask;
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(mockTask);
 
       render(<EditTaskDialog task={mockTask} open={true} onClose={onClose} />);
 

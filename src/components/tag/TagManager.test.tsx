@@ -3,50 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TagManager from './TagManager';
 import { useBoardStore } from '@/stores/useBoardStore';
-import type { Tag, BoardState } from '@/types';
-
-const resetStore = () => {
-  const initialState: BoardState = {
-    tasks: {},
-    columns: {
-      todo: {
-        id: 'todo',
-        title: '未着手',
-        color: '#94a3b8',
-        position: 0,
-        isDefault: true,
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: '進行中',
-        color: '#60a5fa',
-        position: 1,
-        isDefault: true,
-      },
-      done: {
-        id: 'done',
-        title: '完了',
-        color: '#34d399',
-        position: 2,
-        isDefault: true,
-      },
-    },
-    columnOrder: ['todo', 'inProgress', 'done'],
-    members: {},
-    tags: {},
-    filters: {
-      tagIds: [],
-      assigneeIds: [],
-      priorities: [],
-    },
-    currentUserId: undefined,
-  };
-
-  useBoardStore.setState({
-    ...initialState,
-    searchQuery: '',
-  });
-};
+import type { Tag } from '@/types';
+import { resetStore, createMockTag, addTagToStore } from '@/test-utils/mockStore';
 
 describe('TagManager', () => {
   let onClose: ReturnType<typeof vi.fn>;
@@ -115,8 +73,9 @@ describe('TagManager', () => {
       await user.click(addButton);
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const bugTag = Object.values(store.tags).find((tag) => tag.name === 'バグ');
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const bugTag = Object.values(board?.tags || {}).find((tag) => tag.name === 'バグ');
         expect(bugTag).toBeDefined();
         expect(bugTag?.color).toBe('#ef4444'); // デフォルトカラー
       });
@@ -131,8 +90,9 @@ describe('TagManager', () => {
       await user.type(input, '機能{Enter}');
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const featureTag = Object.values(store.tags).find((tag) => tag.name === '機能');
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const featureTag = Object.values(board?.tags || {}).find((tag) => tag.name === '機能');
         expect(featureTag).toBeDefined();
       });
     });
@@ -181,8 +141,9 @@ describe('TagManager', () => {
       await user.click(addButton);
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const blueTag = Object.values(store.tags).find((tag) => tag.name === 'ブルータグ');
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const blueTag = Object.values(board?.tags || {}).find((tag) => tag.name === 'ブルータグ');
         expect(blueTag?.color).toBe('#3b82f6');
       });
     });
@@ -207,8 +168,9 @@ describe('TagManager', () => {
       await user.click(addButton);
 
       await waitFor(() => {
-        const store = useBoardStore.getState();
-        const nextTag = Object.values(store.tags).find((tag) => tag.name === '次のタグ');
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        const nextTag = Object.values(board?.tags || {}).find((tag) => tag.name === '次のタグ');
         expect(nextTag?.color).toBe('#ef4444'); // デフォルトカラー
       });
     });
@@ -216,23 +178,19 @@ describe('TagManager', () => {
 
   describe('タグの表示', () => {
     it('登録済みタグが表示される', () => {
-      const store = useBoardStore.getState();
-      const tag1: Tag = {
+      const tag1 = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
-      const tag2: Tag = {
+      });
+      const tag2 = createMockTag({
         id: 'tag-2',
         name: '機能',
         color: '#10b981',
-      };
+      });
 
-      store.tags = {
-        [tag1.id]: tag1,
-        [tag2.id]: tag2,
-      };
-      useBoardStore.setState({ tags: store.tags });
+      addTagToStore(tag1);
+      addTagToStore(tag2);
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -247,15 +205,13 @@ describe('TagManager', () => {
     });
 
     it('タグのカラーが正しく表示される', () => {
-      const store = useBoardStore.getState();
-      const tag: Tag = {
+      const tag = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
+      });
 
-      store.tags = { [tag.id]: tag };
-      useBoardStore.setState({ tags: store.tags });
+      addTagToStore(tag);
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -268,15 +224,13 @@ describe('TagManager', () => {
     it('削除ボタンで確認ダイアログが表示される', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      const tag: Tag = {
+      const tag = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
+      });
 
-      store.tags = { [tag.id]: tag };
-      useBoardStore.setState({ tags: store.tags });
+      addTagToStore(tag);
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -292,15 +246,13 @@ describe('TagManager', () => {
     it('削除確認でタグが削除される', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      const tag: Tag = {
+      const tag = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
+      });
 
-      store.tags = { [tag.id]: tag };
-      useBoardStore.setState({ tags: store.tags });
+      addTagToStore(tag);
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -312,23 +264,22 @@ describe('TagManager', () => {
       await user.click(confirmButton);
 
       await waitFor(() => {
-        const updatedStore = useBoardStore.getState();
-        expect(updatedStore.tags['tag-1']).toBeUndefined();
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        expect(board?.tags['tag-1']).toBeUndefined();
       });
     });
 
     it('削除キャンセルでタグは削除されない', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
-      const tag: Tag = {
+      const tag = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
+      });
 
-      store.tags = { [tag.id]: tag };
-      useBoardStore.setState({ tags: store.tags });
+      addTagToStore(tag);
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -339,8 +290,9 @@ describe('TagManager', () => {
       await user.click(cancelButton);
 
       await waitFor(() => {
-        const updatedStore = useBoardStore.getState();
-        expect(updatedStore.tags['tag-1']).toBeDefined();
+        const state = useBoardStore.getState();
+        const board = state.boards[state.currentBoardId];
+        expect(board?.tags['tag-1']).toBeDefined();
       });
     });
   });
@@ -410,16 +362,14 @@ describe('TagManager', () => {
 
   describe('複数のタグ', () => {
     it('複数のタグが正しく表示される', () => {
-      const store = useBoardStore.getState();
-      const tags: Record<string, Tag> = {
-        'tag-1': { id: 'tag-1', name: 'バグ', color: '#ef4444' },
-        'tag-2': { id: 'tag-2', name: '機能', color: '#10b981' },
-        'tag-3': { id: 'tag-3', name: '改善', color: '#3b82f6' },
-        'tag-4': { id: 'tag-4', name: 'ドキュメント', color: '#8b5cf6' },
-      };
+      const tags = [
+        createMockTag({ id: 'tag-1', name: 'バグ', color: '#ef4444' }),
+        createMockTag({ id: 'tag-2', name: '機能', color: '#10b981' }),
+        createMockTag({ id: 'tag-3', name: '改善', color: '#3b82f6' }),
+        createMockTag({ id: 'tag-4', name: 'ドキュメント', color: '#8b5cf6' }),
+      ];
 
-      store.tags = tags;
-      useBoardStore.setState({ tags: store.tags });
+      tags.forEach(tag => addTagToStore(tag));
 
       render(<TagManager open={true} onClose={onClose} />);
 
@@ -428,8 +378,9 @@ describe('TagManager', () => {
       expect(screen.getByText('改善')).toBeInTheDocument();
       expect(screen.getByText('ドキュメント')).toBeInTheDocument();
 
-      const store2 = useBoardStore.getState();
-      expect(Object.keys(store2.tags).length).toBe(4);
+      const state = useBoardStore.getState();
+      const board = state.boards[state.currentBoardId];
+      expect(Object.keys(board?.tags || {}).length).toBe(4);
     });
   });
 });

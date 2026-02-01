@@ -45,7 +45,7 @@ export const createMockBoard = (overrides?: Partial<Board>): Board => ({
 export const createMockTask = (overrides?: Partial<Task>): Task => ({
   id: `task-${Date.now()}-${Math.random()}`,
   title: 'テストタスク',
-  description: '',
+  description: 'テストタスクの説明',
   columnId: 'todo',
   position: 0,
   priority: 'medium',

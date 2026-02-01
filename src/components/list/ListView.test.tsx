@@ -3,69 +3,8 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ListView from './ListView';
 import { useBoardStore } from '@/stores/useBoardStore';
-import type { Task, BoardState, Member, Tag } from '@/types';
-
-const resetStore = () => {
-  const initialState: BoardState = {
-    tasks: {},
-    columns: {
-      todo: {
-        id: 'todo',
-        title: '未着手',
-        color: '#94a3b8',
-        position: 0,
-        isDefault: true,
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: '進行中',
-        color: '#60a5fa',
-        position: 1,
-        isDefault: true,
-      },
-      done: {
-        id: 'done',
-        title: '完了',
-        color: '#34d399',
-        position: 2,
-        isDefault: true,
-      },
-    },
-    columnOrder: ['todo', 'inProgress', 'done'],
-    members: {},
-    tags: {},
-    filters: {
-      tagIds: [],
-      assigneeIds: [],
-      priorities: [],
-    },
-    currentUserId: undefined,
-  };
-
-  useBoardStore.setState({
-    ...initialState,
-    searchQuery: '',
-  });
-};
-
-const createMockTask = (overrides?: Partial<Task>): Task => ({
-  id: `task-${Date.now()}-${Math.random()}`,
-  title: 'テストタスク',
-  description: '',
-  columnId: 'todo',
-  position: 0,
-  priority: 'medium',
-  assigneeIds: [],
-  tagIds: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  sync: {
-    version: 1,
-    lastModifiedAt: new Date().toISOString(),
-    syncStatus: 'local',
-  },
-  ...overrides,
-});
+import type { Task, Member, Tag } from '@/types';
+import { resetStore, createMockTask, addTaskToStore, createMockMember, addMemberToStore, createMockTag, addTagToStore } from '@/test-utils/mockStore';
 
 describe('ListView', () => {
   beforeEach(() => {
@@ -92,15 +31,13 @@ describe('ListView', () => {
     });
 
     it('タスクがある場合にテーブル行が表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'テストタスク1',
         columnId: 'todo',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -110,14 +47,12 @@ describe('ListView', () => {
 
   describe('タスク情報の表示', () => {
     it('タスクタイトルが表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスクタイトル',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -125,15 +60,13 @@ describe('ListView', () => {
     });
 
     it('タスク説明が表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスク',
         description: 'タスクの説明',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -141,7 +74,6 @@ describe('ListView', () => {
     });
 
     it('優先度ラベルが表示される', () => {
-      const store = useBoardStore.getState();
       const tasks = [
         createMockTask({ id: 'task-1', title: 'タスク1', priority: 'low' }),
         createMockTask({ id: 'task-2', title: 'タスク2', priority: 'medium' }),
@@ -149,8 +81,7 @@ describe('ListView', () => {
         createMockTask({ id: 'task-4', title: 'タスク4', priority: 'urgent' }),
       ];
 
-      store.tasks = Object.fromEntries(tasks.map((t) => [t.id, t]));
-      useBoardStore.setState({ tasks: store.tasks });
+      tasks.forEach(task => addTaskToStore(task));
 
       render(<ListView />);
 
@@ -161,15 +92,13 @@ describe('ListView', () => {
     });
 
     it('ステータス（列名）が表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスク',
         columnId: 'inProgress',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -177,15 +106,13 @@ describe('ListView', () => {
     });
 
     it('期限が表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスク',
         dueDate: '2025-12-31',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -196,14 +123,12 @@ describe('ListView', () => {
     });
 
     it('期限がない場合にハイフンが表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスク',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       const { container } = render(<ListView />);
 
@@ -216,13 +141,11 @@ describe('ListView', () => {
     });
 
     it('担当者が表示される', () => {
-      const store = useBoardStore.getState();
-      const member: Member = {
+      const member = createMockMember({
         id: 'member-1',
         name: '田中太郎',
         color: '#ef4444',
-        isActive: true,
-      };
+      });
 
       const task = createMockTask({
         id: 'task-1',
@@ -230,9 +153,8 @@ describe('ListView', () => {
         assigneeIds: ['member-1'],
       });
 
-      store.members = { [member.id]: member };
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ members: store.members, tasks: store.tasks });
+      addMemberToStore(member);
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -240,15 +162,13 @@ describe('ListView', () => {
     });
 
     it('担当者がいない場合にハイフンが表示される', () => {
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'タスク',
         assigneeIds: [],
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       const { container } = render(<ListView />);
 
@@ -261,12 +181,11 @@ describe('ListView', () => {
     });
 
     it('タグが表示される', () => {
-      const store = useBoardStore.getState();
-      const tag: Tag = {
+      const tag = createMockTag({
         id: 'tag-1',
         name: 'バグ',
         color: '#ef4444',
-      };
+      });
 
       const task = createMockTask({
         id: 'task-1',
@@ -274,9 +193,8 @@ describe('ListView', () => {
         tagIds: ['tag-1'],
       });
 
-      store.tags = { [tag.id]: tag };
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tags: store.tags, tasks: store.tasks });
+      addTagToStore(tag);
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -286,7 +204,7 @@ describe('ListView', () => {
 
   describe('ソート機能', () => {
     beforeEach(() => {
-      const store = useBoardStore.getState();
+      resetStore();
       const tasks = [
         createMockTask({
           id: 'task-1',
@@ -308,8 +226,7 @@ describe('ListView', () => {
         }),
       ];
 
-      store.tasks = Object.fromEntries(tasks.map((t) => [t.id, t]));
-      useBoardStore.setState({ tasks: store.tasks });
+      tasks.forEach(task => addTaskToStore(task));
     });
 
     it('タスク列のソートボタンをクリックでソートされる', async () => {
@@ -366,14 +283,12 @@ describe('ListView', () => {
     it('タスク行をクリックでEditTaskDialogが開く', async () => {
       const user = userEvent.setup();
 
-      const store = useBoardStore.getState();
       const task = createMockTask({
         id: 'task-1',
         title: 'クリック可能なタスク',
       });
 
-      store.tasks = { [task.id]: task };
-      useBoardStore.setState({ tasks: store.tasks });
+      addTaskToStore(task);
 
       render(<ListView />);
 
@@ -391,15 +306,13 @@ describe('ListView', () => {
 
   describe('複数タスク', () => {
     it('複数のタスクが正しく表示される', () => {
-      const store = useBoardStore.getState();
       const tasks = [
         createMockTask({ id: 'task-1', title: 'タスク1' }),
         createMockTask({ id: 'task-2', title: 'タスク2' }),
         createMockTask({ id: 'task-3', title: 'タスク3' }),
       ];
 
-      store.tasks = Object.fromEntries(tasks.map((t) => [t.id, t]));
-      useBoardStore.setState({ tasks: store.tasks });
+      tasks.forEach(task => addTaskToStore(task));
 
       render(<ListView />);
 

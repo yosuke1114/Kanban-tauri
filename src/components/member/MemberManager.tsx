@@ -93,6 +93,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
             <div className="flex gap-2">
               <Input
                 id="memberName"
+                data-testid="member-name-input"
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
                 placeholder="名前を入力"
@@ -103,7 +104,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                   }
                 }}
               />
-              <Button onClick={handleAddMember} size="icon">
+              <Button onClick={handleAddMember} size="icon" data-testid="add-member-button">
                 <UserPlus size={20} />
               </Button>
             </div>
@@ -112,6 +113,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
               {colorOptions.map((color) => (
                 <button
                   key={color}
+                  data-testid={`color-option-${color}`}
                   className={`w-6 h-6 rounded-full border-2 transition-all ${
                     selectedColor === color
                       ? "border-primary scale-110"
@@ -130,11 +132,13 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
               {Object.values(members).map((member) => (
                 <div
                   key={member.id}
+                  data-testid={`member-item-${member.id}`}
                   className="flex items-center justify-between p-2 rounded-lg border"
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"
+                      data-testid={`member-color-${member.id}`}
                       style={{ backgroundColor: member.color }}
                     />
                     <span className={!member.isActive ? "line-through opacity-50" : ""}>
@@ -148,6 +152,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      data-testid={`toggle-member-${member.id}`}
                       onClick={() => handleToggleActive(member.id, member.isActive)}
                     >
                       {member.isActive ? "無効化" : "有効化"}
@@ -155,6 +160,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      data-testid={`delete-member-${member.id}`}
                       onClick={() => handleDeleteMember(member.id, member.name)}
                       className="text-destructive"
                     >

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useBoardStore } from "@/stores/useBoardStore";
+import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar, User, CheckSquare } from "lucide-react";
@@ -40,7 +40,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onClick = NOOP,
 }) => {
   const members = useBoardStore((state) => state.members);
-  const tags = useBoardStore((state) => state.tags);
+  const tags = useBoardStore(selectTags);
 
   const dueDateStatusResult = getDueDateStatus(task.dueDate);
   const dueDateStatus = dueDateStatusResult

@@ -94,6 +94,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Button
               variant={isMyTasksActive ? "default" : "outline"}
               size="sm"
+              data-testid="my-tasks-toggle"
               onClick={toggleMyTasks}
               disabled={!currentUserId}
               className="rounded-lg hover:bg-muted transition-apple"
@@ -106,6 +107,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Button
               variant="outline"
               size="sm"
+              data-testid="open-column-manager"
               onClick={onOpenColumnManager}
               className="rounded-lg hover:bg-muted transition-apple"
             >
@@ -115,6 +117,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Button
               variant="outline"
               size="sm"
+              data-testid="open-member-manager"
               onClick={onOpenMemberManager}
               className="rounded-lg hover:bg-muted transition-apple"
             >
@@ -124,6 +127,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Button
               variant="outline"
               size="sm"
+              data-testid="open-tag-manager"
               onClick={onOpenTagManager}
               className="rounded-lg hover:bg-muted transition-apple"
             >
@@ -154,6 +158,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <Input
             ref={taskInputRef}
             type="text"
+            data-testid="new-task-input"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="新しいタスクを追加..."
@@ -162,6 +167,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <Button
             type="submit"
             size="icon"
+            data-testid="add-task-button"
             className="rounded-xl hover:scale-105 transition-apple"
           >
             <PlusCircle size={20} />
