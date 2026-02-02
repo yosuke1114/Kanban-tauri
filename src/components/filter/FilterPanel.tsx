@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,26 +37,26 @@ export function FilterPanel() {
     filters.assigneeIds.length > 0 ||
     filters.priorities.length > 0;
 
-  const toggleTag = (tagId: string) => {
+  const toggleTag = useCallback((tagId: string) => {
     const newTagIds = filters.tagIds.includes(tagId)
       ? filters.tagIds.filter((id) => id !== tagId)
       : [...filters.tagIds, tagId];
     setFilters({ tagIds: newTagIds });
-  };
+  }, [filters.tagIds, setFilters]);
 
-  const toggleAssignee = (assigneeId: string) => {
+  const toggleAssignee = useCallback((assigneeId: string) => {
     const newAssigneeIds = filters.assigneeIds.includes(assigneeId)
       ? filters.assigneeIds.filter((id) => id !== assigneeId)
       : [...filters.assigneeIds, assigneeId];
     setFilters({ assigneeIds: newAssigneeIds });
-  };
+  }, [filters.assigneeIds, setFilters]);
 
-  const togglePriority = (priority: Priority) => {
+  const togglePriority = useCallback((priority: Priority) => {
     const newPriorities = filters.priorities.includes(priority)
       ? filters.priorities.filter((p) => p !== priority)
       : [...filters.priorities, priority];
     setFilters({ priorities: newPriorities });
-  };
+  }, [filters.priorities, setFilters]);
 
   return (
     <Popover>

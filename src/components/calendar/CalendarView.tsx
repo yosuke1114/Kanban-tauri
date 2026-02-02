@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { DayPicker } from "react-day-picker";
 import { ja } from "date-fns/locale";
 import { format, parseISO, startOfDay, isSameDay, isPast } from "date-fns";
@@ -9,6 +9,21 @@ import { Calendar as CalendarIcon, Clock, User, AlertCircle } from "lucide-react
 import { cn } from "@/lib/utils";
 import EditTaskDialog from "../task/EditTaskDialog";
 import "react-day-picker/dist/style.css";
+
+// 優先度カラーマッピング（コンポーネント外にHoist）
+const PRIORITY_COLORS: Record<Task["priority"], string> = {
+  urgent: "text-red-600 bg-red-50 border-red-200",
+  high: "text-orange-600 bg-orange-50 border-orange-200",
+  medium: "text-yellow-600 bg-yellow-50 border-yellow-200",
+  low: "text-green-600 bg-green-50 border-green-200",
+};
+
+const PRIORITY_LABELS: Record<Task["priority"], string> = {
+  urgent: "緊急",
+  high: "高",
+  medium: "中",
+  low: "低",
+};
 
 const CalendarView: React.FC = () => {
   const filteredTasks = useFilteredTasks();
@@ -51,43 +66,13 @@ const CalendarView: React.FC = () => {
     return datesWithTasks.filter((date) => isPast(date) && !isSameDay(date, today));
   }, [datesWithTasks]);
 
-  const handleDayClick = (day: Date) => {
+  const handleDayClick = useCallback((day: Date) => {
     setSelectedDate(day);
-  };
+  }, []);
 
-  const handleTaskClick = (task: Task) => {
+  const handleTaskClick = useCallback((task: Task) => {
     setEditingTask(task);
-  };
-
-  const getPriorityColor = (priority: Task["priority"]) => {
-    switch (priority) {
-      case "urgent":
-        return "text-red-600 bg-red-50 border-red-200";
-      case "high":
-        return "text-orange-600 bg-orange-50 border-orange-200";
-      case "medium":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "low":
-        return "text-green-600 bg-green-50 border-green-200";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
-  const getPriorityLabel = (priority: Task["priority"]) => {
-    switch (priority) {
-      case "urgent":
-        return "緊急";
-      case "high":
-        return "高";
-      case "medium":
-        return "中";
-      case "low":
-        return "低";
-      default:
-        return "";
-    }
-  };
+  }, []);
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row gap-4 md:gap-6 p-3 md:p-6 overflow-auto">
@@ -240,10 +225,10 @@ const CalendarView: React.FC = () => {
                       <div
                         className={cn(
                           "flex-shrink-0 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md text-xs font-medium border",
-                          getPriorityColor(task.priority)
+                          PRIORITY_COLORS[task.priority]
                         )}
                       >
-                        {getPriorityLabel(task.priority)}
+                        {PRIORITY_LABELS[task.priority]}
                       </div>
                     </div>
 

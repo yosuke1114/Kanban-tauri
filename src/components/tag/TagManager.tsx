@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -53,7 +53,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
   } | null>(null);
   const [tagNameError, setTagNameError] = useState<string | null>(null);
 
-  const handleAddTag = () => {
+  const handleAddTag = useCallback(() => {
     const error = validateInput.general(newTagName, INPUT_LIMITS.TAG_NAME);
     if (error) {
       setTagNameError(error);
@@ -64,18 +64,18 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
     setNewTagName("");
     setSelectedColor(colorOptions[0]);
     setTagNameError(null);
-  };
+  }, [newTagName, selectedColor, addTag]);
 
-  const handleDeleteTag = (tagId: string, tagName: string) => {
+  const handleDeleteTag = useCallback((tagId: string, tagName: string) => {
     setDeleteTarget({ id: tagId, name: tagName });
-  };
+  }, []);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (deleteTarget) {
       deleteTag(deleteTarget.id);
       setDeleteTarget(null);
     }
-  };
+  }, [deleteTarget, deleteTag]);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>

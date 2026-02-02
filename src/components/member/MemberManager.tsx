@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
   const [memberNameError, setMemberNameError] = useState<string | null>(null);
   const [editNameError, setEditNameError] = useState<string | null>(null);
 
-  const handleAddMember = () => {
+  const handleAddMember = useCallback(() => {
     const error = validateInput.general(newMemberName, INPUT_LIMITS.MEMBER_NAME);
     if (error) {
       setMemberNameError(error);
@@ -69,33 +69,33 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
     setNewMemberName("");
     setSelectedColor(colorOptions[0]);
     setMemberNameError(null);
-  };
+  }, [newMemberName, selectedColor, addMember]);
 
-  const handleToggleActive = (memberId: string, isActive: boolean) => {
+  const handleToggleActive = useCallback((memberId: string, isActive: boolean) => {
     updateMember(memberId, { isActive: !isActive });
-  };
+  }, [updateMember]);
 
-  const handleDeleteMember = (memberId: string, memberName: string) => {
+  const handleDeleteMember = useCallback((memberId: string, memberName: string) => {
     setDeleteTarget({ id: memberId, name: memberName });
-  };
+  }, []);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (deleteTarget) {
       deleteMember(deleteTarget.id);
       setDeleteTarget(null);
     }
-  };
+  }, [deleteTarget, deleteMember]);
 
-  const handleEditMember = (memberId: string) => {
+  const handleEditMember = useCallback((memberId: string) => {
     const member = members[memberId];
     if (member) {
       setEditingMemberId(memberId);
       setEditingName(member.name);
       setEditingColor(member.color);
     }
-  };
+  }, [members]);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     if (!editingMemberId) return;
 
     const error = validateInput.general(editingName, INPUT_LIMITS.MEMBER_NAME);
@@ -112,14 +112,14 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
     setEditingName("");
     setEditingColor("");
     setEditNameError(null);
-  };
+  }, [editingMemberId, editingName, editingColor, updateMember]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingMemberId(null);
     setEditingName("");
     setEditingColor("");
     setEditNameError(null);
-  };
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
