@@ -211,7 +211,7 @@ test.describe('フィルター・検索', () => {
     await page.getByRole('button', { name: '高', exact: true }).click();
 
     // フィルタークリアボタンが表示されることを確認
-    const clearButton = page.getByRole('button', { name: /クリア/i });
+    const clearButton = page.getByRole('button', { name: 'クリア', exact: true });
     await expect(clearButton).toBeVisible();
 
     // クリアボタンをクリック

@@ -35,19 +35,16 @@ test.describe('ボード管理', () => {
   test('ボードを切り替えできる', async ({ page }) => {
     // 新しいボードを作成
     await page.getByRole('button', { name: 'ボードを管理' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByRole('button', { name: '新しいボードを作成' }).click();
     await page.getByLabel(/ボード名/i).fill('ボード2');
     await page.getByRole('button', { name: '作成', exact: true }).click();
 
-    // ダイアログを閉じる
-    await page.getByRole('button', { name: '閉じる' }).click();
+    // ボード一覧で元のボード（テストボード）をクリックして切り替え
+    await page.getByRole('dialog').getByRole('heading', { name: /テストボード/i }).click();
+
+    // ダイアログが閉じることを確認
     await expect(page.getByRole('dialog')).not.toBeVisible();
-
-    // ボードセレクター（combobox）を開く
-    await page.getByRole('combobox').click();
-
-    // 元のボード（テストボード）を選択
-    await page.getByRole('option', { name: /テストボード/i }).click();
 
     // ボードセレクターに「テストボード」が表示されることを確認
     await expect(page.getByRole('combobox')).toContainText('テストボード');
@@ -68,13 +65,13 @@ test.describe('ボード管理', () => {
 
     // 新しいボードを作成して切り替え
     await page.getByRole('button', { name: 'ボードを管理' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByRole('button', { name: '新しいボードを作成' }).click();
     await page.getByLabel(/ボード名/i).fill('ボード2');
     await page.getByRole('button', { name: '作成', exact: true }).click();
 
-    // ボードを選択して切り替え
-    await page.getByRole('button', { name: 'ボード2' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    // ボード一覧で「ボード2」をクリックして切り替え（自動的にダイアログが閉じる）
+    await page.getByRole('dialog').getByRole('heading', { name: 'ボード2' }).click();
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // ボード2ではボード1のタスクが表示されないことを確認
