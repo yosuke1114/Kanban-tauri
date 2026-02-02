@@ -58,6 +58,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <Card
+      data-task-card
       className={cn(
         "group cursor-pointer rounded-lg border border-border",
         "bg-card shadow-apple-md hover:shadow-apple-lg",

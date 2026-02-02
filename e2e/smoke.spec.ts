@@ -29,21 +29,30 @@ test.describe('Smoke Tests', () => {
     await expect(page.getByRole('heading', { name: /完了/ })).toBeVisible();
   });
 
-  test('タスク追加フォームが表示される', async ({ page }) => {
+  test('タスク追加ボタンが表示される', async ({ page }) => {
     await page.goto('/');
 
-    // タスク追加入力欄が表示されていることを確認
-    const addInput = page.getByPlaceholder(/新しいタスクを追加/i);
-    await expect(addInput).toBeVisible();
+    // タスク追加ボタンが表示されていることを確認
+    const addButton = page.getByTestId('add-task-button');
+    await expect(addButton).toBeVisible();
+
+    // ボタンをクリックするとダイアログが開くことを確認
+    await addButton.click();
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 
-  test('メンバー管理とタグ管理が表示される', async ({ page }) => {
+  test('管理メニューが表示される', async ({ page }) => {
     await page.goto('/');
 
-    // メンバー管理セクションが表示されていることを確認
-    await expect(page.getByText('メンバー管理').or(page.getByText('Member Management'))).toBeVisible();
+    // 管理メニューボタンが表示されていることを確認
+    const settingsButton = page.getByRole('button', { name: '管理', exact: true });
+    await expect(settingsButton).toBeVisible();
 
-    // タグ管理セクションが表示されていることを確認
-    await expect(page.getByText('タグ管理').or(page.getByText('Tag Management'))).toBeVisible();
+    // 管理メニューを開く
+    await settingsButton.click();
+
+    // メンバー管理とタグ管理のメニュー項目が表示されることを確認
+    await expect(page.getByTestId('open-member-manager')).toBeVisible();
+    await expect(page.getByTestId('open-tag-manager')).toBeVisible();
   });
 });

@@ -47,6 +47,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
+      data-column-id={column.id}
       className={`flex-shrink-0 flex flex-col h-full bg-secondary/60 backdrop-blur-sm rounded-lg border border-border shadow-apple p-6 transition-all duration-200 hover:shadow-apple-md ${getColumnWidthClass()}`}
     >
       <div className="mb-5 flex items-center gap-3 flex-shrink-0">
