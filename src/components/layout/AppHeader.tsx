@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { BoardSelector } from "@/components/board/BoardSelector";
-import { DataStorageSettings } from "@/components/settings/DataStorageSettings";
 import { Users, Tag, Columns, PlusCircle, Trash2, Settings, Database } from "lucide-react";
+
+// 動的インポート：使用頻度が低い設定ダイアログ
+const DataStorageSettings = lazy(() => import("@/components/settings/DataStorageSettings").then(m => ({ default: m.DataStorageSettings })));
 import { useBoardStore, selectTrashCount } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -139,10 +141,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         />
       </div>
 
-      <DataStorageSettings
-        open={isStorageSettingsOpen}
-        onClose={() => setIsStorageSettingsOpen(false)}
-      />
+      {isStorageSettingsOpen && (
+        <Suspense fallback={null}>
+          <DataStorageSettings
+            open={isStorageSettingsOpen}
+            onClose={() => setIsStorageSettingsOpen(false)}
+          />
+        </Suspense>
+      )}
     </header>
   );
 };

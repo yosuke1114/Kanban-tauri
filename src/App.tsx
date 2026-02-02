@@ -1,8 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import "./App.css";
 import KanbanBoard from "./components/kanban/KanbanBoard";
 import ListView from "./components/list/ListView";
-import CalendarView from "./components/calendar/CalendarView";
 import MemberManager from "./components/member/MemberManager";
 import TagManager from "./components/tag/TagManager";
 import ColumnManager from "./components/kanban/ColumnManager";
@@ -19,6 +18,9 @@ import { useDueDateNotifications } from "./hooks/useDueDateNotifications";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useBoardStore } from "./stores/useBoardStore";
 import { Toaster } from "./components/ui/toaster";
+
+// 動的インポート：使用頻度が低い大きなコンポーネント
+const CalendarView = lazy(() => import("./components/calendar/CalendarView"));
 
 function App() {
   const [showMemberManager, setShowMemberManager] = useState(false);
@@ -115,7 +117,13 @@ function App() {
             <ListView />
           </TabsContent>
           <TabsContent value="calendar" className="mt-0 flex-1 overflow-hidden">
-            <CalendarView />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="text-muted-foreground">カレンダーを読み込み中...</div>
+              </div>
+            }>
+              <CalendarView />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </main>
