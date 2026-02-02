@@ -24,29 +24,19 @@ import { Badge } from "@/components/ui/badge";
 import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Trash2, Tag as TagIcon } from "lucide-react";
 import { INPUT_LIMITS, validateInput } from "@/constants/validation";
+import { COLOR_OPTIONS } from "@/constants/colors";
 
 interface TagManagerProps {
   open: boolean;
   onClose: () => void;
 }
 
-const colorOptions = [
-  "#ef4444",
-  "#f59e0b",
-  "#10b981",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-  "#14b8a6",
-  "#f97316",
-];
-
 const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
   const tags = useBoardStore(selectTags);
   const addTag = useBoardStore((state) => state.addTag);
   const deleteTag = useBoardStore((state) => state.deleteTag);
   const [newTagName, setNewTagName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
+  const [selectedColor, setSelectedColor] = useState<string>(COLOR_OPTIONS[0]);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
@@ -62,7 +52,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
 
     addTag(newTagName.trim(), selectedColor);
     setNewTagName("");
-    setSelectedColor(colorOptions[0]);
+    setSelectedColor(COLOR_OPTIONS[0]);
     setTagNameError(null);
   }, [newTagName, selectedColor, addTag]);
 
@@ -137,7 +127,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
             </div>
 
             <div className="flex gap-2 mt-2">
-              {colorOptions.map((color) => (
+              {COLOR_OPTIONS.map((color) => (
                 <button
                   key={color}
                   data-testid={`color-option-${color}`}

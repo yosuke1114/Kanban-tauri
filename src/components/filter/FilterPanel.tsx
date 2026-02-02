@@ -9,13 +9,7 @@ import {
 import { Filter, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Priority } from "@/types";
-
-const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
-  { value: "low", label: "低" },
-  { value: "medium", label: "中" },
-  { value: "high", label: "高" },
-  { value: "urgent", label: "緊急" },
-];
+import { PRIORITY_OPTIONS } from "@/constants/priority";
 
 export function FilterPanel() {
   const filters = useBoardStore((state) => state.filters);

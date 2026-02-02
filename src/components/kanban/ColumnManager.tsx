@@ -39,22 +39,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Column } from "@/types";
 import { INPUT_LIMITS, validateInput } from "@/constants/validation";
+import { COLUMN_COLOR_OPTIONS } from "@/constants/colors";
 
 interface ColumnManagerProps {
   open: boolean;
   onClose: () => void;
 }
-
-const colorOptions = [
-  { color: "#94a3b8", name: "グレー" },
-  { color: "#60a5fa", name: "ブルー" },
-  { color: "#34d399", name: "グリーン" },
-  { color: "#fbbf24", name: "イエロー" },
-  { color: "#fb923c", name: "オレンジ" },
-  { color: "#f87171", name: "レッド" },
-  { color: "#a78bfa", name: "パープル" },
-  { color: "#ec4899", name: "ピンク" },
-];
 
 interface SortableColumnItemProps {
   column: Column;
@@ -67,7 +57,7 @@ interface SortableColumnItemProps {
   onColorChange: (color: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
-  colorOptions: { color: string; name: string }[];
+  COLUMN_COLOR_OPTIONS: readonly { readonly color: string; readonly name: string }[];
   editTitleError: string | null;
 }
 
@@ -82,7 +72,7 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
   onColorChange,
   onSaveEdit,
   onCancelEdit,
-  colorOptions,
+  COLUMN_COLOR_OPTIONS,
   editTitleError,
 }) => {
   const {
@@ -119,7 +109,7 @@ const SortableColumnItem: React.FC<SortableColumnItemProps> = ({
         <>
           {/* カラー選択 */}
           <div className="flex gap-1">
-            {colorOptions.map((option) => (
+            {COLUMN_COLOR_OPTIONS.map((option) => (
               <button
                 key={option.color}
                 type="button"
@@ -220,7 +210,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
   const updateColumn = useBoardStore((state) => state.updateColumn);
   const reorderColumns = useBoardStore((state) => state.reorderColumns);
   const [newColumnTitle, setNewColumnTitle] = useState("");
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0].color);
+  const [selectedColor, setSelectedColor] = useState<string>(COLUMN_COLOR_OPTIONS[0].color);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
@@ -249,7 +239,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
 
     addColumn(newColumnTitle.trim(), selectedColor);
     setNewColumnTitle("");
-    setSelectedColor(colorOptions[0].color);
+    setSelectedColor(COLUMN_COLOR_OPTIONS[0].color);
     setColumnTitleError(null);
   };
 
@@ -390,7 +380,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
             </div>
 
             <div className="grid grid-cols-4 gap-2 mt-2">
-              {colorOptions.map((option) => (
+              {COLUMN_COLOR_OPTIONS.map((option) => (
                 <button
                   key={option.color}
                   type="button"
@@ -457,7 +447,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({ open, onClose }) => {
                         onColorChange={setEditingColor}
                         onSaveEdit={handleSaveEdit}
                         onCancelEdit={handleCancelEdit}
-                        colorOptions={colorOptions}
+                        COLUMN_COLOR_OPTIONS={COLUMN_COLOR_OPTIONS}
                         editTitleError={editTitleError}
                       />
                     );

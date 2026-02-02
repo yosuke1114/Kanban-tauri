@@ -8,22 +8,8 @@ import { Task } from "@/types";
 import { Calendar as CalendarIcon, Clock, User, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import EditTaskDialog from "../task/EditTaskDialog";
+import { getPriorityCalendarColor, getPriorityLabel } from "@/constants/priority";
 import "react-day-picker/dist/style.css";
-
-// 優先度カラーマッピング（コンポーネント外にHoist）
-const PRIORITY_COLORS: Record<Task["priority"], string> = {
-  urgent: "text-red-600 bg-red-50 border-red-200",
-  high: "text-orange-600 bg-orange-50 border-orange-200",
-  medium: "text-yellow-600 bg-yellow-50 border-yellow-200",
-  low: "text-green-600 bg-green-50 border-green-200",
-};
-
-const PRIORITY_LABELS: Record<Task["priority"], string> = {
-  urgent: "緊急",
-  high: "高",
-  medium: "中",
-  low: "低",
-};
 
 const CalendarView: React.FC = () => {
   const filteredTasks = useFilteredTasks();
@@ -225,10 +211,10 @@ const CalendarView: React.FC = () => {
                       <div
                         className={cn(
                           "flex-shrink-0 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md text-xs font-medium border",
-                          PRIORITY_COLORS[task.priority]
+                          getPriorityCalendarColor(task.priority)
                         )}
                       >
-                        {PRIORITY_LABELS[task.priority]}
+                        {getPriorityLabel(task.priority)}
                       </div>
                     </div>
 

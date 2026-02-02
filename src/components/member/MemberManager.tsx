@@ -24,22 +24,12 @@ import { Badge } from "@/components/ui/badge";
 import { useBoardStore } from "@/stores/useBoardStore";
 import { Trash2, UserPlus, Pencil, Check, X } from "lucide-react";
 import { INPUT_LIMITS, validateInput } from "@/constants/validation";
+import { COLOR_OPTIONS } from "@/constants/colors";
 
 interface MemberManagerProps {
   open: boolean;
   onClose: () => void;
 }
-
-const colorOptions = [
-  "#ef4444",
-  "#f59e0b",
-  "#10b981",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
-  "#14b8a6",
-  "#f97316",
-];
 
 const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
   const members = useBoardStore((state) => state.members);
@@ -47,7 +37,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
   const updateMember = useBoardStore((state) => state.updateMember);
   const deleteMember = useBoardStore((state) => state.deleteMember);
   const [newMemberName, setNewMemberName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
+  const [selectedColor, setSelectedColor] = useState<string>(COLOR_OPTIONS[0]);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
@@ -67,7 +57,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
 
     addMember(newMemberName.trim(), selectedColor);
     setNewMemberName("");
-    setSelectedColor(colorOptions[0]);
+    setSelectedColor(COLOR_OPTIONS[0]);
     setMemberNameError(null);
   }, [newMemberName, selectedColor, addMember]);
 
@@ -181,7 +171,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
             </div>
 
             <div className="flex gap-2 mt-2">
-              {colorOptions.map((color) => (
+              {COLOR_OPTIONS.map((color) => (
                 <button
                   key={color}
                   data-testid={`color-option-${color}`}
@@ -213,7 +203,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                       <>
                         {/* カラー選択 */}
                         <div className="flex gap-1">
-                          {colorOptions.map((color) => (
+                          {COLOR_OPTIONS.map((color) => (
                             <button
                               key={color}
                               type="button"
