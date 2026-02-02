@@ -52,6 +52,18 @@ const TaskItem: React.FC<{
     return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: ja });
   }, [task.deletedAt, task.archivedAt, showDeletedAt]);
 
+  const deleteIn = useMemo(() => {
+    if (!showDeletedAt || !task.deletedAt) return null;
+    const deletedDate = new Date(task.deletedAt);
+    const expirationDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const daysLeft = Math.ceil((expirationDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+
+    if (daysLeft <= 0) return { text: "削除予定", urgent: true };
+    if (daysLeft <= 7) return { text: `あと${daysLeft}日で削除`, urgent: true };
+    return { text: `あと${daysLeft}日で削除`, urgent: false };
+  }, [task.deletedAt, showDeletedAt]);
+
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-muted/50 transition-colors">
       <div className="flex-1 min-w-0">
@@ -74,6 +86,14 @@ const TaskItem: React.FC<{
               <Clock size={10} />
               {timeAgo}
             </span>
+          )}
+          {deleteIn && (
+            <Badge
+              variant={deleteIn.urgent ? "destructive" : "secondary"}
+              className="text-xs"
+            >
+              {deleteIn.text}
+            </Badge>
           )}
         </div>
       </div>

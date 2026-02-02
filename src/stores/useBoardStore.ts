@@ -143,6 +143,9 @@ interface BoardStore extends BoardStoreState {
   // 繰り返しタスク
   generateRecurringTasks: () => void;
 
+  // バッチ処理
+  cleanupExpiredTasks: () => number;
+
   // データ読み込み・保存
   loadFromStorage: () => void;
   saveToStorage: () => void;
@@ -1270,6 +1273,47 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         description: `${tasksToAdd.length}件のタスクを追加しました`,
       });
     }
+  },
+
+  cleanupExpiredTasks: () => {
+    const state = get();
+    const board = state.boards[state.currentBoardId];
+    if (!board) return 0;
+
+    const now = new Date();
+    const RETENTION_DAYS = 30;
+    const expirationDate = new Date(now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
+
+    const deletedTasks = Object.values(board.tasks).filter((task) => {
+      if (task.status !== "deleted" || !task.deletedAt) return false;
+      const deletedDate = new Date(task.deletedAt);
+      return deletedDate < expirationDate;
+    });
+
+    if (deletedTasks.length === 0) return 0;
+
+    // 期限切れタスクを物理削除
+    const updatedTasks = { ...board.tasks };
+    deletedTasks.forEach((task) => {
+      delete updatedTasks[task.id];
+    });
+
+    set((state) => ({
+      boards: {
+        ...state.boards,
+        [state.currentBoardId]: {
+          ...board,
+          tasks: updatedTasks,
+          updatedAt: now.toISOString(),
+        },
+      },
+    }));
+
+    get().saveToStorage();
+
+    console.log(`[Cleanup] ${deletedTasks.length}件の期限切れタスクを削除しました`);
+
+    return deletedTasks.length;
   },
 
   // データ読み込み・保存

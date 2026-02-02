@@ -17,6 +17,7 @@ import { ViewMode } from "./types";
 import { useDueDateNotifications } from "./hooks/useDueDateNotifications";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useBoardStore } from "./stores/useBoardStore";
+import { useEffect } from "react";
 import { Toaster } from "./components/ui/toaster";
 
 // 動的インポート：使用頻度が低い大きなコンポーネント
@@ -36,6 +37,7 @@ function App() {
 
   const clearFilters = useBoardStore((state) => state.clearFilters);
   const addTask = useBoardStore((state) => state.addTask);
+  const cleanupExpiredTasks = useBoardStore((state) => state.cleanupExpiredTasks);
   const tasks = useBoardStore((state) => state.boards[state.currentBoardId]?.tasks || {});
 
   const handleAddNewTask = () => {
@@ -48,6 +50,14 @@ function App() {
 
   // 期限通知フック
   useDueDateNotifications();
+
+  // バッチ処理（アプリ起動時に1回実行）
+  useEffect(() => {
+    const deletedCount = cleanupExpiredTasks();
+    if (deletedCount > 0) {
+      console.log(`[起動時クリーンアップ] ${deletedCount}件の期限切れタスクを削除しました`);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // キーボードショートカット
   useKeyboardShortcuts({
