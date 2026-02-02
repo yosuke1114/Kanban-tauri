@@ -7,73 +7,94 @@ test.describe('ボード管理', () => {
   });
 
   test('新しいボードを作成できる', async ({ page }) => {
-    // ボードセレクターをクリック
-    await page.getByRole('button', { name: /テストボード|ボード/i }).first().click();
+    // ボード管理ボタンをクリック（Settingsアイコン）
+    await page.getByRole('button', { name: 'ボードを管理' }).click();
 
-    // 「新規ボード作成」ボタンをクリック
-    await page.getByRole('button', { name: /新規ボード作成/i }).click();
+    // ダイアログが開くまで待機
+    await expect(page.getByRole('dialog')).toBeVisible();
 
-    // ボード名入力ダイアログ
+    // 「新しいボードを作成」ボタンをクリック
+    await page.getByRole('button', { name: '新しいボードを作成' }).click();
+
+    // ボード名入力フォームが表示されるまで待機
     const nameInput = page.getByLabel(/ボード名/i);
+    await expect(nameInput).toBeVisible();
     await nameInput.fill('新しいプロジェクト');
 
-    // 説明を入力（オプション）
+    // 説明を入力（任意）
     const descInput = page.getByLabel(/説明/i);
     await descInput.fill('テスト用のプロジェクトボード');
 
     // 作成ボタンをクリック
-    await page.getByRole('button', { name: /作成|保存/i }).click();
+    await page.getByRole('button', { name: '作成', exact: true }).click();
 
-    // 新しいボードに切り替わったことを確認
-    await expect(page.getByRole('button').filter({ hasText: '新しいプロジェクト' })).toBeVisible();
+    // ボード一覧に新しいボードが表示されることを確認
+    await expect(page.getByRole('dialog').getByText('新しいプロジェクト')).toBeVisible();
   });
 
   test('ボードを切り替えできる', async ({ page }) => {
     // 新しいボードを作成
-    await page.getByRole('button', { name: /テストボード|ボード/i }).first().click();
-    await page.getByRole('button', { name: /新規ボード作成/i }).click();
+    await page.getByRole('button', { name: 'ボードを管理' }).click();
+    await page.getByRole('button', { name: '新しいボードを作成' }).click();
     await page.getByLabel(/ボード名/i).fill('ボード2');
-    await page.getByRole('button', { name: /作成|保存/i }).click();
+    await page.getByRole('button', { name: '作成', exact: true }).click();
 
-    // 元のボードに戻る
-    await page.getByRole('button', { name: /ボード2/i }).first().click();
+    // ダイアログを閉じる
+    await page.getByRole('button', { name: '閉じる' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // ボードセレクター（combobox）を開く
+    await page.getByRole('combobox').click();
+
+    // 元のボード（テストボード）を選択
     await page.getByRole('option', { name: /テストボード/i }).click();
 
-    // 元のボードに切り替わったことを確認
-    await expect(page.getByRole('button').filter({ hasText: 'テストボード' })).toBeVisible();
+    // ボードセレクターに「テストボード」が表示されることを確認
+    await expect(page.getByRole('combobox')).toContainText('テストボード');
   });
 
   test('ボードごとに独立したタスクを持つ', async ({ page }) => {
     // ボード1にタスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('ボード1のタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
 
-    // タスクカード内に表示されることを確認（トースト通知は除外）
-    await expect(page.locator('[data-task-card]').getByText('ボード1のタスク')).toBeVisible();
+    // ダイアログが閉じるまで待機
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // タスクカードが表示されるまで待機
+    await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード1のタスク' })).toBeVisible();
 
     // 新しいボードを作成して切り替え
-    await page.getByRole('button', { name: /テストボード|ボード/i }).first().click();
-    await page.getByRole('button', { name: /新規ボード作成/i }).click();
+    await page.getByRole('button', { name: 'ボードを管理' }).click();
+    await page.getByRole('button', { name: '新しいボードを作成' }).click();
     await page.getByLabel(/ボード名/i).fill('ボード2');
-    await page.getByRole('button', { name: /作成|保存/i }).click();
+    await page.getByRole('button', { name: '作成', exact: true }).click();
+
+    // ボードを選択して切り替え
+    await page.getByRole('button', { name: 'ボード2' }).click();
+    await page.getByRole('button', { name: '閉じる' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // ボード2ではボード1のタスクが表示されないことを確認
-    await expect(page.locator('[data-task-card]').getByText('ボード1のタスク')).not.toBeVisible();
+    await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード1のタスク' })).not.toBeVisible();
 
     // ボード2にタスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('ボード2のタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
-    await expect(page.locator('[data-task-card]').getByText('ボード2のタスク')).toBeVisible();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+    await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード2のタスク' })).toBeVisible();
 
     // ボード1に戻る
-    await page.getByRole('button', { name: /ボード2/i }).first().click();
+    await page.getByRole('combobox').click();
     await page.getByRole('option', { name: /テストボード/i }).click();
 
     // ボード1のタスクのみが表示されることを確認
-    await expect(page.locator('[data-task-card]').getByText('ボード1のタスク')).toBeVisible();
-    await expect(page.locator('[data-task-card]').getByText('ボード2のタスク')).not.toBeVisible();
+    await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード1のタスク' })).toBeVisible();
+    await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード2のタスク' })).not.toBeVisible();
   });
 
   test('ビューを切り替えできる（カンバン/リスト/カレンダー）', async ({ page }) => {

@@ -9,26 +9,31 @@ test.describe('ドラッグ&ドロップ', () => {
   test('タスクを別の列に移動できる', async ({ page }) => {
     // テスト用タスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('移動するタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
 
+    // ダイアログが閉じるまで待機
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
     // タスクが「未着手」列に存在することを確認
-    const todoColumn = page.locator('[data-column-id="todo"]').or(
-      page.getByRole('heading', { name: /未着手/i }).locator('..')
-    );
-    await expect(todoColumn.locator('[data-task-card]').getByText('移動するタスク')).toBeVisible();
+    const todoColumn = page.locator('[data-column-id="todo"]');
+    await expect(todoColumn.locator('[data-task-card]').filter({ hasText: '移動するタスク' })).toBeVisible();
 
     // ドラッグ&ドロップ: 未着手 → 進行中
     const taskElement = page.locator('[data-task-card]').filter({ hasText: '移動するタスク' });
-    const inProgressColumn = page.getByRole('heading', { name: /進行中/ }).locator('..');
+    const inProgressColumn = page.locator('[data-column-id="in-progress"]');
 
     await taskElement.dragTo(inProgressColumn);
 
+    // ドラッグ操作完了まで待機
+    await page.waitForTimeout(500);
+
     // タスクが「進行中」列に移動したことを確認
-    await expect(inProgressColumn.locator('[data-task-card]').getByText('移動するタスク')).toBeVisible();
+    await expect(inProgressColumn.locator('[data-task-card]').filter({ hasText: '移動するタスク' })).toBeVisible();
 
     // 「未着手」列にはもう存在しないことを確認
-    await expect(todoColumn.locator('[data-task-card]').getByText('移動するタスク')).not.toBeVisible();
+    await expect(todoColumn.locator('[data-task-card]').filter({ hasText: '移動するタスク' })).not.toBeVisible();
   });
 
   test('タスクの順序を変更できる', async ({ page }) => {
@@ -37,17 +42,17 @@ test.describe('ドラッグ&ドロップ', () => {
 
     for (const taskTitle of tasks) {
       await page.getByTestId('add-task-button').click();
+      await expect(page.getByRole('dialog')).toBeVisible();
       await page.getByLabel(/タイトル/i).fill(taskTitle);
       await page.getByRole('button', { name: /保存|閉じる/i }).click();
-      await page.waitForTimeout(100); // 少し待機
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      await page.waitForTimeout(200); // タスク作成完了を待機
     }
 
     // タスクの初期順序を確認
-    const todoColumn = page.locator('[data-column-id="todo"]').or(
-      page.getByRole('heading', { name: /未着手/i }).locator('..')
-    );
-
+    const todoColumn = page.locator('[data-column-id="todo"]');
     const taskCards = todoColumn.locator('[data-task-card]');
+
     await expect(taskCards.filter({ hasText: 'タスク1' })).toBeVisible();
     await expect(taskCards.filter({ hasText: 'タスク2' })).toBeVisible();
     await expect(taskCards.filter({ hasText: 'タスク3' })).toBeVisible();

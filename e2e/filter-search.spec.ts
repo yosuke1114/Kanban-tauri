@@ -80,27 +80,37 @@ test.describe('フィルター・検索', () => {
     await page.getByRole('button', { name: '管理', exact: true }).click();
     await page.getByTestId('open-tag-manager').click();
 
-    // タグを追加
+    // ダイアログが開くまで待機
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    // タグを追加（data-testidを使用）
     await page.getByPlaceholder(/タグ名を入力/i).fill('重要');
-    await page.getByRole('button', { name: /追加/i }).click();
+    await page.getByTestId('add-tag-button').click();
     await page.getByPlaceholder(/タグ名を入力/i).fill('緊急');
-    await page.getByRole('button', { name: /追加/i }).click();
+    await page.getByTestId('add-tag-button').click();
     await page.getByRole('button', { name: /閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // タグ付きタスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('重要なタスク');
 
-    // タグを選択（ダイアログ内のボタンとして実装されている）
-    await page.getByRole('dialog').getByRole('button', { name: '重要' }).click();
+    // タグを選択（Badge要素として表示されている）
+    const tagBadge = page.getByRole('dialog').locator('.cursor-pointer', { hasText: '重要' });
+    await tagBadge.click();
 
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // 別のタグ付きタスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('緊急なタスク');
-    await page.getByRole('dialog').getByRole('button', { name: '緊急' }).click();
+    const urgentTagBadge = page.getByRole('dialog').locator('.cursor-pointer', { hasText: '緊急' });
+    await urgentTagBadge.click();
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // フィルターを適用
     await page.getByRole('button', { name: /フィルター/i }).click();
@@ -118,22 +128,37 @@ test.describe('フィルター・検索', () => {
     await page.getByRole('button', { name: '管理', exact: true }).click();
     await page.getByTestId('open-member-manager').click();
 
-    await page.getByPlaceholder(/メンバー名を入力/i).fill('田中');
-    await page.getByRole('button', { name: /追加/i }).click();
-    await page.getByPlaceholder(/メンバー名を入力/i).fill('佐藤');
-    await page.getByRole('button', { name: /追加/i }).click();
+    // ダイアログが開くまで待機
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    await page.getByPlaceholder(/名前を入力/i).fill('田中');
+    await page.getByTestId('add-member-button').click();
+    await page.getByPlaceholder(/名前を入力/i).fill('佐藤');
+    await page.getByTestId('add-member-button').click();
     await page.getByRole('button', { name: /閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // 担当者付きタスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('田中さんのタスク');
-    await page.getByRole('dialog').getByRole('button', { name: '田中' }).click();
+
+    // 担当者を選択（Badge要素）
+    const tanakaБadge = page.getByRole('dialog').locator('.cursor-pointer', { hasText: '田中' });
+    await tanakaБadge.click();
+
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('佐藤さんのタスク');
-    await page.getByRole('dialog').getByRole('button', { name: '佐藤' }).click();
+
+    const satoBadge = page.getByRole('dialog').locator('.cursor-pointer', { hasText: '佐藤' });
+    await satoBadge.click();
+
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // フィルターを適用
     await page.getByRole('button', { name: /フィルター/i }).click();
@@ -174,19 +199,25 @@ test.describe('フィルター・検索', () => {
   test('フィルタークリアボタンですべてのフィルターをクリアできる', async ({ page }) => {
     // タスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('テストタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
-    // フィルターを適用
+    // フィルターパネルを開く
     await page.getByRole('button', { name: /フィルター/i }).click();
+
+    // 優先度フィルターを適用
     await page.getByRole('button', { name: '高', exact: true }).click();
 
-    // フィルタークリアボタンをクリック
-    await page.getByRole('button', { name: /クリア/i }).click();
+    // フィルタークリアボタンが表示されることを確認
+    const clearButton = page.getByRole('button', { name: /クリア/i });
+    await expect(clearButton).toBeVisible();
 
-    // フィルターがクリアされたことを確認（フィルターボタンがoutline variantに戻る）
-    const filterButton = page.getByRole('button', { name: /フィルター/i }).first();
-    // フィルターがクリアされているので、カウントバッジが表示されない
-    await expect(filterButton.locator('span').filter({ hasText: /^\d+$/ })).not.toBeVisible();
+    // クリアボタンをクリック
+    await clearButton.click();
+
+    // クリアボタンが消えることを確認（フィルターがクリアされた）
+    await expect(clearButton).not.toBeVisible();
   });
 });

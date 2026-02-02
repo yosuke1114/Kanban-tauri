@@ -10,8 +10,10 @@ test.describe('データ管理（エクスポート/インポート）', () => {
   test('データをエクスポートできる', async ({ page }) => {
     // テスト用タスクを作成
     await page.getByTestId('add-task-button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel(/タイトル/i).fill('エクスポートテスト');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // 管理メニューを開く
     await page.getByRole('button', { name: '管理', exact: true }).click();
@@ -19,9 +21,14 @@ test.describe('データ管理（エクスポート/インポート）', () => {
     // データ保存設定をクリック
     await page.getByTestId('open-storage-settings').click();
 
+    // データ保存設定ダイアログが開くまで待機
+    await expect(page.getByRole('dialog', { name: /データ保存設定/i })).toBeVisible();
+
     // エクスポートボタンをクリック
-    const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: /エクスポート/i }).click();
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+    const exportButton = page.getByRole('button', { name: /エクスポート/i });
+    await expect(exportButton).toBeVisible();
+    await exportButton.click();
 
     // ダウンロードが開始されることを確認
     const download = await downloadPromise;

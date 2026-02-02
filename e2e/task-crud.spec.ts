@@ -69,6 +69,9 @@ test.describe('タスクCRUD操作', () => {
     await page.getByLabel(/タイトル/i).fill('削除するタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
 
+    // ダイアログが閉じるまで待機
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
     // タスクが作成されたことを確認
     const taskCards = page.locator('[data-task-card]');
     await expect(taskCards.filter({ hasText: '削除するタスク' })).toBeVisible();
@@ -77,11 +80,14 @@ test.describe('タスクCRUD操作', () => {
     await taskCards.filter({ hasText: '削除するタスク' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
 
-    // 削除ボタンをクリック
-    await page.getByRole('button', { name: /削除/i }).click();
+    // 削除ボタンをクリック（data-testidを使用）
+    await page.getByTestId('delete-task-button').click();
 
-    // 確認ダイアログで削除を確定
-    await page.getByRole('button', { name: /ゴミ箱に移動/i }).click();
+    // 確認ダイアログで削除を確定（ボタンテキストは「削除」）
+    await page.getByRole('button', { name: '削除', exact: true }).click();
+
+    // タスクダイアログが閉じることを確認
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // タスクが表示されなくなることを確認
     await expect(taskCards.filter({ hasText: '削除するタスク' })).not.toBeVisible();
@@ -113,24 +119,30 @@ test.describe('タスクCRUD操作', () => {
     await page.getByLabel(/タイトル/i).fill('サブタスク付きタスク');
     await page.getByRole('button', { name: /保存|閉じる/i }).click();
 
+    // ダイアログが閉じるまで待機
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
     // タスクをクリックして編集
     await page.locator('[data-task-card]').filter({ hasText: 'サブタスク付きタスク' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
 
     // サブタスク入力欄を探す
     const subtaskInput = page.getByPlaceholder(/サブタスクを追加/i);
     await subtaskInput.fill('サブタスク1');
     await subtaskInput.press('Enter');
 
-    // サブタスクが追加されたことを確認（ダイアログ内）
+    // サブタスクが追加されるまで待機
+    await page.waitForTimeout(100);
+
+    // サブタスクが追加されたことを確認
     await expect(page.getByRole('dialog').getByText('サブタスク1')).toBeVisible();
 
-    // サブタスクをチェック
-    const subtaskCheckbox = page.getByRole('dialog').getByRole('checkbox').filter({
-      has: page.locator('text=サブタスク1')
-    }).or(
-      page.getByRole('dialog').locator('input[type="checkbox"]').first()
-    );
-    await subtaskCheckbox.check();
+    // data-testidを使ってチェックボックスを探す（最初のサブタスク）
+    const subtaskCheckboxes = page.getByRole('dialog').locator('[data-testid^="subtask-checkbox-"]');
+    const firstCheckbox = subtaskCheckboxes.first();
+
+    // チェックボックスをチェック
+    await firstCheckbox.check();
 
     // チェックされたことを確認（line-throughスタイル）
     const checkedTask = page.getByRole('dialog').locator('span.line-through', { hasText: 'サブタスク1' });
