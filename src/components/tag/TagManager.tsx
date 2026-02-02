@@ -7,16 +7,8 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { ColorPicker } from "@/components/shared/ColorPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,21 +118,12 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
               )}
             </div>
 
-            <div className="flex gap-2 mt-2">
-              {COLOR_OPTIONS.map((color) => (
-                <button
-                  key={color}
-                  data-testid={`color-option-${color}`}
-                  className={`w-6 h-6 rounded-full border-2 transition-all ${
-                    selectedColor === color
-                      ? "border-primary scale-110"
-                      : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => setSelectedColor(color)}
-                />
-              ))}
-            </div>
+            <ColorPicker
+              colors={COLOR_OPTIONS}
+              selectedColor={selectedColor}
+              onColorChange={setSelectedColor}
+              testIdPrefix="color"
+            />
           </div>
 
           <div className="border-t pt-4">
@@ -186,33 +169,13 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
         </DialogFooter>
       </DialogContent>
 
-      <AlertDialog
+      <DeleteConfirmationDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent className="rounded-lg border-border/50 shadow-apple-xl glass">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-semibold tracking-tight">
-              タグを削除しますか？
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground">
-              この操作は取り消せません。タグ「{deleteTarget?.name}
-              」が完全に削除され、関連するタスクから削除されます。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-md transition-apple">
-              キャンセル
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-apple"
-            >
-              削除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmDelete}
+        title="タグを削除しますか？"
+        description={`この操作は取り消せません。タグ「${deleteTarget?.name}」が完全に削除され、関連するタスクから削除されます。`}
+      />
     </Dialog>
   );
 };
