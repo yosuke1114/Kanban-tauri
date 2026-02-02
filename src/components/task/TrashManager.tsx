@@ -129,6 +129,14 @@ const TrashManager: React.FC<TrashManagerProps> = ({ open, onClose }) => {
   const restoreTask = useBoardStore((state) => state.restoreTask);
   const permanentDeleteTask = useBoardStore((state) => state.permanentDeleteTask);
   const emptyTrash = useBoardStore((state) => state.emptyTrash);
+  const cleanupExpiredTasks = useBoardStore((state) => state.cleanupExpiredTasks);
+
+  // ゴミ箱を開くときに期限切れタスクをクリーンアップ
+  React.useEffect(() => {
+    if (open) {
+      cleanupExpiredTasks();
+    }
+  }, [open, cleanupExpiredTasks]);
 
   // tasksからフィルタリング（useMemoでメモ化）
   const deletedTasks = useMemo(

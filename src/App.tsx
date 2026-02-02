@@ -51,13 +51,29 @@ function App() {
   // 期限通知フック
   useDueDateNotifications();
 
-  // バッチ処理（アプリ起動時に1回実行）
+  // バッチ処理（日次チェック - 常時起動対応）
   useEffect(() => {
-    const deletedCount = cleanupExpiredTasks();
-    if (deletedCount > 0) {
-      console.log(`[起動時クリーンアップ] ${deletedCount}件の期限切れタスクを削除しました`);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const checkDaily = () => {
+      const today = new Date().toDateString();
+      const lastCheck = localStorage.getItem('lastCleanupDate');
+
+      if (lastCheck !== today) {
+        const count = cleanupExpiredTasks();
+        if (count > 0) {
+          console.log(`[日次クリーンアップ] ${count}件の期限切れタスクを削除しました`);
+        }
+        localStorage.setItem('lastCleanupDate', today);
+      }
+    };
+
+    // 初回チェック
+    checkDaily();
+
+    // 1時間ごとに日付変更をチェック（軽量）
+    const interval = setInterval(checkDaily, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [cleanupExpiredTasks]);
 
   // キーボードショートカット
   useKeyboardShortcuts({
