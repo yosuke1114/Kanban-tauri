@@ -88,31 +88,21 @@ export interface FilterState {
 export interface NotificationSettings {
   enabled: boolean; // 通知機能全体のON/OFF
 
-  // 期限24時間前
-  due24HoursEnabled: boolean;
-  due24HoursTime: number; // 0-23時
+  // 期限関連の通知（24時間前、当日、超過）
+  deadlineNotificationsEnabled: boolean;
+  deadlineNotificationHour: number; // 0-23時
+  deadlineNotificationMinute: number; // 0, 15, 30, 45分
 
-  // 期限当日
-  dueTodayEnabled: boolean;
-  dueTodayTime: number; // 0-23時
-
-  // 期限超過
-  overdueEnabled: boolean;
-  overdueTime: number; // 0-23時
-
-  // 繰り返しタスク生成
+  // 繰り返しタスク生成の通知
   recurringGeneratedEnabled: boolean;
 }
 
 // デフォルト通知設定
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: true,
-  due24HoursEnabled: true,
-  due24HoursTime: 9,
-  dueTodayEnabled: true,
-  dueTodayTime: 9,
-  overdueEnabled: true,
-  overdueTime: 9,
+  deadlineNotificationsEnabled: true,
+  deadlineNotificationHour: 9,
+  deadlineNotificationMinute: 0,
   recurringGeneratedEnabled: true,
 };
 

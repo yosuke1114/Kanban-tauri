@@ -4,25 +4,45 @@ import { useDueDateNotifications } from "./useDueDateNotifications";
 import * as notificationService from "@/services/notification/notificationService";
 import type { Task } from "@/types";
 
-// useBoardStoreのモック
+// useBoardStoreのモック（マルチボード対応）
 let mockTasks: { [key: string]: Task } = {};
 let mockNotificationSettings = {
   enabled: true,
-  due24HoursEnabled: true,
-  due24HoursTime: 9,
-  dueTodayEnabled: true,
-  dueTodayTime: 9,
-  overdueEnabled: true,
-  overdueTime: 9,
+  deadlineNotificationsEnabled: true,
+  deadlineNotificationHour: 9,
+  deadlineNotificationMinute: 0,
   recurringGeneratedEnabled: true,
 };
 
 vi.mock("@/stores/useBoardStore", () => ({
   useBoardStore: vi.fn((selector) => {
     if (typeof selector === "function") {
-      return selector({ tasks: mockTasks, notificationSettings: mockNotificationSettings });
+      return selector({
+        boards: {
+          default: {
+            id: "default",
+            name: "テストボード",
+            tasks: mockTasks,
+            columns: {},
+            columnOrder: [],
+            tags: {},
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+        currentBoardId: "default",
+        notificationSettings: mockNotificationSettings,
+      });
     }
-    return { tasks: mockTasks, notificationSettings: mockNotificationSettings };
+    return {
+      boards: {
+        default: {
+          tasks: mockTasks,
+        },
+      },
+      currentBoardId: "default",
+      notificationSettings: mockNotificationSettings,
+    };
   }),
 }));
 

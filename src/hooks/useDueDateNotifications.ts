@@ -41,7 +41,7 @@ const sortTasksByPriority = (tasks: Task[]): Task[] => {
  * 1分ごとに期限をチェックして適切なタイミングで通知を表示
  */
 export function useDueDateNotifications() {
-  const tasks = useBoardStore((state) => state.tasks);
+  const tasks = useBoardStore((state) => state.boards[state.currentBoardId].tasks);
   const notificationSettings = useBoardStore((state) => state.notificationSettings);
   const lastNotifiedRef = useRef<NotificationState>({
     due24Hours: null,
@@ -75,7 +75,7 @@ export function useDueDateNotifications() {
 
     const checkNotifications = async () => {
       const now = new Date();
-      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
       const today = now.toISOString().split("T")[0];
 
       // activeなタスクのみ対象（削除済み・アーカイブ済みを除外）
@@ -86,7 +86,9 @@ export function useDueDateNotifications() {
           task.dueDate
       );
 
-      if (allTasks.length === 0) return;
+      if (allTasks.length === 0) {
+        return;
+      }
 
       // 通知対象のタスクを収集
       const tomorrow = new Date(now);
@@ -111,43 +113,45 @@ export function useDueDateNotifications() {
       // 通知を送信（複数ある場合は2秒間隔）
       const notifications: Array<() => Promise<void>> = [];
 
-      // 期限24時間前の通知
-      if (
-        notificationSettings.due24HoursEnabled &&
-        tasksDueTomorrow.length > 0 &&
-        currentHour === notificationSettings.due24HoursTime &&
-        lastNotifiedRef.current.due24Hours !== today
-      ) {
-        notifications.push(async () => {
-          await notifyDueTomorrow(tasksDueTomorrow);
-          lastNotifiedRef.current.due24Hours = today;
-        });
-      }
+      // 期限関連の通知が有効で、設定時刻にマッチした場合のみ通知
+      if (notificationSettings.deadlineNotificationsEnabled) {
+        // 分が一致すれば通知（1分刻みで設定可能）
+        const isTimeMatch = currentMinute === notificationSettings.deadlineNotificationMinute;
 
-      // 期限当日の通知
-      if (
-        notificationSettings.dueTodayEnabled &&
-        tasksDueToday.length > 0 &&
-        currentHour === notificationSettings.dueTodayTime &&
-        lastNotifiedRef.current.dueToday !== today
-      ) {
-        notifications.push(async () => {
-          await notifyDueToday(tasksDueToday);
-          lastNotifiedRef.current.dueToday = today;
-        });
-      }
+        if (isTimeMatch) {
+          // 期限24時間前の通知
+          if (
+            tasksDueTomorrow.length > 0 &&
+            lastNotifiedRef.current.due24Hours !== today
+          ) {
+            notifications.push(async () => {
+              await notifyDueTomorrow(tasksDueTomorrow);
+              lastNotifiedRef.current.due24Hours = today;
+            });
+          }
 
-      // 期限超過の通知
-      if (
-        notificationSettings.overdueEnabled &&
-        tasksOverdue.length > 0 &&
-        currentHour === notificationSettings.overdueTime &&
-        lastNotifiedRef.current.overdue !== today
-      ) {
-        notifications.push(async () => {
-          await notifyOverdue(tasksOverdue);
-          lastNotifiedRef.current.overdue = today;
-        });
+          // 期限当日の通知
+          if (
+            tasksDueToday.length > 0 &&
+            lastNotifiedRef.current.dueToday !== today
+          ) {
+            notifications.push(async () => {
+              await notifyDueToday(tasksDueToday);
+              lastNotifiedRef.current.dueToday = today;
+            });
+          }
+
+          // 期限超過の通知
+          if (
+            tasksOverdue.length > 0 &&
+            lastNotifiedRef.current.overdue !== today
+          ) {
+            notifications.push(async () => {
+              await notifyOverdue(tasksOverdue);
+              lastNotifiedRef.current.overdue = today;
+            });
+          }
+        }
       }
 
       // 通知を順次送信（2秒間隔）

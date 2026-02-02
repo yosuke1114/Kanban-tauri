@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBoardStore } from "@/stores/useBoardStore";
-import { Bell, BellOff, Clock } from "lucide-react";
+import { Bell, BellOff, Clock, Info } from "lucide-react";
 import { sendNotification } from "@tauri-apps/api/notification";
 import { toast } from "@/hooks/use-toast";
 
@@ -57,15 +57,32 @@ export const NotificationSettingsDialog: React.FC<NotificationSettingsDialogProp
     }
   };
 
+  // デバッグ用：実際の期限通知をテスト
+  const handleTestDeadlineNotification = async () => {
+    try {
+      // 強制的に通知状態をクリア
+      localStorage.removeItem("notificationState");
+
+      toast({
+        title: "期限通知をテストします",
+        description: "次の1分間のチェック時に通知が送信されます",
+      });
+    } catch (error) {
+      console.error("テストの準備に失敗しました:", error);
+    }
+  };
+
   // 時刻選択肢（0-23時）
-  const timeOptions = Array.from({ length: 24 }, (_, i) => i);
+  const hourOptions = Array.from({ length: 24 }, (_, i) => i);
+  // 分選択肢（1分刻み - デバッグ用）
+  const minuteOptions = Array.from({ length: 60 }, (_, i) => i);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Bell size={20} />
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Bell size={24} />
             通知設定
           </DialogTitle>
           <DialogDescription>
@@ -73,16 +90,16 @@ export const NotificationSettingsDialog: React.FC<NotificationSettingsDialogProp
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-6">
           {/* 通知機能全体のON/OFF */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div className="flex items-center gap-3">
               {notificationSettings.enabled ? (
-                <Bell size={18} className="text-primary" />
+                <Bell size={20} className="text-primary" />
               ) : (
-                <BellOff size={18} className="text-muted-foreground" />
+                <BellOff size={20} className="text-muted-foreground" />
               )}
-              <Label htmlFor="enabled" className="text-base font-semibold">
+              <Label htmlFor="enabled" className="text-base font-semibold cursor-pointer">
                 通知を有効にする
               </Label>
             </div>
@@ -96,206 +113,134 @@ export const NotificationSettingsDialog: React.FC<NotificationSettingsDialogProp
           </div>
 
           {notificationSettings.enabled && (
-            <>
-              <div className="border-t pt-4 space-y-4">
-                {/* 期限24時間前の通知 */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+            <div className="space-y-6">
+              {/* 期限通知 */}
+              <div className="space-y-4 p-6 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Clock size={20} />
                     <Label
-                      htmlFor="due24Hours"
-                      className="text-sm font-medium flex items-center gap-2"
+                      htmlFor="deadlineNotifications"
+                      className="text-base font-semibold cursor-pointer"
                     >
-                      <Clock size={16} />
-                      期限24時間前の通知
+                      期限通知
                     </Label>
-                    <Switch
-                      id="due24Hours"
-                      checked={notificationSettings.due24HoursEnabled}
-                      onCheckedChange={(due24HoursEnabled) =>
-                        updateNotificationSettings({ due24HoursEnabled })
-                      }
-                    />
                   </div>
-                  {notificationSettings.due24HoursEnabled && (
-                    <div className="ml-6 space-y-2">
-                      <Label
-                        htmlFor="due24HoursTime"
-                        className="text-xs text-muted-foreground"
-                      >
-                        通知時刻
-                      </Label>
+                  <Switch
+                    id="deadlineNotifications"
+                    checked={notificationSettings.deadlineNotificationsEnabled}
+                    onCheckedChange={(deadlineNotificationsEnabled) =>
+                      updateNotificationSettings({ deadlineNotificationsEnabled })
+                    }
+                  />
+                </div>
+
+                {notificationSettings.deadlineNotificationsEnabled && (
+                  <div className="space-y-4 pt-2">
+                    <Label className="text-sm text-muted-foreground">
+                      通知時刻
+                    </Label>
+                    <div className="flex gap-3 items-center">
                       <Select
-                        value={String(notificationSettings.due24HoursTime)}
+                        value={String(notificationSettings.deadlineNotificationHour)}
                         onValueChange={(value) =>
                           updateNotificationSettings({
-                            due24HoursTime: Number(value),
+                            deadlineNotificationHour: Number(value),
                           })
                         }
                       >
-                        <SelectTrigger id="due24HoursTime" className="w-32">
+                        <SelectTrigger className="w-32 h-12 text-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {timeOptions.map((hour) => (
+                          {hourOptions.map((hour) => (
                             <SelectItem key={hour} value={String(hour)}>
-                              {hour}:00
+                              {String(hour).padStart(2, "0")}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">
-                        ℹ️ 期限の24時間前に通知します
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 期限当日の通知 */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="dueToday"
-                      className="text-sm font-medium flex items-center gap-2"
-                    >
-                      <Clock size={16} />
-                      期限当日の通知
-                    </Label>
-                    <Switch
-                      id="dueToday"
-                      checked={notificationSettings.dueTodayEnabled}
-                      onCheckedChange={(dueTodayEnabled) =>
-                        updateNotificationSettings({ dueTodayEnabled })
-                      }
-                    />
-                  </div>
-                  {notificationSettings.dueTodayEnabled && (
-                    <div className="ml-6 space-y-2">
-                      <Label
-                        htmlFor="dueTodayTime"
-                        className="text-xs text-muted-foreground"
-                      >
-                        通知時刻
-                      </Label>
+                      <span className="text-xl font-semibold">:</span>
                       <Select
-                        value={String(notificationSettings.dueTodayTime)}
+                        value={String(notificationSettings.deadlineNotificationMinute)}
                         onValueChange={(value) =>
                           updateNotificationSettings({
-                            dueTodayTime: Number(value),
+                            deadlineNotificationMinute: Number(value),
                           })
                         }
                       >
-                        <SelectTrigger id="dueTodayTime" className="w-32">
+                        <SelectTrigger className="w-32 h-12 text-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {timeOptions.map((hour) => (
-                            <SelectItem key={hour} value={String(hour)}>
-                              {hour}:00
+                          {minuteOptions.map((minute) => (
+                            <SelectItem key={minute} value={String(minute)}>
+                              {String(minute).padStart(2, "0")}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">
-                        ℹ️ 期限当日の朝に通知します
+                    </div>
+                    <div className="flex gap-2 items-start p-3 rounded-md bg-blue-50 dark:bg-blue-950/20">
+                      <Info size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-blue-900 dark:text-blue-300">
+                        期限1日前/当日/期限超過タスクを通知
                       </p>
                     </div>
-                  )}
-                </div>
-
-                {/* 期限超過の通知 */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="overdue"
-                      className="text-sm font-medium flex items-center gap-2"
-                    >
-                      <Clock size={16} />
-                      期限超過の通知
-                    </Label>
-                    <Switch
-                      id="overdue"
-                      checked={notificationSettings.overdueEnabled}
-                      onCheckedChange={(overdueEnabled) =>
-                        updateNotificationSettings({ overdueEnabled })
-                      }
-                    />
                   </div>
-                  {notificationSettings.overdueEnabled && (
-                    <div className="ml-6 space-y-2">
-                      <Label
-                        htmlFor="overdueTime"
-                        className="text-xs text-muted-foreground"
-                      >
-                        通知時刻
-                      </Label>
-                      <Select
-                        value={String(notificationSettings.overdueTime)}
-                        onValueChange={(value) =>
-                          updateNotificationSettings({
-                            overdueTime: Number(value),
-                          })
-                        }
-                      >
-                        <SelectTrigger id="overdueTime" className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeOptions.map((hour) => (
-                            <SelectItem key={hour} value={String(hour)}>
-                              {hour}:00
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        ℹ️ 期限を過ぎたタスクを毎日通知します
-                      </p>
-                    </div>
-                  )}
-                </div>
+                )}
+              </div>
 
-                {/* 繰り返しタスク生成の通知 */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+              {/* 繰り返しタスク生成の通知 */}
+              <div className="space-y-4 p-6 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Clock size={20} />
                     <Label
                       htmlFor="recurringGenerated"
-                      className="text-sm font-medium flex items-center gap-2"
+                      className="text-base font-semibold cursor-pointer"
                     >
-                      <Clock size={16} />
                       繰り返しタスク生成の通知
                     </Label>
-                    <Switch
-                      id="recurringGenerated"
-                      checked={notificationSettings.recurringGeneratedEnabled}
-                      onCheckedChange={(recurringGeneratedEnabled) =>
-                        updateNotificationSettings({
-                          recurringGeneratedEnabled,
-                        })
-                      }
-                    />
                   </div>
-                  {notificationSettings.recurringGeneratedEnabled && (
-                    <div className="ml-6">
-                      <p className="text-xs text-muted-foreground">
-                        ℹ️ 繰り返しタスクが生成されたら通知
-                      </p>
-                    </div>
-                  )}
+                  <Switch
+                    id="recurringGenerated"
+                    checked={notificationSettings.recurringGeneratedEnabled}
+                    onCheckedChange={(recurringGeneratedEnabled) =>
+                      updateNotificationSettings({
+                        recurringGeneratedEnabled,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex gap-2 items-start p-3 rounded-md bg-blue-50 dark:bg-blue-950/20">
+                  <Info size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-900 dark:text-blue-300">
+                    繰り返しタスクが生成されたら通知
+                  </p>
                 </div>
               </div>
 
               {/* テスト通知ボタン */}
-              <div className="border-t pt-4">
+              <div className="pt-2 space-y-3">
                 <Button
                   variant="outline"
                   onClick={handleTestNotification}
-                  className="w-full"
+                  className="w-full h-12"
                 >
-                  <Bell size={16} className="mr-2" />
+                  <Bell size={18} className="mr-2" />
                   通知をテスト
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleTestDeadlineNotification}
+                  className="w-full h-12"
+                >
+                  <Bell size={18} className="mr-2" />
+                  期限通知をテスト（次の1分後）
+                </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </DialogContent>
