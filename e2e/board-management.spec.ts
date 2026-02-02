@@ -40,14 +40,16 @@ test.describe('ボード管理', () => {
     await page.getByLabel(/ボード名/i).fill('ボード2');
     await page.getByRole('button', { name: '作成', exact: true }).click();
 
-    // ボード一覧で元のボード（テストボード）をクリックして切り替え
-    await page.getByRole('dialog').getByRole('heading', { name: /テストボード/i }).click();
+    // ボード一覧で元のボード（メインボード）をクリックして切り替え
+    // ボードが作成されるまで待機してから選択
+    await page.waitForTimeout(500);
+    await page.getByRole('dialog').getByText('メインボード', { exact: true }).first().click();
 
     // ダイアログが閉じることを確認
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
-    // ボードセレクターに「テストボード」が表示されることを確認
-    await expect(page.getByRole('combobox')).toContainText('テストボード');
+    // ボードセレクターに「メインボード」が表示されることを確認
+    await expect(page.getByRole('combobox')).toContainText('メインボード');
   });
 
   test('ボードごとに独立したタスクを持つ', async ({ page }) => {
@@ -71,7 +73,9 @@ test.describe('ボード管理', () => {
     await page.getByRole('button', { name: '作成', exact: true }).click();
 
     // ボード一覧で「ボード2」をクリックして切り替え（自動的にダイアログが閉じる）
-    await page.getByRole('dialog').getByRole('heading', { name: 'ボード2' }).click();
+    // ボードが作成されるまで待機してから選択
+    await page.waitForTimeout(500);
+    await page.getByRole('dialog').getByText('ボード2', { exact: true }).first().click();
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // ボード2ではボード1のタスクが表示されないことを確認
@@ -87,7 +91,9 @@ test.describe('ボード管理', () => {
 
     // ボード1に戻る
     await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: /テストボード/i }).click();
+    // ドロップダウンが開くまで待機
+    await page.waitForTimeout(200);
+    await page.getByRole('option', { name: /メインボード/i }).click();
 
     // ボード1のタスクのみが表示されることを確認
     await expect(page.locator('[data-task-card]').filter({ hasText: 'ボード1のタスク' })).toBeVisible();
@@ -130,11 +136,14 @@ test.describe('ボード管理', () => {
     // カラーを選択（最初のカラーオプションをクリック）
     await page.getByTestId(/color-option-/).first().click();
 
-    // 追加ボタンをクリック
-    await page.getByRole('button', { name: /追加/i }).click();
+    // 追加ボタンをクリック（アイコンのみのボタンなのでdata-testidを使用）
+    await page.getByTestId('add-column-button').click();
 
-    // 新しいカラムが追加されたことを確認
-    await expect(page.getByText('レビュー中')).toBeVisible();
+    // 新しいカラムが追加されるまで待機
+    await page.waitForTimeout(300);
+
+    // 新しいカラムが追加されたことを確認（ダイアログ内で）
+    await expect(page.getByRole('dialog').getByText('レビュー中')).toBeVisible();
 
     // ダイアログを閉じる
     await page.getByRole('button', { name: /閉じる/i }).click();

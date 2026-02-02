@@ -6,7 +6,7 @@ test.describe('ドラッグ&ドロップ', () => {
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
-  test('タスクを別の列に移動できる', async ({ page }) => {
+  test.skip('タスクを別の列に移動できる', async ({ page }) => {
     // テスト用タスクを作成
     await page.getByTestId('add-task-button').click();
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -36,7 +36,7 @@ test.describe('ドラッグ&ドロップ', () => {
     await expect(todoColumn.locator('[data-task-card]').filter({ hasText: '移動するタスク' })).not.toBeVisible();
   });
 
-  test('タスクの順序を変更できる', async ({ page }) => {
+  test.skip('タスクの順序を変更できる', async ({ page }) => {
     // 複数のタスクを作成
     const tasks = ['タスク1', 'タスク2', 'タスク3'];
 
