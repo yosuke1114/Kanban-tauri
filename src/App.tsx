@@ -37,8 +37,8 @@ function App() {
   const tasks = useBoardStore((state) => state.boards[state.currentBoardId]?.tasks || {});
 
   const handleAddNewTask = () => {
-    // デフォルトの「todo」列に空タスクを作成
-    const taskId = addTask("todo", "新しいタスク");
+    // デフォルトの「todo」列に空タスクを作成（トーストは表示しない）
+    const taskId = addTask("todo", "新しいタスク", false);
     if (taskId) {
       setNewTaskId(taskId);
     }
@@ -149,6 +149,7 @@ function App() {
           task={tasks[newTaskId]}
           open={true}
           onClose={() => setNewTaskId(null)}
+          isNewTask={true}
         />
       )}
       <Toaster />

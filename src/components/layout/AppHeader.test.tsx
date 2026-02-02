@@ -25,6 +25,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -37,6 +40,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -49,6 +55,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -61,6 +70,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -69,136 +81,24 @@ describe('AppHeader', () => {
   });
 
   describe('タスク追加', () => {
-    it('タスクタイトルを入力できる', async () => {
+    it('タスク追加ボタンクリックでコールバックが呼ばれる', async () => {
       const user = userEvent.setup();
+      const onAddNewTask = vi.fn();
       render(
         <AppHeader
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={onAddNewTask}
         />
       );
 
-      // Popoverを開く
-      const addTaskButton = screen.getByText('タスク追加');
+      const addTaskButton = screen.getByTestId('add-task-button');
       await user.click(addTaskButton);
 
-      const input = screen.getByTestId('new-task-input') as HTMLInputElement;
-      await user.type(input, 'テストタスク');
-
-      expect(input.value).toBe('テストタスク');
-    });
-
-    it('フォーム送信でタスクが追加される', async () => {
-      const user = userEvent.setup();
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      // Popoverを開く
-      const taskButton = screen.getByText('タスク追加');
-      await user.click(taskButton);
-
-      const input = screen.getByTestId('new-task-input');
-      const addButton = screen.getByTestId('add-task-button');
-
-      await user.type(input, '新しいタスク');
-      await user.click(addButton);
-
-      await waitFor(() => {
-        const store = useBoardStore.getState();
-        const board = store.boards[store.currentBoardId];
-        const task = Object.values(board?.tasks || {}).find((t) => t.title === '新しいタスク');
-        expect(task).toBeDefined();
-        expect(task?.columnId).toBe('todo');
-      });
-    });
-
-    it('タスク追加後にポップオーバーが閉じる', async () => {
-      const user = userEvent.setup();
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      // Popoverを開く
-      const taskButton = screen.getByText('タスク追加');
-      await user.click(taskButton);
-
-      const input = screen.getByTestId('new-task-input') as HTMLInputElement;
-      const addButton = screen.getByTestId('add-task-button');
-
-      await user.type(input, '新しいタスク');
-      await user.click(addButton);
-
-      // Popoverが閉じることを確認（inputが見つからなくなる）
-      await waitFor(() => {
-        expect(screen.queryByTestId('new-task-input')).not.toBeInTheDocument();
-      });
-    });
-
-    it('空のタスクは追加されない', async () => {
-      const user = userEvent.setup();
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      const state1 = useBoardStore.getState();
-      const board1 = state1.boards[state1.currentBoardId];
-      const initialTaskCount = Object.keys(board1?.tasks || {}).length;
-
-      // Popoverを開く
-      const taskButton = screen.getByText('タスク追加');
-      await user.click(taskButton);
-
-      const addButton = screen.getByTestId('add-task-button');
-      await user.click(addButton);
-
-      const state2 = useBoardStore.getState();
-      const board2 = state2.boards[state2.currentBoardId];
-      const finalTaskCount = Object.keys(board2?.tasks || {}).length;
-      expect(finalTaskCount).toBe(initialTaskCount);
-    });
-
-    it('空白のみのタスクは追加されない', async () => {
-      const user = userEvent.setup();
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-        />
-      );
-
-      const state1 = useBoardStore.getState();
-      const board1 = state1.boards[state1.currentBoardId];
-      const initialTaskCount = Object.keys(board1?.tasks || {}).length;
-
-      // Popoverを開く
-      const taskButton = screen.getByText('タスク追加');
-      await user.click(taskButton);
-
-      const input = screen.getByTestId('new-task-input');
-      const addButton = screen.getByTestId('add-task-button');
-
-      await user.type(input, '   ');
-      await user.click(addButton);
-
-      const state2 = useBoardStore.getState();
-      const board2 = state2.boards[state2.currentBoardId];
-      const finalTaskCount = Object.keys(board2?.tasks || {}).length;
-      expect(finalTaskCount).toBe(initialTaskCount);
+      expect(onAddNewTask).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -210,6 +110,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -231,6 +134,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -251,6 +157,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -277,6 +186,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -297,6 +209,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -317,6 +232,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
         />
       );
 
@@ -332,27 +250,6 @@ describe('AppHeader', () => {
   });
 
   describe('refの転送', () => {
-    it('taskInputRefが正しく転送される', async () => {
-      const user = userEvent.setup();
-      const taskInputRef = { current: null as HTMLInputElement | null };
-
-      render(
-        <AppHeader
-          onOpenMemberManager={onOpenMemberManager}
-          onOpenTagManager={onOpenTagManager}
-          onOpenColumnManager={onOpenColumnManager}
-          taskInputRef={taskInputRef}
-        />
-      );
-
-      // Popoverを開く
-      const taskButton = screen.getByText('タスク追加');
-      await user.click(taskButton);
-
-      expect(taskInputRef.current).toBeInstanceOf(HTMLInputElement);
-      expect(taskInputRef.current?.type).toBe('text');
-    });
-
     it('searchInputRefが正しく転送される', () => {
       const searchInputRef = { current: null as HTMLInputElement | null };
 
@@ -361,6 +258,9 @@ describe('AppHeader', () => {
           onOpenMemberManager={onOpenMemberManager}
           onOpenTagManager={onOpenTagManager}
           onOpenColumnManager={onOpenColumnManager}
+          onOpenTrashManager={vi.fn()}
+          onOpenBoardManager={vi.fn()}
+          onAddNewTask={vi.fn()}
           searchInputRef={searchInputRef}
         />
       );

@@ -21,29 +21,27 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Priority } from "@/types";
-import { Trash2, Archive, Plus, CheckSquare, Calendar as CalendarIcon } from "lucide-react";
+import { Trash2, Archive, Plus, CheckSquare } from "lucide-react";
 import { useBoardStore, selectTags, selectColumns, selectColumnOrder } from "@/stores/useBoardStore";
 import { Badge } from "@/components/ui/badge";
 import { RecurrenceSettings } from "./RecurrenceSettings";
 import { Separator } from "@/components/ui/separator";
 import { PRIORITY_OPTIONS } from "@/constants/priority";
 import { INPUT_LIMITS, validateInput } from "@/constants/validation";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DayPicker } from "react-day-picker";
-import { format } from "date-fns";
-import { ja } from "date-fns/locale";
-import "react-day-picker/dist/style.css";
+import { toast } from "@/hooks/use-toast";
 
 interface EditTaskDialogProps {
   task: Task;
   open: boolean;
   onClose: () => void;
+  isNewTask?: boolean;
 }
 
 const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   task,
   open,
   onClose,
+  isNewTask = false,
 }) => {
   const updateTask = useBoardStore((state) => state.updateTask);
   const softDeleteTask = useBoardStore((state) => state.softDeleteTask);
@@ -131,6 +129,15 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     }
 
     updateTask(task.id, formData);
+
+    // 新規タスクの場合はトーストを表示
+    if (isNewTask) {
+      toast({
+        title: "タスクを作成しました",
+        description: formData.title || task.title,
+      });
+    }
+
     onClose();
   };
 
@@ -186,9 +193,9 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     deleteSubtask(task.id, subtaskId);
   };
 
-  const handleSubtaskDueDateChange = (subtaskId: string, date: Date | undefined) => {
+  const handleSubtaskDueDateChange = (subtaskId: string, dateString: string) => {
     updateSubtask(task.id, subtaskId, {
-      dueDate: date ? date.toISOString() : undefined,
+      dueDate: dateString || undefined,
     });
   };
 
@@ -479,32 +486,13 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                       >
                         {subtask.title}
                       </span>
-                      {subtask.dueDate && (
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(subtask.dueDate), "M/d (E)", { locale: ja })}
-                        </span>
-                      )}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            aria-label="期限を設定"
-                          >
-                            <CalendarIcon size={16} />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <DayPicker
-                            mode="single"
-                            selected={subtask.dueDate ? new Date(subtask.dueDate) : undefined}
-                            onSelect={(date: Date | undefined) => handleSubtaskDueDateChange(subtask.id, date)}
-                            locale={ja}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <Input
+                        type="date"
+                        value={subtask.dueDate || ""}
+                        onChange={(e) => handleSubtaskDueDateChange(subtask.id, e.target.value)}
+                        className="w-auto h-8 text-xs"
+                        aria-label="サブタスクの期限"
+                      />
                       <Button
                         type="button"
                         variant="ghost"

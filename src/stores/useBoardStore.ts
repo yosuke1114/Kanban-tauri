@@ -89,7 +89,7 @@ interface BoardStore extends BoardStoreState {
   getCurrentBoard: () => Board;
 
   // 現在のボードに対するタスク操作
-  addTask: (columnId: string, title: string) => string;
+  addTask: (columnId: string, title: string, showToast?: boolean) => string;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
   moveTask: (taskId: string, targetColumnId: string, newPosition: number) => void;
@@ -313,7 +313,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
 
   // タスク操作（現在のボードに対して）
-  addTask: (columnId: string, title: string) => {
+  addTask: (columnId: string, title: string, showToast = true) => {
     const state = get();
     const board = state.boards[state.currentBoardId];
     if (!board) return "";
@@ -348,10 +348,12 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       },
     }));
     get().saveToStorage();
-    toast({
-      title: "タスクを作成しました",
-      description: title,
-    });
+    if (showToast) {
+      toast({
+        title: "タスクを作成しました",
+        description: title,
+      });
+    }
     return newTask.id;
   },
 
