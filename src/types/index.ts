@@ -84,6 +84,38 @@ export interface FilterState {
   };
 }
 
+// デスクトップ通知設定
+export interface NotificationSettings {
+  enabled: boolean; // 通知機能全体のON/OFF
+
+  // 期限24時間前
+  due24HoursEnabled: boolean;
+  due24HoursTime: number; // 0-23時
+
+  // 期限当日
+  dueTodayEnabled: boolean;
+  dueTodayTime: number; // 0-23時
+
+  // 期限超過
+  overdueEnabled: boolean;
+  overdueTime: number; // 0-23時
+
+  // 繰り返しタスク生成
+  recurringGeneratedEnabled: boolean;
+}
+
+// デフォルト通知設定
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: true,
+  due24HoursEnabled: true,
+  due24HoursTime: 9,
+  dueTodayEnabled: true,
+  dueTodayTime: 9,
+  overdueEnabled: true,
+  overdueTime: 9,
+  recurringGeneratedEnabled: true,
+};
+
 // 個別のボード（カンバン）
 export interface Board {
   id: string;
@@ -104,6 +136,7 @@ export interface AppState {
   currentBoardId: string; // 現在選択中のボードID
   members: { [key: string]: Member }; // メンバーは全ボード共通
   currentUserId?: string; // 現在のユーザーID（「自分のタスク」フィルター用）
+  notificationSettings?: NotificationSettings; // 通知設定（オプショナル、後方互換性のため）
 }
 
 // 後方互換性のための既存インターフェース

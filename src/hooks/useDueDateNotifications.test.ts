@@ -6,13 +6,23 @@ import type { Task } from "@/types";
 
 // useBoardStoreのモック
 let mockTasks: { [key: string]: Task } = {};
+let mockNotificationSettings = {
+  enabled: true,
+  due24HoursEnabled: true,
+  due24HoursTime: 9,
+  dueTodayEnabled: true,
+  dueTodayTime: 9,
+  overdueEnabled: true,
+  overdueTime: 9,
+  recurringGeneratedEnabled: true,
+};
 
 vi.mock("@/stores/useBoardStore", () => ({
   useBoardStore: vi.fn((selector) => {
     if (typeof selector === "function") {
-      return selector({ tasks: mockTasks });
+      return selector({ tasks: mockTasks, notificationSettings: mockNotificationSettings });
     }
-    return { tasks: mockTasks };
+    return { tasks: mockTasks, notificationSettings: mockNotificationSettings };
   }),
 }));
 

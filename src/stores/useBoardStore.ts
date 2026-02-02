@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { Board, Task, Column, Member, Tag, FilterState, Subtask } from "@/types";
+import { Board, Task, Column, Member, Tag, FilterState, Subtask, NotificationSettings, DEFAULT_NOTIFICATION_SETTINGS } from "@/types";
 import {
   calculateNextDueDate,
   isRecurrenceEnded,
@@ -58,6 +58,7 @@ interface BoardStoreState {
   // グローバル設定（全ボード共通）
   members: { [key: string]: Member };
   currentUserId?: string;
+  notificationSettings: NotificationSettings;
 
   // UIステート
   filters: FilterState;
@@ -70,6 +71,7 @@ const initialState: BoardStoreState = {
   currentBoardId: DEFAULT_BOARD_ID,
   members: {},
   currentUserId: undefined,
+  notificationSettings: DEFAULT_NOTIFICATION_SETTINGS,
   filters: {
     tagIds: [],
     assigneeIds: [],
@@ -121,6 +123,9 @@ interface BoardStore extends BoardStoreState {
   addMember: (name: string, color: string) => void;
   updateMember: (memberId: string, updates: Partial<Member>) => void;
   deleteMember: (memberId: string) => void;
+
+  // 通知設定操作（グローバル）
+  updateNotificationSettings: (updates: Partial<NotificationSettings>) => void;
 
   // タグ操作（ボードごと）
   addTag: (name: string, color: string) => void;
@@ -1028,6 +1033,17 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     get().saveToStorage();
   },
 
+  // 通知設定操作（グローバル）
+  updateNotificationSettings: (updates: Partial<NotificationSettings>) => {
+    set((state) => ({
+      notificationSettings: {
+        ...state.notificationSettings,
+        ...updates,
+      },
+    }));
+    get().saveToStorage();
+  },
+
   // タグ操作（ボードごと）
   addTag: (name: string, color: string) => {
     const state = get();
@@ -1331,6 +1347,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
             currentBoardId: parsed.currentBoardId || Object.keys(parsed.boards)[0],
             members: parsed.members || {},
             currentUserId: parsed.currentUserId,
+            notificationSettings: parsed.notificationSettings || DEFAULT_NOTIFICATION_SETTINGS,
           });
         } else {
           // 旧形式からのマイグレーション
@@ -1353,6 +1370,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
             currentBoardId: DEFAULT_BOARD_ID,
             members: parsed.members || {},
             currentUserId: parsed.currentUserId,
+            notificationSettings: parsed.notificationSettings || DEFAULT_NOTIFICATION_SETTINGS,
           });
 
           // マイグレーション後に保存
@@ -1376,6 +1394,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       currentBoardId: state.currentBoardId,
       members: state.members,
       currentUserId: state.currentUserId,
+      notificationSettings: state.notificationSettings,
     };
     storage.save(JSON.stringify(dataToSave)).catch((error) => {
       console.error("データの保存に失敗しました:", error);

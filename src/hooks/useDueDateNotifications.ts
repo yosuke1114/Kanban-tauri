@@ -42,6 +42,7 @@ const sortTasksByPriority = (tasks: Task[]): Task[] => {
  */
 export function useDueDateNotifications() {
   const tasks = useBoardStore((state) => state.tasks);
+  const notificationSettings = useBoardStore((state) => state.notificationSettings);
   const lastNotifiedRef = useRef<NotificationState>({
     due24Hours: null,
     dueToday: null,
@@ -60,13 +61,18 @@ export function useDueDateNotifications() {
     }
   }, []);
 
-  // 通知権限をリクエスト（初回のみ）
+  // 通知権限をリクエスト（初回のみ、設定が有効な場合のみ）
   useEffect(() => {
-    requestNotificationPermission();
-  }, []);
+    if (notificationSettings.enabled) {
+      requestNotificationPermission();
+    }
+  }, [notificationSettings.enabled]);
 
   // 定期チェック（1分ごと）
   useEffect(() => {
+    // 通知が無効な場合は何もしない
+    if (!notificationSettings.enabled) return;
+
     const checkNotifications = async () => {
       const now = new Date();
       const currentHour = now.getHours();
@@ -105,10 +111,11 @@ export function useDueDateNotifications() {
       // 通知を送信（複数ある場合は2秒間隔）
       const notifications: Array<() => Promise<void>> = [];
 
-      // 期限24時間前の通知（デフォルト: 9時）
+      // 期限24時間前の通知
       if (
+        notificationSettings.due24HoursEnabled &&
         tasksDueTomorrow.length > 0 &&
-        currentHour === 9 &&
+        currentHour === notificationSettings.due24HoursTime &&
         lastNotifiedRef.current.due24Hours !== today
       ) {
         notifications.push(async () => {
@@ -117,10 +124,11 @@ export function useDueDateNotifications() {
         });
       }
 
-      // 期限当日の通知（デフォルト: 9時）
+      // 期限当日の通知
       if (
+        notificationSettings.dueTodayEnabled &&
         tasksDueToday.length > 0 &&
-        currentHour === 9 &&
+        currentHour === notificationSettings.dueTodayTime &&
         lastNotifiedRef.current.dueToday !== today
       ) {
         notifications.push(async () => {
@@ -129,10 +137,11 @@ export function useDueDateNotifications() {
         });
       }
 
-      // 期限超過の通知（デフォルト: 9時）
+      // 期限超過の通知
       if (
+        notificationSettings.overdueEnabled &&
         tasksOverdue.length > 0 &&
-        currentHour === 9 &&
+        currentHour === notificationSettings.overdueTime &&
         lastNotifiedRef.current.overdue !== today
       ) {
         notifications.push(async () => {
@@ -171,5 +180,5 @@ export function useDueDateNotifications() {
     const interval = setInterval(checkNotifications, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [tasks]);
+  }, [tasks, notificationSettings]);
 }

@@ -7,6 +7,7 @@ import TagManager from "./components/tag/TagManager";
 import ColumnManager from "./components/kanban/ColumnManager";
 import TrashManager from "./components/task/TrashManager";
 import { BoardManagerDialog } from "./components/board/BoardManagerDialog";
+import { NotificationSettingsDialog } from "./components/settings/NotificationSettingsDialog";
 import { AppHeader } from "./components/layout/AppHeader";
 import { ActiveFiltersIndicator } from "./components/filter/ActiveFiltersIndicator";
 import { ShortcutsDialog } from "./components/shortcuts/ShortcutsDialog";
@@ -29,6 +30,7 @@ function App() {
   const [showColumnManager, setShowColumnManager] = useState(false);
   const [showTrashManager, setShowTrashManager] = useState(false);
   const [showBoardManager, setShowBoardManager] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [newTaskId, setNewTaskId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
@@ -112,6 +114,7 @@ function App() {
         onOpenColumnManager={() => setShowColumnManager(true)}
         onOpenTrashManager={() => setShowTrashManager(true)}
         onOpenBoardManager={() => setShowBoardManager(true)}
+        onOpenNotificationSettings={() => setShowNotificationSettings(true)}
         onAddNewTask={handleAddNewTask}
         searchInputRef={searchInputRef}
       />
@@ -165,6 +168,10 @@ function App() {
       <TagManager
         open={showTagManager}
         onClose={() => setShowTagManager(false)}
+      />
+      <NotificationSettingsDialog
+        open={showNotificationSettings}
+        onClose={() => setShowNotificationSettings(false)}
       />
       <ShortcutsDialog
         open={showShortcuts}

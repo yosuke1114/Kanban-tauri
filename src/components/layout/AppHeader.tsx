@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/search/SearchBar";
 import { FilterPanel } from "@/components/filter/FilterPanel";
 import { BoardSelector } from "@/components/board/BoardSelector";
-import { Users, Tag, Columns, PlusCircle, Trash2, Settings, Database } from "lucide-react";
+import { Users, Tag, Columns, PlusCircle, Trash2, Settings, Database, Bell } from "lucide-react";
 
 // 動的インポート：使用頻度が低い設定ダイアログ
 const DataStorageSettings = lazy(() => import("@/components/settings/DataStorageSettings").then(m => ({ default: m.DataStorageSettings })));
@@ -22,6 +22,7 @@ interface AppHeaderProps {
   onOpenColumnManager: () => void;
   onOpenTrashManager: () => void;
   onOpenBoardManager: () => void;
+  onOpenNotificationSettings: () => void;
   onAddNewTask: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement>;
 }
@@ -32,6 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenColumnManager,
   onOpenTrashManager,
   onOpenBoardManager,
+  onOpenNotificationSettings,
   onAddNewTask,
   searchInputRef,
 }) => {
@@ -101,6 +103,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 >
                   <Tag size={16} className="mr-2" />
                   タグ管理
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={onOpenNotificationSettings}
+                  data-testid="open-notification-settings"
+                  className="cursor-pointer"
+                >
+                  <Bell size={16} className="mr-2" />
+                  通知設定
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setIsStorageSettingsOpen(true)}
