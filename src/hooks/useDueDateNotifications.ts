@@ -2,89 +2,174 @@ import { useEffect, useRef } from "react";
 import { useBoardStore } from "@/stores/useBoardStore";
 import {
   requestNotificationPermission,
-  notifyOverdueTasks,
-  notifyUpcomingTasks,
+  notifyDueTomorrow,
+  notifyDueToday,
+  notifyOverdue,
 } from "@/services/notification/notificationService";
+import { PRIORITY_ORDER } from "@/constants/priority";
+import { Task } from "@/types";
+
+/**
+ * 最後に通知した日付を管理するステート
+ */
+interface NotificationState {
+  due24Hours: string | null; // ISO日付（日付のみ）
+  dueToday: string | null;
+  overdue: string | null;
+}
+
+const NOTIFICATION_STATE_KEY = "notificationState";
+
+/**
+ * 優先度順にタスクをソート（urgent > high > medium > low）
+ */
+const sortTasksByPriority = (tasks: Task[]): Task[] => {
+  return [...tasks].sort((a, b) => {
+    const priorityDiff = PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+    if (priorityDiff !== 0) return priorityDiff;
+
+    // 優先度が同じ場合は期限日でソート（早い順）
+    if (a.dueDate && b.dueDate) {
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }
+    return 0;
+  });
+};
 
 /**
  * 期限チェック・通知フック
- * アプリ起動時と定期的に期限をチェックして通知を表示
+ * 1分ごとに期限をチェックして適切なタイミングで通知を表示
  */
 export function useDueDateNotifications() {
   const tasks = useBoardStore((state) => state.tasks);
-  const hasNotifiedRef = useRef(false);
+  const lastNotifiedRef = useRef<NotificationState>({
+    due24Hours: null,
+    dueToday: null,
+    overdue: null,
+  });
 
+  // localStorageから最後の通知日時を読み込み
+  useEffect(() => {
+    const savedState = localStorage.getItem(NOTIFICATION_STATE_KEY);
+    if (savedState) {
+      try {
+        lastNotifiedRef.current = JSON.parse(savedState);
+      } catch (error) {
+        console.error("通知ステートの読み込みに失敗しました:", error);
+      }
+    }
+  }, []);
+
+  // 通知権限をリクエスト（初回のみ）
   useEffect(() => {
     requestNotificationPermission();
   }, []);
 
+  // 定期チェック（1分ごと）
   useEffect(() => {
-    // 初回のみ通知（アプリ起動時）
-    if (hasNotifiedRef.current) return;
-
-    const checkAndNotify = () => {
+    const checkNotifications = async () => {
       const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const threeDaysLater = new Date(today);
-      threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+      const currentHour = now.getHours();
+      const today = now.toISOString().split("T")[0];
 
-      const allTasks = Object.values(tasks);
-
-      // 期限切れタスク（完了していない）
-      const overdueTasks = allTasks.filter((task) => {
-        if (!task.dueDate || task.columnId === "done") return false;
-        const dueDate = new Date(task.dueDate);
-        return dueDate < today;
-      });
-
-      // 期限が近いタスク（3日以内、完了していない）
-      const upcomingTasks = allTasks.filter((task) => {
-        if (!task.dueDate || task.columnId === "done") return false;
-        const dueDate = new Date(task.dueDate);
-        return dueDate >= today && dueDate <= threeDaysLater;
-      });
-
-      if (overdueTasks.length > 0) {
-        notifyOverdueTasks(overdueTasks);
-      }
-
-      if (upcomingTasks.length > 0) {
-        notifyUpcomingTasks(upcomingTasks);
-      }
-
-      hasNotifiedRef.current = true;
-    };
-
-    // 少し遅延させて通知（タスクの読み込みを待つ）
-    const timer = setTimeout(checkAndNotify, 2000);
-
-    return () => clearTimeout(timer);
-  }, [tasks]);
-
-  // 日次チェック（毎日9時に通知）
-  useEffect(() => {
-    const checkDaily = () => {
-      const now = new Date();
-      const nextCheck = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() + 1,
-        9,
-        0,
-        0
+      // activeなタスクのみ対象（削除済み・アーカイブ済みを除外）
+      const allTasks = Object.values(tasks).filter(
+        (task) =>
+          (!task.status || task.status === "active") &&
+          task.columnId !== "done" &&
+          task.dueDate
       );
 
-      const timeout = nextCheck.getTime() - now.getTime();
+      if (allTasks.length === 0) return;
 
-      const timer = setTimeout(() => {
-        hasNotifiedRef.current = false; // リセットして再通知を許可
-        checkDaily(); // 次の日のチェックをスケジュール
-      }, timeout);
+      // 通知対象のタスクを収集
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-      return () => clearTimeout(timer);
+      // 期限24時間前のタスク
+      const tasksDueTomorrow = sortTasksByPriority(
+        allTasks.filter((task) => task.dueDate === tomorrowStr)
+      );
+
+      // 期限当日のタスク
+      const tasksDueToday = sortTasksByPriority(
+        allTasks.filter((task) => task.dueDate === today)
+      );
+
+      // 期限超過のタスク
+      const tasksOverdue = sortTasksByPriority(
+        allTasks.filter((task) => task.dueDate! < today)
+      );
+
+      // 通知を送信（複数ある場合は2秒間隔）
+      const notifications: Array<() => Promise<void>> = [];
+
+      // 期限24時間前の通知（デフォルト: 9時）
+      if (
+        tasksDueTomorrow.length > 0 &&
+        currentHour === 9 &&
+        lastNotifiedRef.current.due24Hours !== today
+      ) {
+        notifications.push(async () => {
+          await notifyDueTomorrow(tasksDueTomorrow);
+          lastNotifiedRef.current.due24Hours = today;
+        });
+      }
+
+      // 期限当日の通知（デフォルト: 9時）
+      if (
+        tasksDueToday.length > 0 &&
+        currentHour === 9 &&
+        lastNotifiedRef.current.dueToday !== today
+      ) {
+        notifications.push(async () => {
+          await notifyDueToday(tasksDueToday);
+          lastNotifiedRef.current.dueToday = today;
+        });
+      }
+
+      // 期限超過の通知（デフォルト: 9時）
+      if (
+        tasksOverdue.length > 0 &&
+        currentHour === 9 &&
+        lastNotifiedRef.current.overdue !== today
+      ) {
+        notifications.push(async () => {
+          await notifyOverdue(tasksOverdue);
+          lastNotifiedRef.current.overdue = today;
+        });
+      }
+
+      // 通知を順次送信（2秒間隔）
+      if (notifications.length > 0) {
+        for (let i = 0; i < notifications.length; i++) {
+          await notifications[i]();
+
+          // 最後の通知でなければ2秒待つ
+          if (i < notifications.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        }
+
+        // localStorageに保存
+        try {
+          localStorage.setItem(
+            NOTIFICATION_STATE_KEY,
+            JSON.stringify(lastNotifiedRef.current)
+          );
+        } catch (error) {
+          console.error("通知ステートの保存に失敗しました:", error);
+        }
+      }
     };
 
-    const cleanup = checkDaily();
-    return cleanup;
-  }, []);
+    // 初回チェック
+    checkNotifications();
+
+    // 1分ごとにチェック
+    const interval = setInterval(checkNotifications, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [tasks]);
 }
