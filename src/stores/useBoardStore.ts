@@ -308,6 +308,8 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       },
       searchQuery: "",
     });
+    // ボード切り替えを永続化
+    get().saveToStorage();
   },
 
   reorderBoards: (newOrder: string[]) => {

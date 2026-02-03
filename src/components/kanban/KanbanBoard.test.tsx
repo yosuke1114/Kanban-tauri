@@ -205,39 +205,9 @@ describe('KanbanBoard', () => {
     });
   });
 
-  describe('初期データ読み込み', () => {
-    it('コンポーネントマウント時にloadFromStorageが呼ばれる', async () => {
-      const loadFromStorage = vi.fn();
-      const generateRecurringTasks = vi.fn();
-
-      useBoardStore.setState({
-        loadFromStorage,
-        generateRecurringTasks,
-      } as any);
-
-      render(<KanbanBoard />);
-
-      await waitFor(() => {
-        expect(loadFromStorage).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    it('データ読み込み後にgenerateRecurringTasksが呼ばれる', async () => {
-      const loadFromStorage = vi.fn(async () => {});
-      const generateRecurringTasks = vi.fn();
-
-      useBoardStore.setState({
-        loadFromStorage,
-        generateRecurringTasks,
-      } as any);
-
-      render(<KanbanBoard />);
-
-      await waitFor(() => {
-        expect(generateRecurringTasks).toHaveBeenCalledTimes(1);
-      });
-    });
-  });
+  // 注: 初期データ読み込み処理（loadFromStorage, generateRecurringTasks）は
+  // App.tsxに移動したため、KanbanBoard.tsxではこれらの処理は行われません。
+  // App.tsxの統合テストで実施する必要があります。
 
   describe('モバイル表示', () => {
     beforeEach(() => {

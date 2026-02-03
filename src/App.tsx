@@ -40,15 +40,33 @@ function App() {
   const clearFilters = useBoardStore((state) => state.clearFilters);
   const addTask = useBoardStore((state) => state.addTask);
   const cleanupExpiredTasks = useBoardStore((state) => state.cleanupExpiredTasks);
+  const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
+  const generateRecurringTasks = useBoardStore((state) => state.generateRecurringTasks);
   const tasks = useBoardStore((state) => state.boards[state.currentBoardId]?.tasks || {});
+  const columnOrder = useBoardStore((state) => state.boards[state.currentBoardId]?.columnOrder || []);
 
   const handleAddNewTask = () => {
-    // デフォルトの「todo」列に空タスクを作成（トーストは表示しない）
-    const taskId = addTask("todo", "新しいタスク", false);
+    // 列管理のトップ（最初の列）に空タスクを作成（トーストは表示しない）
+    const firstColumnId = columnOrder[0];
+    if (!firstColumnId) {
+      console.error("列が存在しないため、タスクを作成できません");
+      return;
+    }
+    const taskId = addTask(firstColumnId, "新しいタスク", false);
     if (taskId) {
       setNewTaskId(taskId);
     }
   };
+
+  // 初期化処理（アプリ起動時に1回だけ実行）
+  useEffect(() => {
+    const initializeApp = async () => {
+      await loadFromStorage();
+      generateRecurringTasks();
+    };
+    initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 初期化は一度だけ実行
 
   // 期限通知フック
   useDueDateNotifications();

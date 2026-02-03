@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -24,10 +24,6 @@ const KanbanBoard: React.FC = () => {
   const columns = useBoardStore(selectColumns);
   const columnOrder = useBoardStore(selectColumnOrder);
   const moveTask = useBoardStore((state) => state.moveTask);
-  const loadFromStorage = useBoardStore((state) => state.loadFromStorage);
-  const generateRecurringTasks = useBoardStore(
-    (state) => state.generateRecurringTasks
-  );
 
   const filteredTasks = useFilteredTasks();
 
@@ -79,15 +75,7 @@ const KanbanBoard: React.FC = () => {
   const canGoLeft = currentColumnIndex > 0;
   const canGoRight = currentColumnIndex < columnOrder.length - 1;
 
-  useEffect(() => {
-    const initializeData = async () => {
-      await loadFromStorage();
-      // データ読み込み後、繰り返しタスクを生成
-      generateRecurringTasks();
-    };
-    initializeData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // 初期化処理はApp.tsxに移動済み
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

@@ -43,6 +43,8 @@ The application uses a centralized Zustand store (`src/stores/useBoardStore.ts`)
 
 **Key Pattern**: All state mutations happen through store actions (e.g., `addTask`, `moveTask`, `updateTask`). Components should never mutate state directly. The store automatically persists to localStorage after mutations via `saveToStorage()`.
 
+**Critical**: State mutations that change `currentBoardId` or other top-level state MUST call `saveToStorage()` to persist changes. For example, `switchBoard` now correctly calls `saveToStorage()` to ensure board switching persists across view changes.
+
 ### Type System: Central Type Definitions
 
 All domain types are defined in `src/types/index.ts`. Key interfaces:
@@ -80,6 +82,23 @@ Located in `src-tauri/src/main.rs`:
 - `get_data_path()`: Get app data directory path
 
 **Note**: Currently, the frontend still uses localStorage. The Tauri file storage is prepared but not yet integrated. To switch to file storage, update `useBoardStore` to call the Tauri commands instead of localStorage.
+
+### Application Initialization
+
+**Critical Pattern**: Data loading and recurring task generation happen ONCE at application startup in `App.tsx`, not in individual components.
+
+```typescript
+// src/App.tsx
+useEffect(() => {
+  const initializeApp = async () => {
+    await loadFromStorage();
+    generateRecurringTasks();
+  };
+  initializeApp();
+}, [loadFromStorage, generateRecurringTasks]);
+```
+
+**Why**: Previously, `KanbanBoard.tsx` called `loadFromStorage()` on mount, which caused issues when switching views (kanban → list → kanban). Each remount would reload data from localStorage, overwriting the current board selection. By moving initialization to `App.tsx`, data loads only once per session, and board switching (`switchBoard`) persists correctly via `saveToStorage()`.
 
 ### Component Organization
 
@@ -221,6 +240,11 @@ These features are now fully implemented:
 11. **Tauri File Storage**: Integrated via `src/services/storage/tauriStorage.ts`
     - Automatic fallback to localStorage in web mode
     - Seamless storage abstraction
+
+12. **Multi-Board State Persistence**: Fixed board switching behavior (2026-02-03)
+    - `switchBoard` now calls `saveToStorage()` to persist board selection
+    - Initialization moved to `App.tsx` to prevent data reloading on view changes
+    - Board switching now survives view transitions (kanban → list → calendar)
 
 ## Pending/Future Features
 
