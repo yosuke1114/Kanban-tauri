@@ -15,7 +15,7 @@ Tauri + React + TypeScriptで構築された、ビジネスプロフェッショ
 
 ### エンドユーザー向け
 
-最新リリース: [v0.1.0-beta.1](https://github.com/yosuke1114/Kanban-tauri/releases/tag/v0.1.0-beta.1)
+最新リリース: [v0.1.0-beta.3](https://github.com/yosuke1114/Kanban-tauri/releases/tag/v0.1.0-beta.3)
 
 #### macOS
 ```bash
@@ -80,6 +80,12 @@ npm run tauri build
 - ✅ キーボードショートカット（⌘K、⌘Nなど）
 - ✅ Slackスタイルテーマ
 
+### パフォーマンス
+- ✅ React.memo による最適化
+- ✅ useCallback / useMemo によるメモ化
+- ✅ コード分割（lazy loading）
+- ✅ バンドルサイズ最適化（gzip: 53.24 kB）
+
 ---
 
 ## ⌨️ キーボードショートカット
@@ -117,8 +123,9 @@ npm run tauri build
 
 **開発・テスト:**
 - Vite (ビルドツール)
-- Vitest (ユニットテスト、328テスト、カバレッジ67%+)
-- Playwright (E2Eテスト)
+- Vitest (ユニットテスト、346テスト、カバレッジ67%+)
+- Playwright (E2Eテスト、24テスト)
+- ESLint (コード品質チェック)
 - GitHub Actions (CI/CD)
 
 ### プロジェクト構造
@@ -161,7 +168,8 @@ tsc --noEmit
 ```
 
 **現在のテスト状況:**
-- ✅ 328ユニットテスト
+- ✅ 346ユニットテスト
+- ✅ 24 E2Eテスト
 - ✅ カバレッジ67%+
 - ✅ CI/CD自動実行
 
@@ -185,7 +193,10 @@ tsc --noEmit
 
 ## 📚 ドキュメント
 
+- [インストールガイド](docs/INSTALLATION.md)
 - [アーキテクチャ](docs/ARCHITECTURE.md)
+- [コントリビューションガイド](docs/CONTRIBUTING.md)
+- [パフォーマンス最適化](docs/PERFORMANCE_OPTIMIZATION.md)
 - [テスト戦略](docs/TESTING.md)
 - [リリースプロセス](docs/RELEASE_PROCESS.md)
 - [ロードマップ](ROADMAP.md)

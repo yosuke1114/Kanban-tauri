@@ -246,6 +246,13 @@ These features are now fully implemented:
     - Initialization moved to `App.tsx` to prevent data reloading on view changes
     - Board switching now survives view transitions (kanban → list → calendar)
 
+13. **Performance Optimization**: React optimization patterns (2026-02-04)
+    - React.memo for component memoization (FilterPanel, MemberManager, TagManager, CalendarView, ListView)
+    - useCallback for callback memoization (handleAddNewTask, handleSort)
+    - useMemo for computed value memoization (Object.values() optimization)
+    - Code splitting with lazy loading (CalendarView)
+    - Zustand selector optimization with stable references
+
 ## Pending/Future Features
 
 These are next on the roadmap:
@@ -256,14 +263,32 @@ These are next on the roadmap:
 4. **Dark Mode**: Theme toggle with system preference support
 5. **SharePoint Sync**: SyncMetadata prepared for future integration
 6. **Statistics Dashboard**: Completion rate, productivity metrics
-7. **Performance Optimizations**: React.memo, useCallback, virtualization
+7. **Additional Performance Optimizations**: Virtualization for large lists, Web Workers for heavy computations
 
 詳細は `/Users/yo_kuro/kanban-rust/NEXT_DEVELOPMENT_PLAN.md` を参照
+
+## Code Quality Tools
+
+### ESLint (2026-02-04)
+
+ESLint v9 with flat config format is now configured:
+
+```bash
+# Run linter
+npm run lint
+
+# Auto-fix issues
+npm run lint:fix
+```
+
+**Configuration**: `eslint.config.js`
+- TypeScript support
+- React and React Hooks rules
+- Strict type checking integration
 
 ## Known Constraints
 
 - Tauri v1 (not v2) - uses older API patterns
-- ESLint not configured (TypeScript strict mode only)
 - Column reordering UI incomplete (GripVertical icon present but non-functional)
 - Title duplication exists (App.tsx header and KanbanBoard.tsx both show "Kanban Board")
 
@@ -279,8 +304,9 @@ These are next on the roadmap:
 すべてのコード変更後に以下を**必ず実行**してください:
 
 1. **ビルド確認**: `npm run build` が成功すること
-2. **テスト確認**: `npm run test -- --run` が全パスすること (324 テスト)
-3. **E2E 確認**: `npm run test:e2e` がパスすること
+2. **テスト確認**: `npm run test -- --run` が全パスすること (346 テスト)
+3. **E2E 確認**: `npm run test:e2e` がパスすること (24 テスト)
+4. **ESLint 確認**: `npm run lint` でエラーがないこと
 4. **画面表示確認**: アプリを起動して白い画面でないこと
 5. **コンソール確認**: ブラウザコンソールにエラーがないこと
 6. **機能確認**: 変更した機能が正常に動作すること
