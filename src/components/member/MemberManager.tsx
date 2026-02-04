@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ interface MemberManagerProps {
   onClose: () => void;
 }
 
-const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
+const MemberManager: React.FC<MemberManagerProps> = React.memo(({ open, onClose }) => {
   const members = useBoardStore((state) => state.members);
   const addMember = useBoardStore((state) => state.addMember);
   const updateMember = useBoardStore((state) => state.updateMember);
@@ -39,6 +39,9 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
   const [editingColor, setEditingColor] = useState("");
   const [memberNameError, setMemberNameError] = useState<string | null>(null);
   const [editNameError, setEditNameError] = useState<string | null>(null);
+
+  // Object.values(members) をメモ化してパフォーマンス向上
+  const membersList = useMemo(() => Object.values(members), [members]);
 
   const handleAddMember = useCallback(() => {
     const error = validateInput.general(newMemberName, INPUT_LIMITS.MEMBER_NAME);
@@ -173,7 +176,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
           <div className="border-t pt-4">
             <Label>登録済みメンバー</Label>
             <div className="space-y-2 mt-2">
-              {Object.values(members).map((member) => {
+              {membersList.map((member) => {
                 const isEditing = editingMemberId === member.id;
 
                 return (
@@ -291,7 +294,7 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
                   </div>
                 );
               })}
-              {Object.keys(members).length === 0 && (
+              {membersList.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   メンバーが登録されていません
                 </p>
@@ -316,6 +319,8 @@ const MemberManager: React.FC<MemberManagerProps> = ({ open, onClose }) => {
       />
     </Dialog>
   );
-};
+});
+
+MemberManager.displayName = "MemberManager";
 
 export default MemberManager;

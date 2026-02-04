@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ interface TagManagerProps {
   onClose: () => void;
 }
 
-const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
+const TagManager: React.FC<TagManagerProps> = React.memo(({ open, onClose }) => {
   const tags = useBoardStore(selectTags);
   const addTag = useBoardStore((state) => state.addTag);
   const deleteTag = useBoardStore((state) => state.deleteTag);
@@ -34,6 +34,9 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
     name: string;
   } | null>(null);
   const [tagNameError, setTagNameError] = useState<string | null>(null);
+
+  // Object.values(tags) をメモ化してパフォーマンス向上
+  const tagsList = useMemo(() => Object.values(tags), [tags]);
 
   const handleAddTag = useCallback(() => {
     const error = validateInput.general(newTagName, INPUT_LIMITS.TAG_NAME);
@@ -129,7 +132,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
           <div className="border-t pt-4">
             <Label>登録済みタグ</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              {Object.values(tags).map((tag) => (
+              {tagsList.map((tag) => (
                 <div
                   key={tag.id}
                   data-testid={`tag-item-${tag.id}`}
@@ -153,7 +156,7 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
                   </Button>
                 </div>
               ))}
-              {Object.keys(tags).length === 0 && (
+              {tagsList.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4 w-full">
                   タグが登録されていません
                 </p>
@@ -178,6 +181,8 @@ const TagManager: React.FC<TagManagerProps> = ({ open, onClose }) => {
       />
     </Dialog>
   );
-};
+});
+
+TagManager.displayName = "TagManager";
 
 export default TagManager;

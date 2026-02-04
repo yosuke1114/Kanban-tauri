@@ -11,7 +11,7 @@ import EditTaskDialog from "../task/EditTaskDialog";
 import { getPriorityCalendarColor, getPriorityLabel } from "@/constants/priority";
 import "react-day-picker/dist/style.css";
 
-const CalendarView: React.FC = () => {
+const CalendarView: React.FC = React.memo(() => {
   const filteredTasks = useFilteredTasks();
   const members = useBoardStore((state) => state.members);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -261,6 +261,8 @@ const CalendarView: React.FC = () => {
       )}
     </div>
   );
-};
+});
+
+CalendarView.displayName = "CalendarView";
 
 export default CalendarView;

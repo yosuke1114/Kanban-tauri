@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { useBoardStore, selectTags } from "@/stores/useBoardStore";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Priority } from "@/types";
 import { PRIORITY_OPTIONS } from "@/constants/priority";
 
-export function FilterPanel() {
+export const FilterPanel = React.memo(() => {
   const filters = useBoardStore((state) => state.filters);
   const setFilters = useBoardStore((state) => state.setFilters);
   const clearFilters = useBoardStore((state) => state.clearFilters);
@@ -177,4 +177,6 @@ export function FilterPanel() {
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+FilterPanel.displayName = "FilterPanel";

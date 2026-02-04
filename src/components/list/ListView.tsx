@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useBoardStore, selectColumns, selectTags } from "@/stores/useBoardStore";
 import { useFilteredTasks } from "@/hooks/useFilteredTasks";
 import { Task, SortField, SortDirection } from "@/types";
@@ -42,7 +42,7 @@ const SortIcon: React.FC<SortIconProps> = React.memo(({ field, sortField, sortDi
 
 SortIcon.displayName = "SortIcon";
 
-const ListView: React.FC = () => {
+const ListView: React.FC = React.memo(() => {
   const columns = useBoardStore(selectColumns);
   const members = useBoardStore((state) => state.members);
   const tags = useBoardStore(selectTags);
@@ -53,14 +53,14 @@ const ListView: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const handleSort = (field: SortField) => {
+  const handleSort = useCallback((field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("asc");
     }
-  };
+  }, [sortField, sortDirection]);
 
   const sortedTasks = useMemo(() => {
     return [...filteredTasks].sort((a, b) => {
@@ -258,6 +258,8 @@ const ListView: React.FC = () => {
       )}
     </div>
   );
-};
+});
+
+ListView.displayName = "ListView";
 
 export default ListView;

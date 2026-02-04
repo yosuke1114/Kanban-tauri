@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef, lazy, Suspense, useCallback } from "react";
 import "./App.css";
 import KanbanBoard from "./components/kanban/KanbanBoard";
 import ListView from "./components/list/ListView";
@@ -45,7 +45,7 @@ function App() {
   const tasks = useBoardStore((state) => state.boards[state.currentBoardId]?.tasks || {});
   const columnOrder = useBoardStore((state) => state.boards[state.currentBoardId]?.columnOrder || []);
 
-  const handleAddNewTask = () => {
+  const handleAddNewTask = useCallback(() => {
     // 列管理のトップ（最初の列）に空タスクを作成（トーストは表示しない）
     const firstColumnId = columnOrder[0];
     if (!firstColumnId) {
@@ -56,7 +56,7 @@ function App() {
     if (taskId) {
       setNewTaskId(taskId);
     }
-  };
+  }, [columnOrder, addTask]);
 
   // 初期化処理（アプリ起動時に1回だけ実行）
   useEffect(() => {
