@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 
 interface SwipeHandlers {
   onTouchStart: (e: React.TouchEvent) => void;

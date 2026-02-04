@@ -6,7 +6,7 @@ import type { Task } from "@/types";
 
 // useBoardStoreのモック（マルチボード対応）
 let mockTasks: { [key: string]: Task } = {};
-let mockNotificationSettings = {
+const mockNotificationSettings = {
   enabled: true,
   deadlineNotificationsEnabled: true,
   deadlineNotificationHour: 9,

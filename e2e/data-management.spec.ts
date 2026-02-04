@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
+import fs from 'fs';
 
 test.describe('データ管理（エクスポート/インポート）', () => {
   test.beforeEach(async ({ page }) => {
@@ -38,7 +39,6 @@ test.describe('データ管理（エクスポート/インポート）', () => {
     // ダウンロードしたファイルの内容を確認
     const downloadPath = await download.path();
     if (downloadPath) {
-      const fs = require('fs');
       const content = fs.readFileSync(downloadPath, 'utf-8');
       const data = JSON.parse(content);
 

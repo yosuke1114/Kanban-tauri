@@ -1,3 +1,5 @@
+import React from "react";
+
 interface ColorPickerProps {
   colors: readonly string[];
   selectedColor: string;

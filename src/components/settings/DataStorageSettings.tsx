@@ -148,34 +148,30 @@ export const DataStorageSettings: React.FC<DataStorageSettingsProps> = ({
 
       if (isTauri) {
         // Tauri環境: ファイル保存ダイアログを表示
-        try {
-          // ダウンロードフォルダのパスを取得
-          const { downloadDir } = await import("@tauri-apps/api/path");
-          const downloadPath = await downloadDir();
-          const defaultPath = `${downloadPath}${fileName}`;
+        // ダウンロードフォルダのパスを取得
+        const { downloadDir } = await import("@tauri-apps/api/path");
+        const downloadPath = await downloadDir();
+        const defaultPath = `${downloadPath}${fileName}`;
 
-          const filePath = await dialog.save({
-            defaultPath,
-            filters: [
-              {
-                name: "JSON",
-                extensions: ["json"],
-              },
-            ],
+        const filePath = await dialog.save({
+          defaultPath,
+          filters: [
+            {
+              name: "JSON",
+              extensions: ["json"],
+            },
+          ],
+        });
+
+        if (filePath) {
+          // Tauriのファイル書き込みAPIを使用
+          const { writeTextFile } = await import("@tauri-apps/api/fs");
+          await writeTextFile(filePath, data);
+
+          toast({
+            title: "✅ エクスポート完了",
+            description: `保存先: ${filePath}`,
           });
-
-          if (filePath) {
-            // Tauriのファイル書き込みAPIを使用
-            const { writeTextFile } = await import("@tauri-apps/api/fs");
-            await writeTextFile(filePath, data);
-
-            toast({
-              title: "✅ エクスポート完了",
-              description: `保存先: ${filePath}`,
-            });
-          }
-        } catch (error) {
-          throw error;
         }
       } else {
         // Web環境: File System Access APIを試みる（サポートされていればダイアログ表示）

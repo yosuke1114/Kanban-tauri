@@ -731,8 +731,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       },
     }));
     get().saveToStorage();
-
-    console.log(`30日以上経過した${tasksToDelete.length}件のタスクを自動削除しました`);
+    // 30日以上経過したタスクを自動削除（サイレント処理）
   },
 
   // サブタスク操作
@@ -1328,9 +1327,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
     }));
 
     get().saveToStorage();
-
-    console.log(`[Cleanup] ${deletedTasks.length}件の期限切れタスクを削除しました`);
-
+    // 期限切れタスクのクリーンアップ完了
     return deletedTasks.length;
   },
 
@@ -1377,7 +1374,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
 
           // マイグレーション後に保存
           get().saveToStorage();
-          console.log("データを新形式にマイグレーションしました");
+          // データを新形式にマイグレーション完了
         }
 
         // 30日以上経過した削除済みタスクを自動削除

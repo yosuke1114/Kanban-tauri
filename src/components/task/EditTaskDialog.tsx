@@ -72,6 +72,8 @@ const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   useEffect(() => {
     if (open) {
+      // ダイアログが開いたときにフォームデータを初期化
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(task);
       isInitialMount.current = true;
     }

@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
  * @returns クエリにマッチするかどうか
  */
 export const useMediaQuery = (query: string): boolean => {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState(() => {
+    // 初期値をSSR対応で設定
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
 
   useEffect(() => {
     const media = window.matchMedia(query);
-
-    // 初期値を設定
-    setMatches(media.matches);
 
     // リスナーを設定
     const listener = (e: MediaQueryListEvent) => {
